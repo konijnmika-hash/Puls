@@ -4,13 +4,12 @@ import { addDays, dateKey, DAY_SHORT, fmt, parseKey, weekday } from '../lib/date
 import { dayTotals, useTargets } from '../lib/hooks';
 import { emptyDay, useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
-import { BarChart, I, LineChart, AvatarButton } from '../components/ui';
+import { BarChart, LineChart, AvatarButton } from '../components/ui';
 
 export function Progress() {
   const profile = useStore((s) => s.profile)!;
   const days = useStore((s) => s.days);
   const weights = useStore((s) => s.weights);
-  const premium = useStore((s) => s.premium);
   const open = useUI((s) => s.open);
   const t = useTargets()!;
   const [range, setRange] = useState<7 | 30>(7);
@@ -47,8 +46,7 @@ export function Progress() {
         <span className="small muted">Jouw trends</span>
         <div className="seg" role="tablist" aria-label="Periode">
           <button className={range === 7 ? 'on' : ''} onClick={() => setRange(7)}>7 dagen</button>
-          <button className={range === 30 ? 'on' : ''} onClick={() => (premium ? setRange(30) : open({ type: 'premium', reason: 'Bekijk je voortgang over 30 dagen met Premium.' }))}>
-            30 dagen {!premium && <span className="lock" style={{ width: 14, height: 14 }}><I.lock /></span>}
+          <button className={range === 30 ? 'on' : ''} onClick={() => setRange(30)}>30 dagen
           </button>
         </div>
       </div>

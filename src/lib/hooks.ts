@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { calcTargets, sumNutrients, TRAINING_WATER_BONUS } from './calc';
-import { weekday } from './date';
+import { calcTargets, observedTdee, sumNutrients, TRAINING_WATER_BONUS } from './calc';
+import { dateKey, weekday } from './date';
 import { emptyDay, useStore } from './store';
 import { MEALS, type DayLog, type MealKey } from './types';
 import { roomFor } from './recipes';
@@ -12,9 +12,20 @@ export function useDay(date: string): DayLog {
   return useStore((s) => s.days[date]) ?? EMPTY;
 }
 
+/** Je echte verbruik uit dagboek + gewicht. Alleen afgeronde dagen, dus het verschuift niet terwijl je logt. */
+export function useObserved() {
+  const days = useStore((s) => s.days);
+  const weights = useStore((s) => s.weights);
+  const today = dateKey();
+  return useMemo(() => observedTdee(days, weights, today), [days, weights, today]);
+}
+
 export function useTargets() {
   const profile = useStore((s) => s.profile);
-  return useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
+  const observed = useObserved();
+  const tdee = observed ? Math.round(observed.tdee / 25) * 25 : 0;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => (profile ? calcTargets(profile, observed) : null), [profile, tdee, observed?.days]);
 }
 
 export function usePlan() {

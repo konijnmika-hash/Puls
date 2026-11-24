@@ -1,20 +1,22 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ALL_EQUIP, EQUIP_LABEL, type Equip } from '../data/exercises';
-import { ACTIVITY, PACE, bmi, bodyFat, calcTargets, leanMass } from '../lib/calc';
+import { ACTIVITY, PACE, bmi, bodyFat, calcTargets, leanMass, weeklyChange } from '../lib/calc';
 import { DAY_SHORT, fmt, liters } from '../lib/date';
-import { FAT_LABELS, FOCUS_OPTIONS, GOAL_OPTIONS, MUSCLE_LABELS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment, defaultFocus, spreadDays } from '../lib/options';
+import { FAT_LABELS, FOCUS_OPTIONS, GOAL_OPTIONS, MUSCLE_LABELS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment, defaultFocus, defaultGoalWeight, spreadDays } from '../lib/options';
 import { DEFAULT_REMINDERS, useStore, type Reminders } from '../lib/store';
 import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
 import { EXPERIENCE, SPLIT_NAME } from '../lib/workout';
 import { requestNotifications } from '../components/Coach';
 import { Body } from '../components/Body';
 import { I, NumField, Ring, Switch, Wordmark } from '../components/ui';
+import { euro, PLANS, TRIAL_DAYS } from '../lib/account';
+import { AccountForm } from './Account';
 
 const ACT_EMOJI: Record<ActivityLevel, string> = { zittend: '🪑', licht: '🚶', gemiddeld: '🚴', actief: '🏃', zeer: '⛹️' };
 
 type Draft = Omit<Profile, 'createdAt'>;
 
-const STEPS = ['welkom', 'naam', 'geslacht', 'leeftijd', 'lengte', 'gewicht', 'vet', 'spieren', 'doel', 'tempo', 'activiteit', 'dagen', 'uitrusting', 'ervaring', 'focus', 'coach', 'plan'] as const;
+const STEPS = ['welkom', 'naam', 'geslacht', 'leeftijd', 'lengte', 'gewicht', 'vet', 'spieren', 'doel', 'tempo', 'activiteit', 'dagen', 'uitrusting', 'ervaring', 'focus', 'coach', 'plan', 'account'] as const;
 
 function Q({ title, lead, children }: { title: string; lead?: string; children: ReactNode }) {
   return (
@@ -87,7 +89,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
         <h1 className="welcome-title">Elke dag een beetje <em>sterker.</em></h1>
         <p className="welcome-sub">Je persoonlijke coach voor eten, trainen en energie. Een plan dat bij jou past, reminders op het juiste moment en een schouderklopje als je goed bezig bent.</p>
         <button className="btn block welcome-cta" onClick={onStart}>Maak mijn plan</button>
-        <div className="welcome-foot">Klaar in 2 minuten · Gratis te proberen</div>
+        <div className="welcome-foot">Klaar in 2 minuten · {TRIAL_DAYS} dagen gratis</div>
       </div>
     </div>
   );
@@ -95,6 +97,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
 
 export function Onboarding() {
   const setProfile = useStore((s) => s.setProfile);
+  const hasAccount = useStore((s) => !!s.account);
   const [i, setI] = useState(0);
   const [rem, setRem] = useState<Reminders>(DEFAULT_REMINDERS);
   const [p, setP] = useState<Draft>({
@@ -102,7 +105,7 @@ export function Onboarding() {
     trainDays: [0, 2, 4], focus: 'afvallen', experience: 'beginner', place: 'gym', equipment: [...ALL_EQUIP], excluded: [], swaps: {}, fat: 5, muscle: 4,
   });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setP((d) => ({ ...d, [k]: v }));
-  const steps = STEPS.filter((s) => !(s === 'tempo' && p.goal === 'onderhouden') && !(s === 'uitrusting' && p.trainDays.length === 0));
+  const steps = STEPS.filter((s) => !(s === 'tempo' && p.goal === 'onderhouden') && !(s === 'uitrusting' && p.trainDays.length === 0) && !(s === 'account' && hasAccount));
   const step = steps[i];
   const next = () => setI((x) => Math.min(steps.length - 1, x + 1));
   const back = () => setI((x) => Math.max(0, x - 1));
@@ -178,7 +181,7 @@ export function Onboarding() {
             {GOAL_OPTIONS.map((o) => (
               <button key={o.v} className={'choice' + (p.goal === o.v ? ' on' : '')}
                 onClick={() => {
-                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: o.v === 'onderhouden' ? d.weightKg : o.v === 'afvallen' ? Math.round(d.weightKg * 0.93) : Math.round(d.weightKg * 1.05) }));
+                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: defaultGoalWeight(o.v, d.weightKg) }));
                   next();
                 }}>
                 <span className="em">{o.em}</span>
@@ -196,11 +199,12 @@ export function Onboarding() {
           <div className="label-cap">Hoe snel?</div>
           <div className="stack">
             {(Object.keys(PACE) as Pace[]).map((k) => {
-              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / PACE[k].kgPerWeek;
+              const perWeek = Math.abs(weeklyChange(p.goal, k));
+              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / perWeek;
               return (
                 <button key={k} className={'choice' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)} style={{ padding: 12 }}>
                   <div className="grow">
-                    <div className="t">{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg per week</div>
+                    <div className="t">{PACE[k].label} · {fmt(perWeek, 2)} kg per week</div>
                     <div className="s">{weeks >= 1 ? `Doel bereikt in ± ${Math.round(weeks)} weken` : 'Je bent er bijna'}{k === 'normaal' ? ' · aanbevolen' : ''}</div>
                   </div>
                 </button>
@@ -362,6 +366,15 @@ export function Onboarding() {
       break;
   }
 
+  if (step === 'account') {
+    content = (
+      <Q title="Bewaar je plan" lead={`Maak een account met je e-mailadres. De eerste ${TRIAL_DAYS} dagen zijn gratis, daarna is het ${euro(PLANS.maand.price)} per maand of ${euro(PLANS.jaar.price)} per jaar voor de hele app.`}>
+        <AccountForm mode="signup" cta={`Start ${TRIAL_DAYS} dagen gratis`} onDone={() => void finish()} />
+        <p className="tiny" style={{ margin: 0, textAlign: 'center' }}>Je zit nergens aan vast. Je kunt in de proefperiode gewoon stoppen.</p>
+      </Q>
+    );
+  }
+
   const autoAdvance = step === 'geslacht' || step === 'doel' || step === 'activiteit' || step === 'ervaring';
   const finish = async () => {
     useStore.getState().setReminders(rem);
@@ -380,10 +393,10 @@ export function Onboarding() {
           <button className="btn ghost block" onClick={() => { setRem((r) => ({ ...r, on: false })); next(); }}>Liever niet</button>
         </div>
       )}
-      {!autoAdvance && step !== 'coach' && (
+      {!autoAdvance && step !== 'coach' && step !== 'account' && (
         <div className="ob-foot">
-          <button className="btn block" disabled={!valid} onClick={() => (step === 'plan' ? finish() : next())}>
-            {step === 'plan' ? 'Aan de slag' : step === 'naam' && !p.name.trim() ? 'Overslaan' : 'Volgende'}
+          <button className="btn block" disabled={!valid} onClick={() => (step === 'plan' && hasAccount ? finish() : next())}>
+            {step === 'plan' && hasAccount ? 'Aan de slag' : step === 'naam' && !p.name.trim() ? 'Overslaan' : 'Volgende'}
           </button>
         </div>
       )}

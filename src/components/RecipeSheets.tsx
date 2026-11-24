@@ -4,8 +4,7 @@ import { RECIPE_BY_ID, type Recipe } from '../data/recipes';
 import { dateKey, fmt } from '../lib/date';
 import { dayTotals, useMealRoom, useTargets } from '../lib/hooks';
 import {
-  amountText, ingredients, plainName, portionFor, portionNutrients, portionText, PORTION_STEPS, recipeTags, scaledItems, TAG_LABEL,
-} from '../lib/recipes';
+  amountText, ingredients, plainName, portionFor, portionNutrients, portionText, PORTION_STEPS, recipeTags, scaledItems, TAG_LABEL, lightNotes, lightRecipes, lightSaving } from '../lib/recipes';
 import { mealRange } from '../lib/calc';
 import { useStore } from '../lib/store';
 import { MEALS, type MealKey } from '../lib/types';
@@ -137,6 +136,12 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
             })}
             {extras.map((e) => <li key={e} className="extra">+ {e}</li>)}
           </ul>
+          {lightRecipes() && lightNotes(recipe).length > 0 && (
+            <div className="light-note">
+              <b>Lichter gemaakt voor je doel{lightSaving(recipe) * factor >= 10 ? ` · scheelt ± ${fmt(Math.round((lightSaving(recipe) * factor) / 5) * 5)} kcal` : ''}</b>
+              <ul>{lightNotes(recipe).map((x) => <li key={x}>{x[0].toUpperCase() + x.slice(1)}</li>)}</ul>
+            </div>
+          )}
           <button className="btn sm ghost" onClick={() => { useStore.getState().addToShopping(recipe, mult); toast('Op je boodschappenlijst gezet'); }}>
             <span className="i18"><I.cart /></span> Op boodschappenlijst
           </button>

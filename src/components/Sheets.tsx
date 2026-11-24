@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
-import { ACTIVITY, PACE, calcTargets, metKcal } from '../lib/calc';
+import { ACTIVITY, PACE, calcTargets, metKcal, weeklyChange } from '../lib/calc';
 import { dateKey, DAY_SHORT, fmt } from '../lib/date';
-import { useDay, usePlan, useTargets } from '../lib/hooks';
+import { useDay, useObserved, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
-import { useStore, type Reminders } from '../lib/store';
+import { useStore, type Reminders, type Theme } from '../lib/store';
 import { requestNotifications } from './Coach';
 import { mealForNow, useUI } from '../lib/ui';
 import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
@@ -146,62 +146,10 @@ export function QuickSheet() {
   );
 }
 
-const PREMIUM_FEATURES = [
-  ['Barcodescanner', 'Scan een product en het staat er meteen in.'],
-  ['Eigen doelen', 'Stel je eigen calorie-, water- en stappendoel in.'],
-  ['Volledige voortgang', 'Grafieken over 30 dagen in plaats van 7.'],
-];
-
-export function PremiumSheet({ reason }: { reason?: string }) {
-  const close = useUI((s) => s.close);
-  const premium = useStore((s) => s.premium);
-  const [plan, setPlan] = useState<'maand' | 'jaar'>('maand');
-  return (
-    <Sheet onClose={close}>
-      <div className="stack">
-        <div className="premium-hero">
-          <svg className="leaf" viewBox="0 0 32 32" aria-hidden><path d="M4 26C4 12 14 4 30 3c-1 17-10 25-24 25" fill="#c9f27a" /></svg>
-          <span className="tag gold">Puls Premium</span>
-          <h2 style={{ marginTop: 10 }}>Haal alles uit je dag</h2>
-          <p style={{ margin: '6px 0 0', opacity: 0.85 }}>{reason ?? 'Voor wie serieus werk maakt van eten, drinken en trainen.'}</p>
-        </div>
-        <div className="stack">
-          {PREMIUM_FEATURES.map(([t, s]) => (
-            <div key={t} className="feat"><I.check /><div><b>{t}</b><div className="small muted">{s}</div></div></div>
-          ))}
-        </div>
-        {premium ? (
-          <>
-            <div className="card row"><div className="grow"><b>Premium staat aan</b><div className="small muted">Alle functies zijn ontgrendeld.</div></div></div>
-            <button className="btn outline block" onClick={() => { useStore.getState().setPremium(false); toast('Premium uitgezet (demo)'); }}>Premium uitzetten (demo)</button>
-          </>
-        ) : (
-          <>
-            <button className={'plan' + (plan === 'maand' ? ' on' : '')} onClick={() => setPlan('maand')}>
-              <span className="radio" />
-              <div className="grow"><b>Maandelijks</b><div className="small muted">Elke maand opzegbaar</div></div>
-              <div className="price num">€ 4,99<span className="tiny"> /mnd</span></div>
-            </button>
-            <button className={'plan' + (plan === 'jaar' ? ' on' : '')} onClick={() => setPlan('jaar')}>
-              <span className="radio" />
-              <div className="grow"><b>Jaarlijks <span className="tag brand">−33%</span></b><div className="small muted num">€ 39,99 per jaar · € 3,33 /mnd</div></div>
-              <div className="price num">€ 39,99</div>
-            </button>
-            <button className="btn block" onClick={() => { useStore.getState().setPremium(true); toast('Premium geactiveerd (demo, er wordt niets afgeschreven)'); close(); }}>
-              Probeer 7 dagen gratis
-            </button>
-            <p className="tiny" style={{ textAlign: 'center', margin: 0 }}>Daarna {plan === 'maand' ? '€ 4,99 per maand' : '€ 39,99 per jaar'}. Op elk moment opzegbaar via de App Store of Google Play.</p>
-          </>
-        )}
-      </div>
-    </Sheet>
-  );
-}
-
 export function GoalsSheet() {
   const close = useUI((s) => s.close);
   const profile = useStore((s) => s.profile)!;
-  const auto = calcTargets({ ...profile, custom: undefined });
+  const auto = calcTargets({ ...profile, custom: undefined }, useObserved());
   const t = useTargets()!;
   const [kcal, setKcal] = useState(t.kcal);
   const [water, setWater] = useState(t.waterMl);
@@ -248,7 +196,7 @@ export function ProfileEditSheet() {
         </div>
         {p.goal !== 'onderhouden' && (
           <div className="field"><span className="lbl">Tempo</span>
-            <div className="chips">{(Object.keys(PACE) as Pace[]).map((k) => <button key={k} className={'chip' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)}>{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg/week</button>)}</div>
+            <div className="chips">{(Object.keys(PACE) as Pace[]).map((k) => <button key={k} className={'chip' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)}>{PACE[k].label} · {fmt(Math.abs(weeklyChange(p.goal, k)), 2)} kg/week</button>)}</div>
           </div>
         )}
         <div className="field"><span className="lbl">Dagelijkse activiteit</span>
@@ -379,9 +327,17 @@ export function ExerciseSheet({ id, slotKey }: { id: string; slotKey?: string })
 
 export function SettingsRows() {
   const glass = useStore((s) => s.glassMl);
+  const theme = useStore((s) => s.theme);
   const set = useStore((s) => s.setSettings);
+  const themes: [Theme, string][] = [['licht', 'Licht'], ['donker', 'Donker'], ['systeem', 'Auto']];
   return (
     <div className="list">
+      <div className="item">
+        <div className="grow"><div className="t">Weergave</div><div className="s">{theme === 'systeem' ? 'Volgt je telefoon' : theme === 'donker' ? 'Donkere modus' : 'Lichte modus'}</div></div>
+        <div className="seg" role="group" aria-label="Weergave">
+          {themes.map(([v, l]) => <button key={v} className={theme === v ? 'on' : ''} aria-pressed={theme === v} onClick={() => set({ theme: v })}>{l}</button>)}
+        </div>
+      </div>
       <div className="item">
         <div className="grow"><div className="t">Glasgrootte</div><div className="s">Hoeveel ml een glas water telt</div></div>
         <div className="seg">

@@ -3,7 +3,7 @@ import type { Food } from '../data/foods';
 
 export type Sex = 'man' | 'vrouw' | 'anders';
 export type ActivityLevel = 'zittend' | 'licht' | 'gemiddeld' | 'actief' | 'zeer';
-export type Goal = 'afvallen' | 'onderhouden' | 'aankomen';
+export type Goal = 'afvallen' | 'recomp' | 'onderhouden' | 'aankomen';
 export type Pace = 'rustig' | 'normaal' | 'snel';
 export type Focus = 'afvallen' | 'spiermassa' | 'kracht' | 'fit';
 export type Experience = 'nieuw' | 'beginner' | 'gemiddeld' | 'ervaren';
@@ -39,7 +39,7 @@ export interface Profile {
   fat: number;
   /** zelfinschatting 1-10: hoeveel spieren (1 = weinig, 10 = bodybuilder) */
   muscle: number;
-  /** Handmatig overschreven doelen (Premium) */
+  /** Handmatig overschreven doelen */
   custom?: { kcal?: number; waterMl?: number; steps?: number };
   createdAt: string;
 }
@@ -53,6 +53,8 @@ export interface Targets {
   steps: number;
   bmr: number;
   tdee: number;
+  /** kcal bijgesteld op basis van je dagboek en gewicht */
+  adapted?: number;
 }
 
 export interface FoodEntry {

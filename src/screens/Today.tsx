@@ -10,6 +10,7 @@ import { CoachCard, useCoachCtx } from '../components/Coach';
 import { coachFeed } from '../lib/coach';
 import { MealIdea } from '../components/RecipeSheets';
 import { recentlyEaten, suggest } from '../lib/recipes';
+import { accessOf, euro, PLANS } from '../lib/account';
 
 const NONE: never[] = [];
 
@@ -48,6 +49,8 @@ export function Today() {
           <AvatarButton />
         </div>
       </header>
+
+      <TrialNotice />
 
       <nav className="datenav" aria-label="Dag kiezen">
         <button className="arrow" onClick={() => setDate(addDays(date, -1))} aria-label="Vorige dag"><I.left /></button>
@@ -357,4 +360,19 @@ function useNarrow(limit = 380) {
     return () => window.removeEventListener('resize', on);
   }, [limit]);
   return narrow;
+}
+
+/** Laatste dagen van de proefperiode: rustig laten weten wat er komt. */
+function TrialNotice() {
+  const installedAt = useStore((s) => s.installedAt);
+  const sub = useStore((s) => s.subscription);
+  const open = useUI((s) => s.open);
+  const a = accessOf(installedAt, sub);
+  if (a.kind !== 'trial' || a.daysLeft > 3) return null;
+  return (
+    <button className="trial-note" onClick={() => open({ type: 'abonnement' })}>
+      <span className="grow">Nog <b>{a.daysLeft} {a.daysLeft === 1 ? 'dag' : 'dagen'}</b> gratis. Daarna {euro(PLANS.maand.price)} per maand of {euro(PLANS.jaar.price)} per jaar.</span>
+      <I.right />
+    </button>
+  );
 }

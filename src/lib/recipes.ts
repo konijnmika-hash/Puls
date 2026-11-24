@@ -14,21 +14,130 @@ export interface ResolvedIng {
   grams: number;
 }
 
-export function ingredients(r: Recipe) {
+/* ---------- Lichter koken bij afvallen ---------- */
+
+/**
+ * Bij afvallen schrappen we kcal die je niet mist: lichtere sauzen en zuivel, melk aangelengd met
+ * water, minder olie en minder noten of zoetigheid (een beetje mag, voor de smaak).
+ */
+interface Swap {
+  /** vervangend product */
+  to?: string;
+  /** hoeveelheid keer dit getal */
+  mult?: number;
+  /** de helft vervangen door water */
+  water?: boolean;
+  note: string;
+}
+
+const NUTS = 'minder noten en zaden, net genoeg voor de bite';
+const SWEET = 'minder zoet, de helft van de honing of siroop';
+
+export const LIGHT_SWAPS: Record<string, Swap> = {
+  'Mayonaise': { to: 'Fritessaus', note: 'fritessaus in plaats van mayonaise' },
+  'Knoflooksaus': { to: 'Yoghurtdressing', note: 'yoghurtdressing in plaats van knoflooksaus' },
+  'Halfvolle melk': { water: true, note: 'melk half melk, half water' },
+  'Volle melk': { to: 'Halfvolle melk', water: true, note: 'halfvolle melk, half aangelengd met water' },
+  'Olijfolie': { mult: 0.5, note: 'de helft van de olie (of bakspray)' },
+  'Kokosolie': { mult: 0.5, note: 'de helft van de olie (of bakspray)' },
+  'Boter': { to: 'Halvarine', mult: 0.5, note: 'een dun laagje halvarine in plaats van boter' },
+  'Griekse yoghurt 10%': { to: 'Griekse yoghurt 0%', note: 'Griekse yoghurt 0% in plaats van 10%' },
+  'Volle yoghurt': { to: 'Halfvolle yoghurt', note: 'halfvolle in plaats van volle yoghurt' },
+  'Volle kwark': { to: 'Magere kwark', note: 'magere kwark in plaats van volle' },
+  'Halfvolle kwark': { to: 'Magere kwark', note: 'magere kwark in plaats van halfvolle' },
+  'Jonge kaas 48+': { to: 'Kaas 30+', note: '30+ kaas in plaats van 48+' },
+  'Belegen kaas 48+': { to: 'Kaas 30+', note: '30+ kaas in plaats van 48+' },
+  'Oude kaas 48+': { to: 'Kaas 30+', note: '30+ kaas in plaats van 48+' },
+  'Mozzarella': { to: 'Mozzarella light', note: 'mozzarella light' },
+  'Burrata': { to: 'Mozzarella light', note: 'mozzarella light in plaats van burrata' },
+  'Roomkaas': { to: 'Light smeerkaas', note: 'light smeerkaas in plaats van roomkaas' },
+  'Smeerkaas': { to: 'Light smeerkaas', note: 'light smeerkaas' },
+  'Hummus': { to: 'Hummus light', note: 'hummus light' },
+  'Kokosmelk': { to: 'Kokosmelk light', note: 'kokosmelk light' },
+  'Slagroom': { to: 'Kookroom light', note: 'kookroom light in plaats van slagroom' },
+  'Rundergehakt (gebakken)': { to: 'Mager rundergehakt (gebakken)', note: 'mager rundergehakt' },
+  'Half-om-half gehakt (gebakken)': { to: 'Mager rundergehakt (gebakken)', note: 'mager rundergehakt in plaats van half-om-half' },
+  'Kippendij (gebakken)': { to: 'Kipfilet (gebakken)', note: 'kipfilet in plaats van kippendij' },
+  'Feta': { mult: 0.6, note: 'iets minder feta, de smaak blijft' },
+  'Parmezaanse kaas': { mult: 0.6, note: 'iets minder Parmezaan' },
+  'Halloumi': { mult: 0.7, note: 'iets minder halloumi' },
+  'Pesto': { mult: 0.5, note: 'de helft van de pesto' },
+  'Satésaus': { mult: 0.5, note: 'de helft van de satésaus' },
+  'Pindakaas': { mult: 0.5, note: 'de helft van de pindakaas' },
+  'Pindakaas 100% pinda': { mult: 0.5, note: 'de helft van de pindakaas' },
+  'Avocado': { mult: 0.5, note: 'een halve portie avocado' },
+  'Walnoten': { mult: 0.5, note: NUTS },
+  'Amandelen': { mult: 0.5, note: NUTS },
+  'Cashewnoten': { mult: 0.5, note: NUTS },
+  'Ongebrande gemengde noten': { mult: 0.5, note: NUTS },
+  'Pompoenpitten': { mult: 0.5, note: NUTS },
+  'Sesamzaad': { mult: 0.5, note: NUTS },
+  'Chiazaad': { mult: 0.5, note: NUTS },
+  'Kokosrasp': { mult: 0.5, note: NUTS },
+  'Granola': { mult: 0.5, note: 'de helft van de granola' },
+  'Pure chocolade 70%': { mult: 0.5, note: 'de helft van de chocolade' },
+  'Honing': { mult: 0.5, note: SWEET },
+  'Ahornsiroop': { mult: 0.5, note: SWEET },
+  'Agavesiroop': { mult: 0.5, note: SWEET },
+  'Suiker': { mult: 0.5, note: SWEET },
+};
+
+let light = false;
+
+/** Zet lichte recepten aan of uit (bij afvallen). Leegt de rekencaches. */
+export function setLightRecipes(on: boolean) {
+  if (on === light) return;
+  light = on;
+  cache.clear();
+  portionCache.clear();
+  recipeFoodsCache = null;
+}
+export const lightRecipes = () => light;
+
+const byName = (name: string, r: Recipe) => {
+  const food = FOOD_BY_NAME.get(name);
+  if (!food) throw new Error(`Onbekend ingrediënt in ${r.id}: ${name}`);
+  return food;
+};
+
+/** Wat er bij afvallen aan dit recept is aangepast. */
+export function lightNotes(r: Recipe, on = light): string[] {
+  if (!on) return [];
+  const notes: string[] = [];
+  for (const i of r.ing) if (typeof i !== 'string' && LIGHT_SWAPS[i[0]] && !notes.includes(LIGHT_SWAPS[i[0]].note)) notes.push(LIGHT_SWAPS[i[0]].note);
+  return notes;
+}
+
+export function ingredients(r: Recipe, on = light) {
   const items: ResolvedIng[] = [];
   const extras: string[] = [];
+  const add = (food: Food, grams: number) => {
+    const same = items.find((x) => x.food.id === food.id);
+    if (same) same.grams += grams;
+    else items.push({ food, grams });
+  };
   for (const i of r.ing) {
-    if (typeof i === 'string') extras.push(i);
-    else {
-      const food = FOOD_BY_NAME.get(i[0]);
-      if (!food) throw new Error(`Onbekend ingrediënt in ${r.id}: ${i[0]}`);
-      items.push({ food, grams: i[1] });
-    }
+    if (typeof i === 'string') { extras.push(i); continue; }
+    const [name, grams] = i;
+    const sw = on ? LIGHT_SWAPS[name] : undefined;
+    if (!sw) { add(byName(name, r), grams); continue; }
+    const food = byName(sw.to ?? name, r);
+    const g = grams * (sw.mult ?? 1);
+    if (sw.water) {
+      const half = Math.round(g / 2 / 5) * 5;
+      add(food, half);
+      add(byName('Water', r), Math.round(g - half));
+    } else add(food, Math.max(1, Math.round(g)));
   }
   return { items, extras };
 }
 
 const cache = new Map<string, Nutrients & { grams: number }>();
+
+const kcalOf = (items: ResolvedIng[]) => items.reduce((s, i) => s + (i.food.kcal * i.grams) / 100, 0);
+
+/** Hoeveel kcal de lichte versie per standaardportie scheelt. */
+export const lightSaving = (r: Recipe) => kcalOf(ingredients(r, false).items) - kcalOf(ingredients(r, true).items);
 
 /** Voedingswaarden van één standaardportie. */
 export function recipeNutrients(r: Recipe) {
@@ -254,6 +363,12 @@ export function suggest(
       const kcalFit = 1 - Math.min(1, Math.abs(n.kcal - room.kcal) / room.kcal);
       const pFit = room.p > 0 ? Math.min(1, n.p / room.p) : 0.5;
       let score = kcalFit * 50 + pFit * 35;
+      if (light) {
+        // bij afvallen: veel eiwit en volume per kcal, weinig vet
+        const pShare = (n.p * 4) / Math.max(1, n.kcal);
+        const fShare = (n.f * 9) / Math.max(1, n.kcal);
+        score += Math.min(1, pShare / 0.35) * 12 - Math.max(0, fShare - 0.35) * 30;
+      }
       if (opts.favorites?.includes(recipe.id)) score += 8;
       if (opts.recent?.has(recipe.id)) score -= 20;
       score += hash(recipe.id + (opts.seed ?? '')) * 14;
@@ -321,7 +436,9 @@ export function recipeFood(r: Recipe, factor = 1): Food {
   };
 }
 
-export const RECIPE_FOODS = RECIPES.map(recipeFood);
+let recipeFoodsCache: Food[] | null = null;
+/** Alle recepten als product, om in je dagboek op te zoeken. */
+export const recipeFoods = () => (recipeFoodsCache ??= RECIPES.map((r) => recipeFood(r)));
 
 /* ---------- Boodschappen ---------- */
 
@@ -349,7 +466,7 @@ export function mergeShopping(list: ShopItem[], r: Recipe, factor: number): Shop
       if (!existing.from.includes(r.name)) existing.from.push(r.name);
     } else out.push({ key: `${id}:${Math.random().toString(36).slice(2, 8)}`, id, name, grams, unit, done: false, from: [r.name] });
   };
-  for (const { food, grams } of scaledItems(r, factor)) add(food.id, plainName(food.name), grams, food.unit);
+  for (const { food, grams } of scaledItems(r, factor)) if (food.name !== 'Water') add(food.id, plainName(food.name), grams, food.unit);
   for (const e of extras) add('x-' + e.toLowerCase(), e[0].toUpperCase() + e.slice(1));
   return out;
 }

@@ -785,3 +785,20 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.02e
 }
 .tr-sum-check { width: 72px; height: 72px; border-radius: 50%; background: var(--ok); color: #fff; display: grid; place-items: center; margin: 18px auto 0; }
 .tr-sum-check svg { width: 36px; height: 36px; }
+
+/* Lichter gemaakt bij afvallen */
+.light-note { background: color-mix(in srgb, var(--brand) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13.5px; }
+.light-note b { color: var(--brand); }
+.light-note ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); }
+.light-note li { margin: 2px 0; }
+
+/* Account en abonnement */
+.auth { justify-content: center; padding-bottom: 40px; }
+.auth-logo { width: 56px; height: 56px; border-radius: 18px; background: var(--brand); color: var(--brand-ink); display: grid; place-items: center; }
+.auth-logo svg { width: 28px; height: 28px; }
+.pass { position: relative; }
+.pass .input { padding-right: 70px; }
+.pass .link { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
+.form-err { margin: 0; color: var(--danger); font-size: 14px; font-weight: 600; }
+.trial-note { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 12px 14px; border-radius: var(--r-md); background: color-mix(in srgb, var(--carb) 16%, var(--surface)); font-size: 14px; color: var(--ink); }
+.trial-note svg { width: 18px; height: 18px; flex: none; color: var(--ink-2); }

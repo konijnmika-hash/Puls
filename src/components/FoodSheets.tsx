@@ -3,7 +3,7 @@ import { CATEGORY_EMOJI, CATEGORY_LABEL, FOODS, searchFoods, type Food, type Foo
 import { fmt } from '../lib/date';
 import { lookupBarcode, searchOff } from '../lib/openfoodfacts';
 import { CAMERA_HELP, cameraAllowedHere, cameraProblem, decodeFile, getDecoder, inFrame, type CameraProblem } from '../lib/barcode';
-import { RECIPE_FOODS } from '../lib/recipes';
+import { recipeFoods } from '../lib/recipes';
 import { newId, useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { MEALS, type FoodEntry, type MealKey } from '../lib/types';
@@ -47,9 +47,7 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
   const recent = useStore((s) => s.recent);
   const favIds = useStore((s) => s.favorites);
   const custom = useStore((s) => s.customFoods);
-  const premium = useStore((s) => s.premium);
-  const open = useUI((s) => s.open);
-  const all = useMemo(() => [...custom, ...RECIPE_FOODS, ...FOODS], [custom]);
+  const all = useMemo(() => [...custom, ...recipeFoods(), ...FOODS], [custom]);
   const local = useMemo(() => searchFoods(q, all), [q, all]);
   const favs = useMemo(() => {
     const byId = new Map([...all, ...recent].map((f) => [f.id, f]));
@@ -83,7 +81,7 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
         <input id="food-search" className="input" placeholder={`Zoek voor ${MEAL_META[meal].label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" enterKeyHint="search" />
       </div>
       <div className="grid2" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <button className="btn ghost sm" onClick={() => (premium ? onView({ kind: 'scan' }) : open({ type: 'premium', reason: 'De barcodescanner zit in Puls Premium.' }))}>
+        <button className="btn ghost sm" onClick={() => onView({ kind: 'scan' })}>
           <span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.barcode /></span>Scan
         </button>
         <button className="btn ghost sm" onClick={() => onView({ kind: 'quick' })}><span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.bolt /></span>Snel</button>

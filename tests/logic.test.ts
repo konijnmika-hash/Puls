@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FOODS, searchFoods } from '../src/data/foods';
 import { ALL_EQUIP, EXERCISES } from '../src/data/exercises';
-import { bmr, bodyFat, calcTargets, entryNutrients, mealRange } from '../src/lib/calc';
+import { bmr, bodyFat, calcTargets, entryNutrients, mealRange, observedTdee, weeklyChange } from '../src/lib/calc';
 import { coachFeed } from '../src/lib/coach';
 import { emptyDay } from '../src/lib/store';
 import { addDays, weekday } from '../src/lib/date';
@@ -25,7 +25,39 @@ describe('calories', () => {
     const lbm = 80 * (1 - bodyFat(base) / 100);
     const b = (1780 + 370 + 21.6 * lbm) / 2;
     expect(t.bmr).toBe(Math.round(b));
-    expect(t.kcal).toBe(Math.round((b * 1.55 - 550) / 10) * 10);
+    const train = (3 * 4 * 80 * (50 / 60)) / 7;
+    expect(t.kcal).toBe(Math.round((b * 1.45 + train - 550) / 10) * 10);
+  });
+  it('recomp: a smaller deficit and the most protein', () => {
+    const cut = calcTargets(base);
+    const re = calcTargets({ ...base, goal: 'recomp' });
+    const keep = calcTargets({ ...base, goal: 'onderhouden' });
+    expect(re.kcal).toBeGreaterThan(cut.kcal);
+    expect(re.kcal).toBeLessThan(keep.kcal);
+    expect(re.p).toBeGreaterThanOrEqual(cut.p);
+    expect(weeklyChange('recomp', 'normaal')).toBeCloseTo(-0.3);
+  });
+  it('caps the deficit at 25% of maintenance', () => {
+    const t = calcTargets({ ...base, weightKg: 60, heightCm: 165, sex: 'vrouw', activity: 'zittend', trainDays: [], pace: 'snel' });
+    expect(t.kcal).toBeGreaterThanOrEqual(Math.round((t.tdee * 0.75) / 10) * 10 - 10);
+  });
+  it('learns from logged food and weight', () => {
+    const today = '2026-03-01';
+    const days: Record<string, ReturnType<typeof emptyDay>> = {};
+    const oats = FOODS.find((f) => f.name === 'Havermout')!;
+    for (let i = 1; i <= 21; i++) {
+      const d = emptyDay();
+      d.meals.lunch.push({ id: 'x' + i, food: oats, grams: 2000 / oats.kcal * 100, label: '' });
+      days[addDays(today, -i)] = d;
+    }
+    // 2000 kcal eten en stabiel gewicht = verbruik ± 2000
+    const weights = [21, 14, 7, 1].map((i) => ({ date: addDays(today, -i), kg: 80 }));
+    const obs = observedTdee(days, weights, today)!;
+    expect(obs.tdee).toBeCloseTo(2000, -1);
+    const t = calcTargets(base, obs);
+    expect(t.adapted).toBeLessThan(0);
+    // te weinig gegevens: niets aanpassen
+    expect(observedTdee(days, weights.slice(2), today)).toBeNull();
   });
   it('uses the fat and muscle scales', () => {
     expect(bodyFat({ sex: 'man', fat: 1, muscle: 5 })).toBe(7);
