@@ -171,3 +171,16 @@ describe('dates', () => {
     expect(addDays('2026-11-30', 1)).toBe('2026-12-01');
   });
 });
+
+describe('recomp goal', () => {
+  it('uses a small deficit and the most protein', () => {
+    const lose = calcTargets(base);
+    const keep = calcTargets({ ...base, goal: 'onderhouden' });
+    const recomp = calcTargets({ ...base, goal: 'recomp' });
+    expect(recomp.kcal).toBeLessThan(keep.kcal);
+    expect(recomp.kcal).toBeGreaterThan(lose.kcal);
+    expect(keep.kcal - recomp.kcal).toBeLessThanOrEqual(360);
+    expect(recomp.p).toBeGreaterThan(lose.p);
+    expect(recomp.steps).toBe(lose.steps);
+  });
+});

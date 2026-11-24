@@ -102,7 +102,7 @@ export function Onboarding() {
     trainDays: [0, 2, 4], focus: 'afvallen', experience: 'beginner', place: 'gym', equipment: [...ALL_EQUIP], excluded: [], swaps: {}, fat: 5, muscle: 4,
   });
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setP((d) => ({ ...d, [k]: v }));
-  const steps = STEPS.filter((s) => !(s === 'tempo' && p.goal === 'onderhouden') && !(s === 'uitrusting' && p.trainDays.length === 0));
+  const steps = STEPS.filter((s) => !(s === 'tempo' && (p.goal === 'onderhouden' || p.goal === 'recomp')) && !(s === 'uitrusting' && p.trainDays.length === 0));
   const step = steps[i];
   const next = () => setI((x) => Math.min(steps.length - 1, x + 1));
   const back = () => setI((x) => Math.max(0, x - 1));
@@ -178,7 +178,7 @@ export function Onboarding() {
             {GOAL_OPTIONS.map((o) => (
               <button key={o.v} className={'choice' + (p.goal === o.v ? ' on' : '')}
                 onClick={() => {
-                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: o.v === 'onderhouden' ? d.weightKg : o.v === 'afvallen' ? Math.round(d.weightKg * 0.93) : Math.round(d.weightKg * 1.05) }));
+                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: o.v === 'onderhouden' ? d.weightKg : o.v === 'afvallen' ? Math.round(d.weightKg * 0.93) : o.v === 'recomp' ? Math.round(d.weightKg * 0.97) : Math.round(d.weightKg * 1.05) }));
                   next();
                 }}>
                 <span className="em">{o.em}</span>

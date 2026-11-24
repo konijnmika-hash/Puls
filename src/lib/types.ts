@@ -3,7 +3,8 @@ import type { Food } from '../data/foods';
 
 export type Sex = 'man' | 'vrouw' | 'anders';
 export type ActivityLevel = 'zittend' | 'licht' | 'gemiddeld' | 'actief' | 'zeer';
-export type Goal = 'afvallen' | 'onderhouden' | 'aankomen';
+/** recomp = vet verliezen en tegelijk spieren opbouwen */
+export type Goal = 'afvallen' | 'recomp' | 'onderhouden' | 'aankomen';
 export type Pace = 'rustig' | 'normaal' | 'snel';
 export type Focus = 'afvallen' | 'spiermassa' | 'kracht' | 'fit';
 export type Experience = 'nieuw' | 'beginner' | 'gemiddeld' | 'ervaren';

@@ -246,7 +246,7 @@ export function ProfileEditSheet() {
         <div className="field"><span className="lbl">Doel</span>
           <div className="chips">{GOAL_OPTIONS.map((o) => <button key={o.v} className={'chip' + (p.goal === o.v ? ' on' : '')} onClick={() => set('goal', o.v)}>{o.t}</button>)}</div>
         </div>
-        {p.goal !== 'onderhouden' && (
+        {p.goal !== 'onderhouden' && p.goal !== 'recomp' && (
           <div className="field"><span className="lbl">Tempo</span>
             <div className="chips">{(Object.keys(PACE) as Pace[]).map((k) => <button key={k} className={'chip' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)}>{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg/week</button>)}</div>
           </div>

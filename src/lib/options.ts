@@ -9,6 +9,7 @@ export const SEX_OPTIONS: { v: Sex; t: string; em: string }[] = [
 
 export const GOAL_OPTIONS: { v: Goal; t: string; s: string; em: string }[] = [
   { v: 'afvallen', t: 'Afvallen', s: 'Vet verliezen en strakker worden', em: '🔥' },
+  { v: 'recomp', t: 'Afvallen en spieren opbouwen', s: 'Vet kwijt en sterker worden, je gewicht daalt langzaam', em: '🏋️' },
   { v: 'onderhouden', t: 'Gewicht behouden', s: 'Fit blijven en gezonder eten', em: '⚖️' },
   { v: 'aankomen', t: 'Aankomen', s: 'Spiermassa en gewicht opbouwen', em: '💪' },
 ];
@@ -30,7 +31,7 @@ export const PLACE_OPTIONS: { v: Place; t: string; em: string }[] = [
   { v: 'thuis', t: 'Thuis', em: '🏠' },
 ];
 
-export const defaultFocus = (g: Goal): Focus => (g === 'afvallen' ? 'afvallen' : g === 'aankomen' ? 'spiermassa' : 'fit');
+export const defaultFocus = (g: Goal): Focus => (g === 'afvallen' ? 'afvallen' : g === 'aankomen' || g === 'recomp' ? 'spiermassa' : 'fit');
 
 /** Spreidt n trainingsdagen netjes over de week (0 = ma). */
 export function spreadDays(n: number): number[] {

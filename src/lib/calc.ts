@@ -47,20 +47,22 @@ export function calcTargets(p: Profile): Targets {
   const b = (bmr(p) + katch) / 2;
   const tdee = b * ACTIVITY[p.activity].factor;
   const daily = (PACE[p.pace].kgPerWeek * 7700) / 7;
-  let kcal = tdee + (p.goal === 'afvallen' ? -daily : p.goal === 'aankomen' ? daily * 0.6 : 0);
+  // Recomp: een klein tekort (± 10-12%), genoeg om vet te verliezen maar met ruimte om spieren op te bouwen
+  const recompDeficit = Math.min(tdee * 0.12, 350);
+  let kcal = tdee + (p.goal === 'afvallen' ? -daily : p.goal === 'recomp' ? -recompDeficit : p.goal === 'aankomen' ? daily * 0.6 : 0);
   const floor = p.sex === 'man' ? 1500 : 1200;
   kcal = Math.max(kcal, floor);
   kcal = round(p.custom?.kcal ?? kcal, 10);
 
   // Eiwit op basis van vetvrije massa: bij afvallen extra om spieren te behouden
-  let perLbm = p.goal === 'afvallen' ? 2.5 : p.goal === 'aankomen' ? 2.3 : 2.0;
+  let perLbm = p.goal === 'recomp' ? 2.7 : p.goal === 'afvallen' ? 2.5 : p.goal === 'aankomen' ? 2.3 : 2.0;
   if (p.focus === 'spiermassa' || p.focus === 'kracht') perLbm = Math.max(perLbm, 2.3);
-  const protein = Math.round(Math.min(lbm * perLbm, p.weightKg * 2.4));
+  const protein = Math.round(Math.min(lbm * perLbm, p.weightKg * (p.goal === 'recomp' ? 2.6 : 2.4)));
   const fat = Math.round((kcal * 0.28) / 9);
   const carbs = Math.max(50, Math.round((kcal - protein * 4 - fat * 9) / 4));
 
   const water = Math.min(4000, Math.max(1500, round(p.weightKg * 35, 250)));
-  let steps = ACTIVITY[p.activity].steps + (p.goal === 'afvallen' ? 1000 : 0);
+  let steps = ACTIVITY[p.activity].steps + (p.goal === 'afvallen' || p.goal === 'recomp' ? 1000 : 0);
   steps = Math.min(steps, 12000);
 
   return {
