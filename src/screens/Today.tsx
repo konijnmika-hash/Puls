@@ -80,15 +80,6 @@ export function Today() {
         </div>
       </section>
 
-      <CoachCard date={date} />
-
-      <div className="grid2">
-        <WaterCard date={date} />
-        <StepsCard date={date} heightCm={profile.heightCm} target={t.steps} />
-      </div>
-
-      <TrainingTeaser date={date} />
-
       <div className="section-title">
         <h2>Voedingslogboek</h2>
         <span className="small muted num">{fmt(eaten.kcal)} kcal</span>
@@ -98,7 +89,17 @@ export function Today() {
       ))}
 
       <div className="section-title">
-        <h2>Beweging</h2>
+        <h2>Water & sport</h2>
+      </div>
+      <div className="grid2">
+        <WaterCard date={date} />
+        <StepsCard date={date} heightCm={profile.heightCm} target={t.steps} />
+      </div>
+
+      <TrainingTeaser date={date} />
+
+      <div className="section-title">
+        <h2>Activiteiten</h2>
         <button className="link" onClick={() => open({ type: 'activity' })}>+ Activiteit</button>
       </div>
       <div className="card">
@@ -127,6 +128,10 @@ export function Today() {
             ))}
           </div>
         )}
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <CoachCard date={date} />
       </div>
     </div>
   );
