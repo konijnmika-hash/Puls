@@ -1,8 +1,10 @@
 import type { ReactElement } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { accessOf } from './lib/account';
+import { AuthScreen, Paywall, SubscriptionSheet } from './screens/Account';
 import { AddFoodSheet, EditEntrySheet } from './components/FoodSheets';
 import {
-  ActivitySheet, ConnectSheet, ExerciseSheet, GoalsSheet, PlanEditSheet, PremiumSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
+  ActivitySheet, ConnectSheet, ExerciseSheet, GoalsSheet, PlanEditSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
 } from './components/Sheets';
 import { I, Toast } from './components/ui';
 import { Celebrations, InboxSheet, useReminders } from './components/Coach';
@@ -34,7 +36,7 @@ function SheetHost() {
     case 'activity': return <ActivitySheet />;
     case 'weight': return <WeightSheet />;
     case 'quick': return <QuickSheet />;
-    case 'premium': return <PremiumSheet reason={sheet.reason} />;
+    case 'abonnement': return <SubscriptionSheet />;
     case 'planEdit': return <PlanEditSheet />;
     case 'profileEdit': return <ProfileEditSheet />;
     case 'goals': return <GoalsSheet />;
@@ -48,6 +50,8 @@ function SheetHost() {
 
 export function App() {
   const profile = useStore((s) => s.profile);
+  const account = useStore((s) => s.account);
+  const loggedIn = useStore((s) => s.loggedIn);
 
   // Spring na middernacht vanzelf naar de nieuwe dag als je op "vandaag" stond
   useEffect(() => {
@@ -63,6 +67,21 @@ export function App() {
   }, []);
 
   if (!profile) return <Onboarding />;
+  if (!account || !loggedIn) return <AuthScreen />;
+  return <Gate />;
+}
+
+/** Na de proefperiode zonder abonnement kun je niets, behalve abonneren of uitloggen. */
+function Gate() {
+  const installedAt = useStore((s) => s.installedAt);
+  const sub = useStore((s) => s.subscription);
+  // elke minuut opnieuw kijken, zodat de proefperiode ook afloopt terwijl de app openstaat
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  if (accessOf(installedAt, sub).kind === 'none') return <Paywall />;
   return <Main />;
 }
 

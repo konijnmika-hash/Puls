@@ -39,7 +39,7 @@ export interface Profile {
   fat: number;
   /** zelfinschatting 1-10: hoeveel spieren (1 = weinig, 10 = bodybuilder) */
   muscle: number;
-  /** Handmatig overschreven doelen (Premium) */
+  /** Handmatig overschreven doelen */
   custom?: { kcal?: number; waterMl?: number; steps?: number };
   createdAt: string;
 }

@@ -23,7 +23,7 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 - **Trainingsschema**: 1–2 dagen = full body; 3 dagen = push / pull / benen; 4 dagen = borst & triceps, rug & biceps, benen, schouders & armen; 5 dagen = één spiergroep per dag; 6 dagen = push/pull/benen 2×. Oefeningen worden gekozen op je apparatuur en ervaring (van machines en lichaamsgewicht voor starters tot halterstang-oefeningen voor gevorderden). Elke oefening heeft een **geanimeerd plaatje**, stapsgewijze uitleg en een tip. Je kunt een oefening **wisselen** of aangeven dat je hem **niet kunt doen**; dan kiest Puls een alternatief voor dezelfde spieren. Tijdens de training vink je sets af, houd je je gewichten bij en loopt er een rusttimer.
 - **Activiteiten**: hardlopen, fietsen, padel, zwemmen enz. met kcal-schatting (MET).
 - **Voortgang**: gewichtslijn naar streefgewicht, calorieën, water en stappen per dag, streak.
-- **Premium (€ 4,99/mnd of € 39,99/jaar)**: barcodescanner, eigen doelen en 30-dagen-grafieken. Nu een demo-schakelaar; echte betalingen gaan straks via App Store / Google Play.
+- **Account en abonnement**: account met e-mail en wachtwoord, 14 dagen gratis vanaf de eerste keer openen, daarna € 2,99 per maand of € 30 per jaar voor de hele app. Zonder abonnement zie je alleen het betaalscherm. Accounts en betalingen zijn nu nog lokaal en een demo (`src/lib/account.ts`).
 - Licht en donker thema, werkt offline als PWA (installeerbaar op je beginscherm), gegevens blijven op het toestel.
 
 ## Starten
@@ -53,6 +53,6 @@ De workflow `.github/workflows/pages.yml` test en bouwt Puls en publiceert hem o
 1. **Native verpakken** met [Capacitor](https://capacitorjs.com): dezelfde code wordt een iOS- en Android-app.
 2. **Push-meldingen op de achtergrond**: in de webversie komen reminders alleen als de app open is of op de achtergrond draait. In de native app plan je ze met lokale notificaties (Capacitor Local Notifications).
 3. **Stappen automatisch**: Google Fit-API’s worden uitgefaseerd; gebruik **Health Connect** (Android) en **HealthKit** (iOS) via een Capacitor-plugin. Het koppelscherm staat al klaar.
-4. **Abonnement**: in-app aankopen via App Store en Google Play (bijv. met RevenueCat); de Premium-schermen en vergrendelde functies staan al klaar.
+4. **Abonnement en accounts**: een server voor accounts (bijv. Supabase of Firebase) zodat je op elk apparaat kunt inloggen, en echte betalingen via Mollie/Stripe (web) of App Store/Google Play (bijv. met RevenueCat). Vervang daarvoor `checkout` en de accountfuncties in `src/lib/account.ts`; de schermen staan al klaar.
 5. **Accounts en sync**: nu staat alles lokaal op het toestel; met een backend (bijv. Supabase of Firebase) kunnen gebruikers wisselen van telefoon.
 6. **Open Food Facts**: vermeld de bron (ODbL-licentie) in de app en stuur een eigen User-Agent mee vanuit de native app.

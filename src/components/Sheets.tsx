@@ -146,58 +146,6 @@ export function QuickSheet() {
   );
 }
 
-const PREMIUM_FEATURES = [
-  ['Barcodescanner', 'Scan een product en het staat er meteen in.'],
-  ['Eigen doelen', 'Stel je eigen calorie-, water- en stappendoel in.'],
-  ['Volledige voortgang', 'Grafieken over 30 dagen in plaats van 7.'],
-];
-
-export function PremiumSheet({ reason }: { reason?: string }) {
-  const close = useUI((s) => s.close);
-  const premium = useStore((s) => s.premium);
-  const [plan, setPlan] = useState<'maand' | 'jaar'>('maand');
-  return (
-    <Sheet onClose={close}>
-      <div className="stack">
-        <div className="premium-hero">
-          <svg className="leaf" viewBox="0 0 32 32" aria-hidden><path d="M4 26C4 12 14 4 30 3c-1 17-10 25-24 25" fill="#c9f27a" /></svg>
-          <span className="tag gold">Puls Premium</span>
-          <h2 style={{ marginTop: 10 }}>Haal alles uit je dag</h2>
-          <p style={{ margin: '6px 0 0', opacity: 0.85 }}>{reason ?? 'Voor wie serieus werk maakt van eten, drinken en trainen.'}</p>
-        </div>
-        <div className="stack">
-          {PREMIUM_FEATURES.map(([t, s]) => (
-            <div key={t} className="feat"><I.check /><div><b>{t}</b><div className="small muted">{s}</div></div></div>
-          ))}
-        </div>
-        {premium ? (
-          <>
-            <div className="card row"><div className="grow"><b>Premium staat aan</b><div className="small muted">Alle functies zijn ontgrendeld.</div></div></div>
-            <button className="btn outline block" onClick={() => { useStore.getState().setPremium(false); toast('Premium uitgezet (demo)'); }}>Premium uitzetten (demo)</button>
-          </>
-        ) : (
-          <>
-            <button className={'plan' + (plan === 'maand' ? ' on' : '')} onClick={() => setPlan('maand')}>
-              <span className="radio" />
-              <div className="grow"><b>Maandelijks</b><div className="small muted">Elke maand opzegbaar</div></div>
-              <div className="price num">€ 4,99<span className="tiny"> /mnd</span></div>
-            </button>
-            <button className={'plan' + (plan === 'jaar' ? ' on' : '')} onClick={() => setPlan('jaar')}>
-              <span className="radio" />
-              <div className="grow"><b>Jaarlijks <span className="tag brand">−33%</span></b><div className="small muted num">€ 39,99 per jaar · € 3,33 /mnd</div></div>
-              <div className="price num">€ 39,99</div>
-            </button>
-            <button className="btn block" onClick={() => { useStore.getState().setPremium(true); toast('Premium geactiveerd (demo, er wordt niets afgeschreven)'); close(); }}>
-              Probeer 7 dagen gratis
-            </button>
-            <p className="tiny" style={{ textAlign: 'center', margin: 0 }}>Daarna {plan === 'maand' ? '€ 4,99 per maand' : '€ 39,99 per jaar'}. Op elk moment opzegbaar via de App Store of Google Play.</p>
-          </>
-        )}
-      </div>
-    </Sheet>
-  );
-}
-
 export function GoalsSheet() {
   const close = useUI((s) => s.close);
   const profile = useStore((s) => s.profile)!;

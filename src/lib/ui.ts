@@ -11,7 +11,7 @@ export type SheetState =
   | { type: 'activity' }
   | { type: 'weight' }
   | { type: 'quick' }
-  | { type: 'premium'; reason?: string }
+  | { type: 'abonnement' }
   | { type: 'planEdit' }
   | { type: 'profileEdit' }
   | { type: 'goals' }

@@ -47,8 +47,6 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
   const recent = useStore((s) => s.recent);
   const favIds = useStore((s) => s.favorites);
   const custom = useStore((s) => s.customFoods);
-  const premium = useStore((s) => s.premium);
-  const open = useUI((s) => s.open);
   const all = useMemo(() => [...custom, ...recipeFoods(), ...FOODS], [custom]);
   const local = useMemo(() => searchFoods(q, all), [q, all]);
   const favs = useMemo(() => {
@@ -83,7 +81,7 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
         <input id="food-search" className="input" placeholder={`Zoek voor ${MEAL_META[meal].label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" enterKeyHint="search" />
       </div>
       <div className="grid2" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <button className="btn ghost sm" onClick={() => (premium ? onView({ kind: 'scan' }) : open({ type: 'premium', reason: 'De barcodescanner zit in Puls Premium.' }))}>
+        <button className="btn ghost sm" onClick={() => onView({ kind: 'scan' })}>
           <span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.barcode /></span>Scan
         </button>
         <button className="btn ghost sm" onClick={() => onView({ kind: 'quick' })}><span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.bolt /></span>Snel</button>

@@ -7,10 +7,14 @@ import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { ReminderRows, SettingsRows } from '../components/Sheets';
 import { I } from '../components/ui';
+import { accessOf, euro, longDate, PLANS } from '../lib/account';
+import { AccountRow } from './Account';
 
 export function ProfileScreen() {
   const profile = useStore((s) => s.profile)!;
-  const premium = useStore((s) => s.premium);
+  const installedAt = useStore((s) => s.installedAt);
+  const sub = useStore((s) => s.subscription);
+  const access = accessOf(installedAt, sub);
   const open = useUI((s) => s.open);
   const t = useTargets()!;
   const [confirm, setConfirm] = useState(false);
@@ -23,7 +27,6 @@ export function ProfileScreen() {
           <button className="iconbtn" onClick={() => useUI.getState().setTab('vandaag')} aria-label="Terug naar vandaag"><I.left /></button>
           <h1 className="page-title">Profiel</h1>
         </div>
-        {premium && <span className="tag gold">Premium</span>}
       </header>
 
       <section className="card row" style={{ alignItems: 'flex-start' }}>
@@ -41,17 +44,19 @@ export function ProfileScreen() {
         <button className="iconbtn" onClick={() => open({ type: 'profileEdit' })} aria-label="Gegevens bewerken"><I.pencil /></button>
       </section>
 
-      {!premium && (
-        <button className="premium-banner" onClick={() => open({ type: 'premium' })}>
-          <div className="grow"><b>Puls Premium</b><div className="small muted">Barcodescanner, eigen doelen en meer · € 4,99 /mnd</div></div>
-          <I.right />
-        </button>
-      )}
+      <button className="premium-banner" onClick={() => open({ type: 'abonnement' })}>
+        <div className="grow">
+          {access.kind === 'abo'
+            ? <><b>Puls · {PLANS[access.sub.plan].label.toLowerCase()}</b><div className="small muted">{access.sub.renews ? 'Verlengt' : 'Loopt af'} op {longDate(access.sub.until)}</div></>
+            : <><b>Proefperiode: nog {access.kind === 'trial' ? access.daysLeft : 0} {access.kind === 'trial' && access.daysLeft === 1 ? 'dag' : 'dagen'}</b><div className="small muted">Daarna {euro(PLANS.maand.price)} per maand of {euro(PLANS.jaar.price)} per jaar</div></>}
+        </div>
+        <I.right />
+      </button>
 
       <div className="section-title">
         <h2>Jouw dagdoelen</h2>
-        <button className="link" onClick={() => open(premium ? { type: 'goals' } : { type: 'premium', reason: 'Eigen doelen instellen zit in Puls Premium.' })}>
-          Aanpassen {!premium && <span className="lock" style={{ width: 14, height: 14, verticalAlign: '-2px' }}><I.lock /></span>}
+        <button className="link" onClick={() => open({ type: 'goals' })}>
+          Aanpassen
         </button>
       </div>
       <section className="card stack">
@@ -89,6 +94,7 @@ export function ProfileScreen() {
 
       <div className="section-title"><h2>Instellingen</h2></div>
       <section className="card" style={{ padding: '4px 14px' }}>
+        <AccountRow />
         <SettingsRows />
       </section>
 

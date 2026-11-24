@@ -6,6 +6,7 @@ import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
 import { mergeShopping, portionNutrients, portionText, recipeFood, setLightRecipes, type Prefs, type ShopItem } from './recipes';
 import { isCut } from './calc';
+import type { Account, Subscription } from './account';
 import { dateKey } from './date';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
 
@@ -77,7 +78,11 @@ interface State {
   lifts: Record<string, number>;
   /** afgeronde trainingen met alle sets, nieuwste achteraan */
   workoutLog: WorkoutLog[];
-  premium: boolean;
+  /** eerste keer dat de app op dit apparaat openging: start van de proefperiode */
+  installedAt: string;
+  account: Account | null;
+  loggedIn: boolean;
+  subscription: Subscription | null;
   glassMl: number;
   /** licht, donker of volgens je telefoon */
   theme: Theme;
@@ -108,7 +113,9 @@ interface State {
   logWeight: (date: string, kg: number) => void;
   toggleFavorite: (id: string) => void;
   addCustomFood: (f: Food) => void;
-  setPremium: (v: boolean) => void;
+  createAccount: (a: Account) => void;
+  setLoggedIn: (v: boolean) => void;
+  setSubscription: (s: Subscription | null) => void;
   setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource' | 'theme'>>) => void;
   setReminders: (r: Partial<Reminders>) => void;
   markFired: (date: string, id: string) => void;
@@ -131,7 +138,10 @@ const initial = {
   customFoods: [],
   lifts: {},
   workoutLog: [] as WorkoutLog[],
-  premium: false,
+  installedAt: new Date().toISOString(),
+  account: null as Account | null,
+  loggedIn: false,
+  subscription: null as Subscription | null,
   glassMl: 250,
   theme: 'systeem' as Theme,
   stepsSource: 'handmatig' as const,
@@ -220,12 +230,15 @@ export const useStore = create<State>()(
             favorites: s.favorites.includes(id) ? s.favorites.filter((f) => f !== id) : [...s.favorites, id],
           })),
         addCustomFood: (f) => set((s) => ({ customFoods: [f, ...s.customFoods] })),
-        setPremium: (premium) => set({ premium }),
+        createAccount: (account) => set({ account, loggedIn: true }),
+        setLoggedIn: (loggedIn) => set({ loggedIn }),
+        setSubscription: (subscription) => set({ subscription }),
         setSettings: (st) => set(st),
         setReminders: (r) => set((s) => ({ reminders: { ...s.reminders, ...r } })),
         markFired: (date, id) => set((s) => ({ fired: { [date]: [...(s.fired[date] ?? []), id] } })),
         markCheered: (date, ids) => set((s) => ({ cheered: { [date]: [...new Set([...(s.cheered[date] ?? []), ...ids])] } })),
-        reset: () => set((s) => ({ ...initial, theme: s.theme })),
+        // account, proefperiode en abonnement blijven: opnieuw beginnen geeft geen nieuwe proefperiode
+        reset: () => set((s) => ({ ...initial, theme: s.theme, installedAt: s.installedAt, account: s.account, loggedIn: s.loggedIn, subscription: s.subscription })),
 
         logRecipe: (date, meal, r, factor) => {
           // waarden van precies deze portie, met hele sneetjes en eieren
@@ -248,10 +261,10 @@ export const useStore = create<State>()(
     },
     {
       name: 'puls-v1',
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         const s = persisted as State;
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, theme: s.theme ?? 'systeem' } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, theme: s.theme ?? 'systeem', installedAt: s.installedAt ?? new Date().toISOString(), account: s.account ?? null, loggedIn: s.loggedIn ?? false, subscription: s.subscription ?? null } as State;
       },
     },
   ),
