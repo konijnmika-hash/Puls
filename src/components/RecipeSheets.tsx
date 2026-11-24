@@ -60,7 +60,7 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
       setDate(logDate);
       setTab('vandaag');
     }
-    toast(after >= 0 ? `Gelogd bij ${MEAL_META[meal].label.toLowerCase()}. Nog ${fmt(after)} kcal over vandaag 👌` : `Gelogd bij ${MEAL_META[meal].label.toLowerCase()}.`);
+    toast(after >= 0 ? `Gelogd bij ${MEAL_META[meal].label.toLowerCase()}. Nog ${fmt(after)} kcal over vandaag.` : `Gelogd bij ${MEAL_META[meal].label.toLowerCase()}.`);
   };
 
   return (
@@ -103,8 +103,8 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
             </div>
             <p className="portion-why">
               {factor === advised
-                ? <><b>Afgestemd op jou.</b> {fromMenu ? 'Met deze portie haalt je dagmenu precies je doelen van vandaag.' : room?.adjusted ? `Op basis van wat je vandaag al at, houd ik voor ${MEAL_META[meal].label.toLowerCase()} ${fmt(Math.round((room.kcal) / 10) * 10)} kcal aan.` : `Voor ${MEAL_META[meal].label.toLowerCase()} past ${fmt(lo)}–${fmt(hi)} kcal bij jouw doel.`}{factor !== 1 && !fromMenu ? ` Daarom raad ik ${portionText(factor)} aan.` : ''}</>
-                : <>Ik raadde {portionText(advised)} aan ({fmt(portionNutrients(recipe, advised).kcal)} kcal). <button className="link" onClick={() => setF(advised)}>Terug naar advies</button></>}
+                ? <>{fromMenu ? 'Portie volgens je dagmenu.' : room?.adjusted ? `Na wat je vandaag al at, is er voor ${MEAL_META[meal].label.toLowerCase()} nog ongeveer ${fmt(Math.round((room.kcal) / 10) * 10)} kcal.` : `Voor ${MEAL_META[meal].label.toLowerCase()} past ${fmt(lo)}–${fmt(hi)} kcal bij je doel.`}{factor !== 1 && !fromMenu ? ` Aanbevolen: ${portionText(factor)}.` : ''}</>
+                : <>Aanbevolen was {portionText(advised)} ({fmt(portionNutrients(recipe, advised).kcal)} kcal). <button className="link" onClick={() => setF(advised)}>Terug naar advies</button></>}
               {logDate === today && <> Na deze maaltijd heb je vandaag nog <b className="num">{after >= 0 ? `${fmt(after)} kcal` : `${fmt(-after)} kcal te veel`}</b>{after >= 0 ? ' over' : ''}.</>}
             </p>
           </section>
@@ -137,7 +137,7 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
             })}
             {extras.map((e) => <li key={e} className="extra">+ {e}</li>)}
           </ul>
-          <button className="btn sm ghost" onClick={() => { useStore.getState().addToShopping(recipe, mult); toast('Op je boodschappenlijst gezet 🛒'); }}>
+          <button className="btn sm ghost" onClick={() => { useStore.getState().addToShopping(recipe, mult); toast('Op je boodschappenlijst gezet'); }}>
             <span className="i18"><I.cart /></span> Op boodschappenlijst
           </button>
 
@@ -156,8 +156,8 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
 
           {recipe.tip && (
             <div className="coach-tip">
-              <span className="i18"><I.sparkle /></span>
-              <div><b>Tip van je coach</b><div className="small">{recipe.tip}</div></div>
+              <span className="i18"><I.info /></span>
+              <div><b>Tip</b><div className="small">{recipe.tip}</div></div>
             </div>
           )}
           <div style={{ height: 8 }} />
@@ -215,7 +215,7 @@ export function CookMode() {
         setTimer({ ...timer, left: 0, running: false });
         beep();
         navigator.vibrate?.([300, 150, 300]);
-        toast('⏰ De tijd is om!');
+        toast('De tijd is om');
       } else tick((x) => x + 1);
     }, 250);
     return () => clearInterval(id);
@@ -273,9 +273,8 @@ export function CookMode() {
           </div>
         ) : (
           <div className="cook-step done" key="done">
-            <div style={{ fontSize: 64 }}>🍽️</div>
-            <h2 style={{ fontSize: 30 }}>Eet smakelijk!</h2>
-            <p className="muted" style={{ margin: 0 }}>Zal ik je portie ({portionText(cook.factor)}, {fmt(portionNutrients(recipe, cook.factor).kcal)} kcal) meteen in je dagboek zetten?</p>
+            <h2 style={{ fontSize: 30 }}>Eet smakelijk</h2>
+            <p className="muted" style={{ margin: 0 }}>Je portie ({portionText(cook.factor)}, {fmt(portionNutrients(recipe, cook.factor).kcal)} kcal) in je dagboek zetten?</p>
             <button
               className="btn block"
               onClick={() => {
@@ -284,7 +283,7 @@ export function CookMode() {
                 exit();
                 setDate(d);
                 setTab('vandaag');
-                toast(`Gelogd bij ${MEAL_META[cook.meal].label.toLowerCase()}. Lekker bezig!`);
+                toast(`Gelogd bij ${MEAL_META[cook.meal].label.toLowerCase()}.`);
               }}
             >
               Log bij {MEAL_META[cook.meal].label.toLowerCase()}
@@ -360,13 +359,12 @@ export function ShoppingSheet() {
     <Sheet onClose={close} full title="Boodschappen" right={list.length ? <button className="iconbtn" onClick={share} aria-label="Lijst delen"><I.share /></button> : undefined}>
       {list.length === 0 ? (
         <div className="empty">
-          <div className="em">🛒</div>
           <b>Je lijst is nog leeg</b>
-          <p className="small" style={{ margin: '6px 0 0' }}>Open een recept en tik op “Op boodschappenlijst”. Ik tel dezelfde producten voor je bij elkaar en sorteer ze per afdeling.</p>
+          <p className="small" style={{ margin: '6px 0 0' }}>Open een recept en tik op “Op boodschappenlijst”. Dezelfde producten worden opgeteld en per afdeling gesorteerd.</p>
         </div>
       ) : (
         <div className="stack">
-          <div className="small muted">{open ? `Nog ${open} ${open === 1 ? 'product' : 'producten'} te halen` : 'Alles in je mandje! 🎉'}</div>
+          <div className="small muted">{open ? `Nog ${open} ${open === 1 ? 'product' : 'producten'} te halen` : 'Alles is afgevinkt.'}</div>
           {groups.map((g) => (
             <section key={g.label}>
               <div className="label-cap" style={{ marginBottom: 6 }}>{g.label}</div>
@@ -406,7 +404,7 @@ export function MealIdea({ recipe, factor, kcal, protein, meal }: { recipe: Reci
     <button className="meal-idea" onClick={() => open({ type: 'recipe', id: recipe.id, meal })}>
       <div className="meal-idea-photo"><FoodArt recipe={recipe} /></div>
       <div className="grow" style={{ minWidth: 0 }}>
-        <div className="meal-idea-eyebrow"><span className="i14"><I.sparkle /></span> Idee van je coach</div>
+        <div className="meal-idea-eyebrow">Suggestie</div>
         <div className="meal-idea-name ellipsis">{recipe.name}</div>
         <div className="tiny num ellipsis">{fmt(kcal)} kcal · {fmt(protein)} g eiwit{factor !== 1 ? ` · ${portionText(factor)}` : ` · ${recipe.minutes} min`}</div>
       </div>

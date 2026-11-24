@@ -56,9 +56,9 @@ export function Training() {
             <span className="tr-week-num num">{doneThisWeek}<small>/{plan.length}</small></span>
           </Ring>
           <div className="grow">
-            <b className="tr-week-title">{plan.length === 0 ? 'Nog geen schema' : doneThisWeek >= plan.length ? 'Week voltooid!' : `Nog ${plan.length - doneThisWeek} ${plan.length - doneThisWeek === 1 ? 'training' : 'trainingen'} deze week`}</b>
+            <b className="tr-week-title">{plan.length === 0 ? 'Nog geen schema' : doneThisWeek >= plan.length ? 'Week voltooid' : `Nog ${plan.length - doneThisWeek} ${plan.length - doneThisWeek === 1 ? 'training' : 'trainingen'} deze week`}</b>
             <div className="small muted">
-              {streak >= 2 ? `🔥 ${streak} weken op rij je schema gehaald` : streak === 1 ? '🔥 Deze week al helemaal gedaan' : log.length ? `${log.length} ${log.length === 1 ? 'training' : 'trainingen'} gelogd in totaal` : 'Elke training telt. Je eerste staat klaar.'}
+              {streak >= 2 ? `${streak} weken op rij je schema gehaald` : streak === 1 ? 'Deze week helemaal gedaan' : log.length ? `${log.length} ${log.length === 1 ? 'training' : 'trainingen'} gelogd in totaal` : 'Je eerste training staat klaar.'}
             </div>
           </div>
         </div>
@@ -82,8 +82,7 @@ export function Training() {
 
       {plan.length === 0 ? (
         <div className="card empty">
-          <div className="em">🗓️</div>
-          <p>Kies op welke dagen je wilt trainen, dan maak ik een schema dat bij je past.</p>
+          <p>Kies op welke dagen je wilt trainen. Je krijgt dan een schema dat past bij je apparatuur en ervaring.</p>
           <button className="btn" onClick={() => open({ type: 'planEdit' })}>Maak mijn schema</button>
         </div>
       ) : wd ? (
@@ -111,7 +110,7 @@ export function Training() {
             </div>
             <div className="tr-hero-fig" aria-hidden><Figure anim={wd.exercises[0]?.exercise.anim ?? EXERCISES.squat.anim} /></div>
             {done ? (
-              <div className="tr-hero-done"><span className="i18"><I.check /></span> Afgerond, sterk gedaan!</div>
+              <div className="tr-hero-done"><span className="i18"><I.check /></span> Afgerond</div>
             ) : (
               <button className="btn block tr-start" onClick={() => startSession(wd.id)}>
                 <span className="i20"><I.play /></span> {sel === todayWd ? 'Start training' : selDate < today ? 'Nu alsnog doen' : 'Nu al starten'}
@@ -122,10 +121,10 @@ export function Training() {
         </>
       ) : (
         <section className="card tr-rest">
-          <div className="tr-rest-ico">🌿</div>
+          <div className="tr-rest-ico"><span className="i20"><I.moon /></span></div>
           <div className="grow">
             <b>Rustdag op {DAY_LONG[sel]}</b>
-            <div className="small muted">Je spieren groeien juist tijdens herstel. Een wandeling of wat stretchen helpt je herstel en je stappendoel.</div>
+            <div className="small muted">Herstel hoort bij het schema. Wandelen of rustig stretchen kan altijd.</div>
             {nextUp && <button className="link small" style={{ marginTop: 6 }} onClick={() => setSel(nextUp.weekday)}>Volgende training: {nextUp.name} op {DAY_LONG[nextUp.weekday]} →</button>}
           </div>
         </section>
@@ -144,7 +143,7 @@ export function Training() {
                 const did = isDone(p);
                 return (
                   <button key={p.id} className={'item' + (p.weekday === sel ? ' tr-sel' : '')} onClick={() => setSel(p.weekday)}>
-                    <div className="ico" style={did ? { background: 'color-mix(in srgb, var(--ok) 16%, transparent)', color: 'var(--ok)' } : undefined}>{did ? <span className="i20"><I.check /></span> : p.emoji}</div>
+                    <div className="ico" style={did ? { background: 'color-mix(in srgb, var(--ok) 16%, transparent)', color: 'var(--ok)' } : undefined}>{did ? <span className="i20"><I.check /></span> : <span className="i20"><I.dumbbell /></span>}</div>
                     <div className="grow">
                       <div className="t">{p.name}</div>
                       <div className="s">{DAY_LONG[p.weekday]} · {dayMuscles(p).slice(0, 3).join(', ')}</div>
@@ -190,7 +189,7 @@ function WorkoutList({ wd }: { wd: WorkoutDay }) {
       })}
       {wd.cardio && (
         <div className="exrow">
-          <span className="tr-idx">🏃</span>
+          <span className="tr-idx"><span className="i18"><I.shoe /></span></span>
           <div className="grow">
             <div className="tr-exname">{wd.cardio.label}</div>
             <div className="small muted">{wd.cardio.minutes} minuten</div>
@@ -216,7 +215,7 @@ function History({ log }: { log: WorkoutLog[] }) {
         <div className="list">
           {recent.map((l, i) => (
             <div key={l.date + l.id + i} className="item">
-              <div className="ico">{l.emoji}</div>
+              <div className="ico"><span className="i20"><I.dumbbell /></span></div>
               <div className="grow">
                 <div className="t">{l.name}</div>
                 <div className="s num">{dayTitle(l.date, today)} · {l.sets} sets{l.volume ? ` · ${fmt(l.volume)} kg volume` : ''}</div>
@@ -340,17 +339,14 @@ export function WorkoutSession({ id }: { id: string }) {
     const entry: WorkoutLog = { date: dateKey(), id: wd.id, name: wd.name, emoji: wd.emoji, minutes, kcal, volume: Math.round(volume), sets: doneSets, ex: doneList };
     useStore.getState().completeWorkout(dateKey(), wd.id, { name: wd.name, emoji: wd.emoji, minutes, kcal }, newLifts, entry);
     startSession(null);
-    toast(prs.length ? `Opgeslagen, met ${prs.length} ${prs.length === 1 ? 'nieuw record' : 'nieuwe records'}! 🏆` : 'Training opgeslagen. Sterk gedaan! 💪');
+    toast(prs.length ? `Training opgeslagen, ${prs.length} ${prs.length === 1 ? 'nieuw record' : 'nieuwe records'}` : 'Training opgeslagen');
   };
 
   if (phase === 'summary') {
     return (
       <div className="session" role="dialog" aria-label="Training afgerond">
         <div className="session-inner tr-sum">
-          <div className="burst" aria-hidden>
-            {Array.from({ length: 14 }, (_, i) => <i key={i} style={{ ['--a' as string]: `${i * (360 / 14)}deg`, ['--c' as string]: ['var(--brand)', 'var(--carb)', 'var(--protein)', 'var(--water)', 'var(--fat)'][i % 5] }} />)}
-            <span className="burst-core"><I.check /></span>
-          </div>
+          <div className="tr-sum-check" aria-hidden><I.check /></div>
           <div className="cheer-eyebrow" style={{ textAlign: 'center' }}>Training afgerond</div>
           <h2 style={{ textAlign: 'center', fontSize: 30 }}>{wd.name}</h2>
           <div className="tr-sum-grid num">
@@ -361,7 +357,7 @@ export function WorkoutSession({ id }: { id: string }) {
           </div>
           {prs.length > 0 && (
             <div className="card tr-prs">
-              <b>🏆 Nieuwe records</b>
+              <b>Nieuwe records</b>
               {prs.map((r) => <div key={r.id} className="row between small"><span>{EXERCISES[r.id]?.name}</span><b className="num">{kgText(r.kg)} <span className="muted" style={{ fontWeight: 500 }}>(was {kgText(r.prev)})</span></b></div>)}
             </div>
           )}
@@ -434,7 +430,7 @@ export function WorkoutSession({ id }: { id: string }) {
               <button className="link small" onClick={() => open({ type: 'exercise', id: cur.exercise.id, slotKey: cur.slotKey })}>Hoe doe je deze?</button>
             </div>
           </div>
-          {cur.exercise.weighted && sug.why === 'zwaarder' && <div className="tr-sug up num">↑ Vorige keer haalde je alles met {kgText(sug.last!)}. Tijd voor {kgText(sug.kg)}!</div>}
+          {cur.exercise.weighted && sug.why === 'zwaarder' && <div className="tr-sug up num">↑ Vorige keer haalde je alles met {kgText(sug.last!)}. Probeer nu {kgText(sug.kg)}.</div>}
           {cur.exercise.weighted && sug.why === 'start' && <div className="tr-sug num">Kies een gewicht waarmee de laatste herhalingen zwaar voelen, maar je techniek goed blijft.</div>}
 
           <div className={'tr-sets' + (cur.exercise.weighted ? '' : ' nokg')}>
@@ -473,7 +469,7 @@ export function WorkoutSession({ id }: { id: string }) {
             })}
             {wd.cardio && (
               <button className="item tr-upnext" onClick={() => setCardioDone(!cardioDone)} aria-pressed={cardioDone}>
-                <span className="tr-idx">🏃</span>
+                <span className="tr-idx"><span className="i18"><I.shoe /></span></span>
                 <div className="grow"><div className="t">{wd.cardio.label}</div><div className="s">{wd.cardio.minutes} minuten · tik om af te vinken</div></div>
                 {cardioDone && <span className="tr-mini-done"><I.check /></span>}
               </button>

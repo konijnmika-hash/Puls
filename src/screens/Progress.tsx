@@ -54,7 +54,7 @@ export function Progress() {
       </div>
 
       <div className="tiles3">
-        <div className="tile"><div className="v num">{streak}🔥</div><div className="l">dagen op rij</div></div>
+        <div className="tile"><div className="v num">{streak}</div><div className="l">dagen op rij</div></div>
         <div className="tile"><div className="v num">{workouts}</div><div className="l">trainingen</div></div>
         <div className="tile"><div className="v num">{avgKcal ? fmt(avgKcal) : '–'}</div><div className="l">gem. kcal</div></div>
       </div>
@@ -69,7 +69,7 @@ export function Progress() {
         </div>
         <div className="chips">
           <span className={'tag' + (diff < 0 ? ' brand' : '')}>{diff > 0 ? '+' : ''}{fmt(diff, 1)} kg sinds start</span>
-          {profile.goal !== 'onderhouden' && <span className="tag">{Math.abs(toGo) < 0.3 ? 'Streefgewicht bereikt!' : `nog ${fmt(Math.abs(toGo), 1)} kg tot ${fmt(profile.goalWeightKg, 1)}`}</span>}
+          {profile.goal !== 'onderhouden' && <span className="tag">{Math.abs(toGo) < 0.3 ? 'Streefgewicht bereikt' : `nog ${fmt(Math.abs(toGo), 1)} kg tot ${fmt(profile.goalWeightKg, 1)}`}</span>}
           <span className="tag">BMI {fmt(b, 1)}</span>
         </div>
         {wpts.length > 1 ? (

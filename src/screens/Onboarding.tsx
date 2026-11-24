@@ -63,7 +63,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
         <div className="preview" aria-hidden>
           <div className="pv pv-coach" style={{ animationDelay: '0.15s' }}>
             <span className="pv-dot" />
-            <div><b>Goedemorgen, Sam!</b><span>Vandaag: Borst &amp; triceps · 45 min</span></div>
+            <div><b>Goedemorgen, Sam</b><span>Vandaag: Borst &amp; triceps · 45 min</span></div>
           </div>
           <div className="pv pv-ring" style={{ animationDelay: '0.45s' }}>
             <Ring size={74} stroke={9} value={0.62} color="#c9f27a" track="rgba(255,255,255,0.14)">
@@ -77,7 +77,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
           </div>
           <div className="pv pv-cheer" style={{ animationDelay: '0.8s' }}>
             <span className="pv-check"><I.check /></span>
-            <div><b>Waterdoel gehaald!</b><span>Goed bezig, houd dit vast.</span></div>
+            <div><b>Waterdoel gehaald</b><span>2,5 liter gedronken</span></div>
           </div>
           <div className="pv pv-nudge" style={{ animationDelay: '1.15s' }}>
             <span className="pv-dot amber" />

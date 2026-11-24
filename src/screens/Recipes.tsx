@@ -91,14 +91,13 @@ export function Recipes() {
         <button className={'chip' + (prefs.vega ? ' on' : '')} onClick={() => { useStore.getState().setRecipePrefs({ vega: !prefs.vega }); toast(prefs.vega ? 'Alle recepten weer zichtbaar' : 'Alleen vegetarisch, ook in je suggesties'); }}>🌱 Vega</button>
         {FILTERS.map((f) => (
           <button key={f} className={'chip' + (filters.includes(f) ? ' on' : '')} onClick={() => setFilters((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))}>
-            {f === 'fav' ? '♥ Favorieten' : TAG_LABEL[f]}
+            {f === 'fav' ? 'Favorieten' : TAG_LABEL[f]}
           </button>
         ))}
       </div>
 
       {list.length === 0 ? (
         <div className="empty card">
-          <div className="em">🍳</div>
           <b>Geen recepten gevonden</b>
           <div className="small">{filters.includes('fav') && !favs.length ? 'Tik op het hartje bij een recept om het te bewaren.' : 'Probeer een ander filter of zoekwoord.'}</div>
         </div>
@@ -159,19 +158,17 @@ function ForYou({ date }: { date: string }) {
 
   const left = eaten ? Math.max(0, t.kcal - eaten.kcal) : t.kcal;
   const pLeft = eaten ? Math.max(0, t.p - eaten.p) : t.p;
-  const name = useStore.getState().profile?.name;
   const intro = already
     ? `Je hebt ${MEAL_MOMENT[meal]} al ingevuld. Toch nog iets? Deze passen nog in je dag.`
     : eaten && eaten.kcal > 0
-      ? `Je hebt vandaag nog ${fmt(left)} kcal en ${fmt(pLeft)} g eiwit over. Voor ${MEAL_MOMENT[meal]} houd ik ongeveer ${fmt(Math.round(room.kcal / 10) * 10)} kcal aan.`
-      : `Voor ${MEAL_MOMENT[meal]} past ongeveer ${fmt(Math.round(room.kcal / 10) * 10)} kcal bij jouw doel${name ? `, ${name}` : ''}. Ik heb de porties al voor je uitgerekend.`;
+      ? `Je hebt vandaag nog ${fmt(left)} kcal en ${fmt(pLeft)} g eiwit over. Voor ${MEAL_MOMENT[meal]} is dat ongeveer ${fmt(Math.round(room.kcal / 10) * 10)} kcal.`
+      : `Voor ${MEAL_MOMENT[meal]} past ongeveer ${fmt(Math.round(room.kcal / 10) * 10)} kcal bij je doel. De porties hieronder zijn daarop afgestemd.`;
 
   return (
     <section className="foryou" aria-label="Voorstellen voor jou">
       <div className="foryou-head">
-        <span className="foryou-badge"><I.sparkle /></span>
         <div className="grow">
-          <div className="foryou-eyebrow">Je coach raadt aan</div>
+          <div className="foryou-eyebrow">Suggesties</div>
           <h2>{meal === now ? 'Wat ga je nu eten?' : `Idee voor ${MEAL_META[meal].label.toLowerCase()}`}</h2>
         </div>
       </div>
@@ -188,7 +185,6 @@ function ForYou({ date }: { date: string }) {
             <div className="pick-body">
               <b>{s.recipe.name}</b>
               <div className="pick-meta num">{fmt(s.n.kcal)} kcal · {fmt(s.n.p)} g eiwit · {s.recipe.minutes} min</div>
-              <div className="pick-why"><span className="i"><I.check /></span>{s.why}</div>
               {s.factor !== 1 && <div className="pick-portion">Jouw portie: {portionText(s.factor)}</div>}
             </div>
           </button>
@@ -214,8 +210,8 @@ function DayMenuCard() {
     <section className="card daymenu" aria-label="Jouw dagmenu">
       <div className="row between">
         <div>
-          <div className="label-cap" style={{ color: 'var(--brand)' }}>Jouw dagmenu</div>
-          <h3 style={{ fontSize: 19, marginTop: 2 }}>Een hele dag, precies op maat</h3>
+          <div className="label-cap" style={{ color: 'var(--brand)' }}>Op je doel</div>
+          <h3 style={{ fontSize: 19, marginTop: 2 }}>Dagmenu voor vandaag</h3>
         </div>
         <button className="iconbtn" onClick={() => setN(n + 1)} aria-label="Ander dagmenu"><I.shuffle /></button>
       </div>
@@ -243,7 +239,7 @@ function DayMenuCard() {
         onClick={() => {
           const s = useStore.getState();
           for (const m of MEALS) s.addToShopping(menu.items[m].recipe, menu.items[m].factor);
-          toast('Dagmenu op je boodschappenlijst gezet 🛒');
+          toast('Dagmenu op je boodschappenlijst gezet');
         }}
       >
         <span className="i18"><I.cart /></span> Zet alles op mijn boodschappenlijst

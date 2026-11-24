@@ -23,7 +23,7 @@ export function ProfileScreen() {
           <button className="iconbtn" onClick={() => useUI.getState().setTab('vandaag')} aria-label="Terug naar vandaag"><I.left /></button>
           <h1 className="page-title">Profiel</h1>
         </div>
-        {premium && <span className="tag gold">🌟 Premium</span>}
+        {premium && <span className="tag gold">Premium</span>}
       </header>
 
       <section className="card row" style={{ alignItems: 'flex-start' }}>
@@ -43,7 +43,6 @@ export function ProfileScreen() {
 
       {!premium && (
         <button className="premium-banner" onClick={() => open({ type: 'premium' })}>
-          <span style={{ fontSize: 28 }}>🌟</span>
           <div className="grow"><b>Puls Premium</b><div className="small muted">Barcodescanner, eigen doelen en meer · € 4,99 /mnd</div></div>
           <I.right />
         </button>

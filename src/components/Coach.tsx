@@ -4,7 +4,7 @@ import { dateKey, fmt, liters, weekday } from '../lib/date';
 import { dayTotals, useDay, usePlan, useTargets, useWaterTarget } from '../lib/hooks';
 import { useStore } from '../lib/store';
 import { mealForNow, useUI } from '../lib/ui';
-import { I, LogoMark, Sheet, toast } from './ui';
+import { I, Sheet, toast } from './ui';
 
 const NONE: string[] = [];
 
@@ -43,7 +43,7 @@ export function useCoachAction() {
       case 'water': {
         const ml = (s.days[date]?.waterMl ?? 0) + s.glassMl;
         s.setWater(date, ml);
-        toast(`+${s.glassMl} ml water, goed zo!`);
+        toast(`+${s.glassMl} ml water`);
         return;
       }
       case 'food': return open({ type: 'addFood', meal: mealForNow() });
@@ -61,10 +61,10 @@ export function useCoachAction() {
 }
 
 const TONE: Record<CoachMsg['tone'], { label: string; color: string }> = {
-  cheer: { label: 'Goed bezig', color: 'var(--ok)' },
-  nudge: { label: 'Reminder', color: 'var(--steps)' },
+  cheer: { label: 'Gehaald', color: 'var(--ok)' },
+  nudge: { label: 'Herinnering', color: 'var(--steps)' },
   tip: { label: 'Tip', color: 'var(--water)' },
-  plan: { label: 'Jouw dag', color: 'var(--brand)' },
+  plan: { label: 'Vandaag', color: 'var(--brand)' },
 };
 
 export function CoachCard({ date }: { date: string }) {
@@ -80,9 +80,8 @@ export function CoachCard({ date }: { date: string }) {
   return (
     <section className="coach" aria-live="polite">
       <div className="coach-top">
-        <span className="coach-avatar"><LogoMark size={30} /></span>
         <div className="grow">
-          <div className="coach-who">Je coach <span className="coach-tone" style={{ color: tone.color }}>· {tone.label}</span></div>
+          <h2 className="coach-h">Tips en herinneringen</h2>
         </div>
         {feed.length > 1 && (
           <button className="coach-next" onClick={() => setI((i + 1) % feed.length)} aria-label="Volgend bericht">
@@ -90,7 +89,8 @@ export function CoachCard({ date }: { date: string }) {
           </button>
         )}
       </div>
-      <div className="coach-bubble" key={msg.id}>
+      <div className="coach-bubble" key={msg.id} style={{ borderLeftColor: tone.color }}>
+        <div className="coach-tone" style={{ color: tone.color }}>{tone.label}</div>
         <b>{msg.title}</b>
         <p>{msg.text}</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -109,7 +109,7 @@ export function InboxSheet() {
   const fired = useStore((s) => s.fired[dateKey()]) ?? NONE;
   const feed = ctx ? coachFeed(ctx) : [];
   return (
-    <Sheet onClose={close} title="Je coach">
+    <Sheet onClose={close} title="Tips en herinneringen">
       <div className="stack">
         {feed.map((m) => (
           <div key={m.id} className="card" style={{ padding: 14 }}>
@@ -125,13 +125,11 @@ export function InboxSheet() {
   );
 }
 
-/* ---------- Felicitaties ---------- */
-interface Cheer { title: string; text: string }
+/* ---------- Gehaalde doelen ---------- */
 
 export function Celebrations() {
   const today = dateKey();
   const ctx = useCoachCtx(today);
-  const [cheer, setCheer] = useState<Cheer | null>(null);
   const primed = useRef(false);
 
   useEffect(() => {
@@ -145,35 +143,16 @@ export function Celebrations() {
       return;
     }
     s.markCheered(today, fresh.map((f) => f.id));
-    // bij het openen van de app niet meteen feest vieren voor oude successen
+    // bij het openen van de app geen meldingen voor oude successen
     if (!primed.current) {
       primed.current = true;
       return;
     }
-    setCheer(fresh[0]);
-    navigator.vibrate?.([40, 60, 40]);
+    toast(fresh.map((f) => f.title).join(' · '));
+    navigator.vibrate?.(40);
   }, [ctx, today]);
 
-  useEffect(() => {
-    if (!cheer) return;
-    const t = setTimeout(() => setCheer(null), 4200);
-    return () => clearTimeout(t);
-  }, [cheer]);
-
-  if (!cheer) return null;
-  return (
-    <div className="cheer-wrap" onClick={() => setCheer(null)} role="status">
-      <div className="cheer">
-        <div className="burst" aria-hidden>
-          {Array.from({ length: 14 }, (_, i) => <i key={i} style={{ ['--a' as string]: `${i * (360 / 14)}deg`, ['--c' as string]: ['var(--brand)', 'var(--carb)', 'var(--protein)', 'var(--water)', 'var(--fat)'][i % 5] }} />)}
-          <span className="burst-core"><I.check /></span>
-        </div>
-        <div className="cheer-eyebrow">Goed bezig!</div>
-        <h2>{cheer.title}</h2>
-        <p>{cheer.text}</p>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ---------- Reminders ---------- */
@@ -224,19 +203,19 @@ export function useReminders() {
       if (r.water) {
         for (const h of [10, 12, 14, 16, 18, 20]) {
           const expected = c.waterTarget * Math.max(0, Math.min(1, (h - 7) / 14));
-          list.push({ id: `water-${h}`, at: h * 60, when: c.day.waterMl < expected - 250, title: 'Tijd voor een glas water 💧', body: `Je zit op ${liters(c.day.waterMl)} van ${liters(c.waterTarget)} liter.` });
+          list.push({ id: `water-${h}`, at: h * 60, when: c.day.waterMl < expected - 250, title: 'Water drinken', body: `Je zit op ${liters(c.day.waterMl)} van ${liters(c.waterTarget)} liter.` });
         }
       }
       if (r.meals) {
-        list.push({ id: 'meal-ontbijt', at: 9 * 60 + 30, when: c.day.meals.ontbijt.length === 0, title: 'Al ontbeten?', body: 'Vul je ontbijt even in, dan blijft je dag kloppen.' });
-        list.push({ id: 'meal-lunch', at: 13 * 60 + 30, when: c.day.meals.lunch.length === 0, title: 'Hoe was je lunch?', body: 'Vergeet je lunch niet in te vullen.' });
+        list.push({ id: 'meal-ontbijt', at: 9 * 60 + 30, when: c.day.meals.ontbijt.length === 0, title: 'Ontbijt invullen', body: 'Je hebt nog geen ontbijt ingevuld.' });
+        list.push({ id: 'meal-lunch', at: 13 * 60 + 30, when: c.day.meals.lunch.length === 0, title: 'Lunch invullen', body: 'Je hebt nog geen lunch ingevuld.' });
         list.push({ id: 'meal-diner', at: 19 * 60 + 30, when: c.day.meals.diner.length === 0, title: 'Avondeten invullen', body: `Je hebt nog ${fmt(Math.max(0, c.t.kcal - eaten.kcal))} kcal over voor vandaag.` });
       }
       if (r.training && c.workout) {
-        list.push({ id: 'training', at: hm(r.trainingTime), when: !c.day.workoutsDone.includes(c.workout.id), title: `Tijd voor ${c.workout.name}! 💪`, body: `± ${c.workout.estMinutes} minuten. Je schema staat klaar.` });
+        list.push({ id: 'training', at: hm(r.trainingTime), when: !c.day.workoutsDone.includes(c.workout.id), title: `Training: ${c.workout.name}`, body: `Ongeveer ${c.workout.estMinutes} minuten.` });
       }
       if (r.evening) {
-        list.push({ id: 'evening', at: 21 * 60, when: count > 0, title: 'Je dag in het kort', body: `${fmt(eaten.kcal)} kcal · ${fmt(eaten.p)} g eiwit · ${liters(c.day.waterMl)} L water · ${fmt(c.day.steps)} stappen. Goed bezig!` });
+        list.push({ id: 'evening', at: 21 * 60, when: count > 0, title: 'Je dag', body: `${fmt(eaten.kcal)} kcal · ${fmt(eaten.p)} g eiwit · ${liters(c.day.waterMl)} L water · ${fmt(c.day.steps)} stappen.` });
       }
       for (const it of list) {
         // alleen versturen binnen een uur na het moment, en maar één keer per dag

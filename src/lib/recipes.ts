@@ -259,9 +259,9 @@ export function suggest(
       score += hash(recipe.id + (opts.seed ?? '')) * 14;
       const why =
         room.p > 0 && n.p >= room.p * 0.8
-          ? `${Math.round(n.p)} g eiwit: precies wat je nog nodig hebt`
+          ? `${Math.round(n.p)} g eiwit`
           : kcalFit > 0.9
-            ? `Past precies in je ${Math.round(room.kcal / 10) * 10} kcal`
+            ? `Past in je ${Math.round(room.kcal / 10) * 10} kcal`
             : `${Math.round(n.kcal)} kcal · ${Math.round(n.p)} g eiwit`;
       return { recipe, factor, n, score, why };
     })

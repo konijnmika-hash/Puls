@@ -122,7 +122,7 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
 
       {!q && list.length === 0 && tab !== 'cat' && (
         <div className="empty">
-          <div className="em">{tab === 'fav' ? '💚' : '🥗'}</div>
+          
           <p>{tab === 'fav' ? 'Tik op het hartje bij een product om het hier te bewaren.' : 'Zoek in meer dan 200 basisproducten en miljoenen merkproducten.'}</p>
           <div className="chips" style={{ justifyContent: 'center' }}>
             {['Havermout', 'Banaan', 'Kipfilet', 'Skyr', 'Pindakaas'].map((s) => (
@@ -428,7 +428,7 @@ function Scanner({ onFound }: { onFound: (f: Food) => void }) {
       if (c) return lookup(c);
       setNote('Geen barcode gevonden op de foto. Zorg dat de streepjes scherp en recht in beeld zijn, of typ de cijfers in.');
     } catch {
-      setNote('Deze foto kon ik niet openen. Probeer een andere.');
+      setNote('Deze foto kan niet worden geopend. Probeer een andere.');
     }
   };
 

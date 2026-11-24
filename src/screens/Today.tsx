@@ -61,7 +61,7 @@ export function Today() {
             <div className="v num">{fmt(eaten.kcal)}</div>
             <div className="l">Gegeten</div>
           </div>
-          <Ring size={narrow ? 150 : 186} stroke={narrow ? 13 : 15} value={eaten.kcal / budget} color={over ? 'var(--protein)' : 'var(--brand)'} dot>
+          <Ring size={narrow ? 150 : 186} stroke={narrow ? 13 : 15} value={eaten.kcal / budget} color={over ? 'var(--protein)' : 'var(--brand)'}>
             <div className="ring-center">
               <div className="cap">{over ? 'Te veel' : 'Nog over'}</div>
               <div className="big num">{fmt(Math.abs(remaining))}</div>
@@ -115,7 +115,7 @@ export function Today() {
           <div className="list">
             {day.activities.map((a) => (
               <div key={a.id} className="item">
-                <div className="ico">{a.emoji}</div>
+                <div className="ico">{a.workout ? <span className="i20" style={{ color: 'var(--brand)' }}><I.dumbbell /></span> : a.emoji}</div>
                 <div className="grow">
                   <div className="t">{a.name}</div>
                   <div className="s num">{a.minutes} min</div>
@@ -142,7 +142,7 @@ function Bell() {
   const open = useUI((s) => s.open);
   const n = ctx ? coachFeed(ctx).filter((m) => m.tone === 'nudge').length : 0;
   return (
-    <button className="iconbtn bell" style={{ width: 42, height: 42, background: 'var(--surface)' }} onClick={() => open({ type: 'inbox' })} aria-label={`Berichten van je coach${n ? `, ${n} nieuw` : ''}`}>
+    <button className="iconbtn bell" style={{ width: 42, height: 42, background: 'var(--surface)' }} onClick={() => open({ type: 'inbox' })} aria-label={`Tips en herinneringen${n ? `, ${n} nieuw` : ''}`}>
       <I.bell />
       {n > 0 && <span className="badge num">{n}</span>}
     </button>
@@ -192,13 +192,13 @@ function WaterCard({ date }: { date: string }) {
   let hint = `Nog ${glassesLeft} ${glassesLeft === 1 ? 'glas' : 'glazen'} te gaan`;
   let cls = 'hint';
   if (pct >= 1) {
-    hint = 'Doel gehaald, lekker gehydrateerd!';
+    hint = 'Doel gehaald';
     cls = 'hint good';
   } else if (date === dateKey()) {
     const h = new Date().getHours() + new Date().getMinutes() / 60;
     const expected = target * Math.max(0, Math.min(1, (h - 7) / 14));
     if (ml < expected - glass * 2) {
-      hint = 'Je loopt achter. Tijd voor een glas water!';
+      hint = 'Iets achter op schema';
       cls = 'hint warn';
     } else if (ml >= expected) hint = `Goed op schema · nog ${glassesLeft} ${glassesLeft === 1 ? 'glas' : 'glazen'}`;
   } else if (date < dateKey()) {
@@ -238,7 +238,7 @@ function StepsCard({ date, target, heightCm }: { date: string; target: number; h
         </div>
       </div>
       <div className={'hint' + (pct >= 1 ? ' good' : '')}>
-        {pct >= 1 ? 'Stappendoel gehaald!' : `${fmt(stepsToKm(day.steps, heightCm), 1)} km · nog ${fmt(Math.max(0, target - day.steps))}`}
+        {pct >= 1 ? 'Doel gehaald' : `${fmt(stepsToKm(day.steps, heightCm), 1)} km · nog ${fmt(Math.max(0, target - day.steps))}`}
       </div>
       <div className="pillbtns">
         <button onClick={() => open({ type: 'steps' })}>Invoeren</button>
@@ -257,7 +257,7 @@ function TrainingTeaser({ date }: { date: string }) {
     const next = plan.find((p) => p.weekday > weekday(date)) ?? plan[0];
     return (
       <button className="card row" style={{ textAlign: 'left' }} onClick={() => setTab('training')}>
-        <div className="meal-icon" style={{ background: 'var(--surface-2)', fontSize: 24 }}>🌿</div>
+        <div className="meal-icon" style={{ background: 'var(--surface-2)', color: 'var(--ink-2)' }}><I.moon /></div>
         <div className="grow">
           <b>Rustdag</b>
           <div className="small muted">{next ? `Volgende training: ${next.name}` : 'Stel je trainingsschema in'}</div>
@@ -269,7 +269,7 @@ function TrainingTeaser({ date }: { date: string }) {
   const done = day.workoutsDone.includes(wd.id);
   return (
     <div className="card row">
-      <div className="meal-icon" style={{ background: 'color-mix(in srgb, var(--brand) 16%, transparent)', fontSize: 24 }}>{wd.emoji}</div>
+      <div className="meal-icon" style={{ background: 'color-mix(in srgb, var(--brand) 16%, transparent)', color: 'var(--brand)' }}><I.dumbbell /></div>
       <button className="grow" style={{ textAlign: 'left' }} onClick={() => setTab('training')}>
         <div className="tiny" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Training vandaag</div>
         <b>{wd.name}</b>

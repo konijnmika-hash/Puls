@@ -172,7 +172,7 @@ export function PremiumSheet({ reason }: { reason?: string }) {
         </div>
         {premium ? (
           <>
-            <div className="card row"><span style={{ fontSize: 26 }}>🌟</span><div className="grow"><b>Premium staat aan</b><div className="small muted">Alle functies zijn ontgrendeld.</div></div></div>
+            <div className="card row"><div className="grow"><b>Premium staat aan</b><div className="small muted">Alle functies zijn ontgrendeld.</div></div></div>
             <button className="btn outline block" onClick={() => { useStore.getState().setPremium(false); toast('Premium uitgezet (demo)'); }}>Premium uitzetten (demo)</button>
           </>
         ) : (
@@ -405,8 +405,8 @@ export function ReminderRows() {
   return (
     <div className="list">
       <div className="item">
-        <div className="grow"><div className="t">Coach-reminders</div><div className="s">Seintjes en complimenten van je coach</div></div>
-        <Switch on={r.on} onChange={(v) => set({ on: v })} label="Coach-reminders" />
+        <div className="grow"><div className="t">Herinneringen</div><div className="s">Meldingen voor water, maaltijden en training</div></div>
+        <Switch on={r.on} onChange={(v) => set({ on: v })} label="Herinneringen" />
       </div>
       {r.on && rows.map(([k, t, s]) => (
         <div key={k} className="item">
