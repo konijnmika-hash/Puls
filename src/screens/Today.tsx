@@ -55,8 +55,6 @@ export function Today() {
         <button className="arrow" onClick={() => setDate(addDays(date, 1))} aria-label="Volgende dag"><I.right /></button>
       </nav>
 
-      <CoachCard date={date} />
-
       <section className="daycard" aria-label="Calorieën vandaag">
         <div className="ringwrap">
           <div className="stat">
@@ -81,6 +79,8 @@ export function Today() {
           <Macro name="Vet" v={eaten.f} t={t.f} color="var(--fat)" />
         </div>
       </section>
+
+      <CoachCard date={date} />
 
       <div className="grid2">
         <WaterCard date={date} />
