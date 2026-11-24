@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ACTIVITY, bmi, bodyFat, leanMass } from '../lib/calc';
+import { ACTIVITY, bmi, bodyFat, isCut, leanMass } from '../lib/calc';
 import { fmt, liters } from '../lib/date';
 import { useTargets } from '../lib/hooks';
 import { GOAL_OPTIONS } from '../lib/options';
@@ -67,7 +67,10 @@ export function ProfileScreen() {
           <Goal v={`${t.f}`} u="g" l="Vet" c="var(--fat)" small />
         </div>
         <p className="tiny" style={{ margin: 0 }}>
-          Berekend uit je lengte, gewicht, leeftijd en vetpercentage (Mifflin-St Jeor en Katch-McArdle): je rustverbranding is {fmt(t.bmr)} kcal, met je dagelijkse activiteit verbruik je ongeveer {fmt(t.tdee)} kcal.
+          Berekend uit je lengte, gewicht, leeftijd en vetpercentage (Mifflin-St Jeor en Katch-McArdle): je rustverbranding is {fmt(t.bmr)} kcal, met je dagelijkse activiteit en {profile.trainDays.length}× trainen per week verbruik je ongeveer {fmt(t.tdee)} kcal.
+          {t.adapted ? ` Op basis van je dagboek en gewicht van de afgelopen weken is dat ${t.adapted > 0 ? 'verhoogd' : 'verlaagd'} met ${fmt(Math.abs(t.adapted))} kcal.` : ''}
+          {' '}Eiwit ({t.p} g) is afgestemd op je vetvrije massa{isCut(profile.goal) ? ', extra hoog om je spieren te beschermen tijdens het afvallen' : ''}.
+          {isCut(profile.goal) ? ' Recepten worden voor jou lichter gemaakt: minder olie, lichtere sauzen en zuivel.' : ''}
           {profile.custom ? ' Je gebruikt eigen doelen.' : ''}
         </p>
       </section>

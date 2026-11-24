@@ -4,7 +4,8 @@ import { ALL_EQUIP } from '../data/exercises';
 import type { Food } from '../data/foods';
 import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
-import { mergeShopping, portionNutrients, portionText, recipeFood, type Prefs, type ShopItem } from './recipes';
+import { mergeShopping, portionNutrients, portionText, recipeFood, setLightRecipes, type Prefs, type ShopItem } from './recipes';
+import { isCut } from './calc';
 import { dateKey } from './date';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
 
@@ -15,6 +16,18 @@ export const emptyDay = (): DayLog => ({
   activities: [],
   workoutsDone: [],
 });
+
+export type Theme = 'systeem' | 'licht' | 'donker';
+
+/** Zet het thema op de pagina, ook de kleur van de statusbalk. */
+export function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  if (theme === 'systeem') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', theme === 'donker' ? 'dark' : 'light');
+  const dark = theme === 'donker' || (theme === 'systeem' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', dark ? '#0c1813' : '#edf3ea'));
+}
 
 export interface Reminders {
   on: boolean;
@@ -66,6 +79,8 @@ interface State {
   workoutLog: WorkoutLog[];
   premium: boolean;
   glassMl: number;
+  /** licht, donker of volgens je telefoon */
+  theme: Theme;
   stepsSource: 'handmatig' | 'health';
   reminders: Reminders;
   /** per dag: welke reminders al zijn verstuurd */
@@ -94,7 +109,7 @@ interface State {
   toggleFavorite: (id: string) => void;
   addCustomFood: (f: Food) => void;
   setPremium: (v: boolean) => void;
-  setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource'>>) => void;
+  setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource' | 'theme'>>) => void;
   setReminders: (r: Partial<Reminders>) => void;
   markFired: (date: string, id: string) => void;
   markCheered: (date: string, ids: string[]) => void;
@@ -118,6 +133,7 @@ const initial = {
   workoutLog: [] as WorkoutLog[],
   premium: false,
   glassMl: 250,
+  theme: 'systeem' as Theme,
   stepsSource: 'handmatig' as const,
   reminders: DEFAULT_REMINDERS,
   fired: {} as Record<string, string[]>,
@@ -209,7 +225,7 @@ export const useStore = create<State>()(
         setReminders: (r) => set((s) => ({ reminders: { ...s.reminders, ...r } })),
         markFired: (date, id) => set((s) => ({ fired: { [date]: [...(s.fired[date] ?? []), id] } })),
         markCheered: (date, ids) => set((s) => ({ cheered: { [date]: [...new Set([...(s.cheered[date] ?? []), ...ids])] } })),
-        reset: () => set({ ...initial }),
+        reset: () => set((s) => ({ ...initial, theme: s.theme })),
 
         logRecipe: (date, meal, r, factor) => {
           // waarden van precies deze portie, met hele sneetjes en eieren
@@ -235,10 +251,19 @@ export const useStore = create<State>()(
       version: 4,
       migrate: (persisted) => {
         const s = persisted as State;
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false } } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, theme: s.theme ?? 'systeem' } as State;
       },
     },
   ),
 );
 
 export const newId = uid;
+
+// Thema en lichte recepten direct toepassen en meeveranderen
+applyTheme(useStore.getState().theme);
+setLightRecipes(isCut(useStore.getState().profile?.goal));
+useStore.subscribe((s, prev) => {
+  if (s.theme !== prev.theme) applyTheme(s.theme);
+  if (s.profile?.goal !== prev.profile?.goal) setLightRecipes(isCut(s.profile?.goal));
+});
+if (typeof window !== 'undefined') window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme(useStore.getState().theme));

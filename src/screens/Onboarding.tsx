@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { ALL_EQUIP, EQUIP_LABEL, type Equip } from '../data/exercises';
-import { ACTIVITY, PACE, bmi, bodyFat, calcTargets, leanMass } from '../lib/calc';
+import { ACTIVITY, PACE, bmi, bodyFat, calcTargets, leanMass, weeklyChange } from '../lib/calc';
 import { DAY_SHORT, fmt, liters } from '../lib/date';
-import { FAT_LABELS, FOCUS_OPTIONS, GOAL_OPTIONS, MUSCLE_LABELS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment, defaultFocus, spreadDays } from '../lib/options';
+import { FAT_LABELS, FOCUS_OPTIONS, GOAL_OPTIONS, MUSCLE_LABELS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment, defaultFocus, defaultGoalWeight, spreadDays } from '../lib/options';
 import { DEFAULT_REMINDERS, useStore, type Reminders } from '../lib/store';
 import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
 import { EXPERIENCE, SPLIT_NAME } from '../lib/workout';
@@ -178,7 +178,7 @@ export function Onboarding() {
             {GOAL_OPTIONS.map((o) => (
               <button key={o.v} className={'choice' + (p.goal === o.v ? ' on' : '')}
                 onClick={() => {
-                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: o.v === 'onderhouden' ? d.weightKg : o.v === 'afvallen' ? Math.round(d.weightKg * 0.93) : Math.round(d.weightKg * 1.05) }));
+                  setP((d) => ({ ...d, goal: o.v, focus: defaultFocus(o.v), goalWeightKg: defaultGoalWeight(o.v, d.weightKg) }));
                   next();
                 }}>
                 <span className="em">{o.em}</span>
@@ -196,11 +196,12 @@ export function Onboarding() {
           <div className="label-cap">Hoe snel?</div>
           <div className="stack">
             {(Object.keys(PACE) as Pace[]).map((k) => {
-              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / PACE[k].kgPerWeek;
+              const perWeek = Math.abs(weeklyChange(p.goal, k));
+              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / perWeek;
               return (
                 <button key={k} className={'choice' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)} style={{ padding: 12 }}>
                   <div className="grow">
-                    <div className="t">{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg per week</div>
+                    <div className="t">{PACE[k].label} · {fmt(perWeek, 2)} kg per week</div>
                     <div className="s">{weeks >= 1 ? `Doel bereikt in ± ${Math.round(weeks)} weken` : 'Je bent er bijna'}{k === 'normaal' ? ' · aanbevolen' : ''}</div>
                   </div>
                 </button>

@@ -3,7 +3,7 @@ import { CATEGORY_EMOJI, CATEGORY_LABEL, FOODS, searchFoods, type Food, type Foo
 import { fmt } from '../lib/date';
 import { lookupBarcode, searchOff } from '../lib/openfoodfacts';
 import { CAMERA_HELP, cameraAllowedHere, cameraProblem, decodeFile, getDecoder, inFrame, type CameraProblem } from '../lib/barcode';
-import { RECIPE_FOODS } from '../lib/recipes';
+import { recipeFoods } from '../lib/recipes';
 import { newId, useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { MEALS, type FoodEntry, type MealKey } from '../lib/types';
@@ -49,7 +49,7 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
   const custom = useStore((s) => s.customFoods);
   const premium = useStore((s) => s.premium);
   const open = useUI((s) => s.open);
-  const all = useMemo(() => [...custom, ...RECIPE_FOODS, ...FOODS], [custom]);
+  const all = useMemo(() => [...custom, ...recipeFoods(), ...FOODS], [custom]);
   const local = useMemo(() => searchFoods(q, all), [q, all]);
   const favs = useMemo(() => {
     const byId = new Map([...all, ...recent].map((f) => [f.id, f]));

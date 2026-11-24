@@ -6,7 +6,7 @@ import { calcTargets, mealRange } from '../src/lib/calc';
 import { coachFeed } from '../src/lib/coach';
 import {
   amountLabel, amountText, dayMenu, ingredients, mergeShopping, portionFor, portionNutrients, portionText, PORTION_STEPS, recipeFood,
-  recipeNutrients, recipeTags, roomFor, scaledItems, suggest,
+  recipeNutrients, recipeTags, roomFor, scaledItems, suggest, lightNotes, lightSaving, setLightRecipes,
 } from '../src/lib/recipes';
 import { emptyDay } from '../src/lib/store';
 import { MEALS, type Profile } from '../src/lib/types';
@@ -151,5 +151,38 @@ describe('number input', async () => {
     expect(parseNum('1.234.567')).toBe(1234567);
     expect(parseNum('2.500,5')).toBe(2500.5);
     expect(Number.isNaN(parseNum(''))).toBe(true);
+  });
+});
+
+describe('light recipes when losing weight', () => {
+  it('swaps mayo, thins milk with water and keeps every swap valid', () => {
+    for (const r of RECIPES) expect(() => ingredients(r, true), r.id).not.toThrow();
+    const withMilk = RECIPES.find((r) => r.ing.some((i) => typeof i !== 'string' && i[0] === 'Halfvolle melk'))!;
+    const base = ingredients(withMilk, false).items.find((i) => i.food.name === 'Halfvolle melk')!.grams;
+    const items = ingredients(withMilk, true).items;
+    const milk = items.find((i) => i.food.name === 'Halfvolle melk')!.grams;
+    const water = items.find((i) => i.food.name === 'Water')!.grams;
+    expect(milk + water).toBe(base);
+    expect(Math.abs(milk - water)).toBeLessThanOrEqual(10);
+    const mayo = RECIPES.find((r) => r.ing.some((i) => typeof i !== 'string' && i[0] === 'Mayonaise'))!;
+    expect(ingredients(mayo, true).items.some((i) => i.food.name === 'Fritessaus')).toBe(true);
+    expect(ingredients(mayo, true).items.some((i) => i.food.name === 'Mayonaise')).toBe(false);
+    expect(lightNotes(mayo, true)).toContain('fritessaus in plaats van mayonaise');
+  });
+  it('never adds calories and saves a lot overall', () => {
+    let saved = 0;
+    for (const r of RECIPES) {
+      expect(lightSaving(r), r.id).toBeGreaterThanOrEqual(0);
+      saved += lightSaving(r);
+    }
+    expect(saved / RECIPES.length).toBeGreaterThan(20);
+  });
+  it('switches the whole app over and back', () => {
+    const r = RECIPES.find((x) => lightSaving(x) > 30)!;
+    const normal = portionNutrients(r, 1).kcal;
+    setLightRecipes(true);
+    expect(portionNutrients(r, 1).kcal).toBeLessThan(normal - 25);
+    setLightRecipes(false);
+    expect(portionNutrients(r, 1).kcal).toBeCloseTo(normal);
   });
 });
