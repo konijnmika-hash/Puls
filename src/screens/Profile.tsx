@@ -7,7 +7,7 @@ import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { ReminderRows, SettingsRows } from '../components/Sheets';
 import { I } from '../components/ui';
-import { accessOf, euro, longDate, PLANS } from '../lib/account';
+import { accessOf, euro, longDate, planLabel, PLANS } from '../lib/account';
 import { AccountRow } from './Account';
 
 export function ProfileScreen() {
@@ -47,7 +47,9 @@ export function ProfileScreen() {
       <button className="premium-banner" onClick={() => open({ type: 'abonnement' })}>
         <div className="grow">
           {access.kind === 'abo'
-            ? <><b>Puls · {PLANS[access.sub.plan].label.toLowerCase()}</b><div className="small muted">{access.sub.renews ? 'Verlengt' : 'Loopt af'} op {longDate(access.sub.until)}</div></>
+            ? access.sub.plan === 'vriend'
+              ? <><b>Puls · gratis voor altijd</b><div className="small muted">Met een vriendencode</div></>
+              : <><b>Puls · {planLabel(access.sub.plan).toLowerCase()}</b><div className="small muted">{access.sub.renews ? 'Verlengt' : 'Loopt af'} op {longDate(access.sub.until)}</div></>
             : <><b>Proefperiode: nog {access.kind === 'trial' ? access.daysLeft : 0} {access.kind === 'trial' && access.daysLeft === 1 ? 'dag' : 'dagen'}</b><div className="small muted">Daarna {euro(PLANS.maand.price)} per maand of {euro(PLANS.jaar.price)} per jaar</div></>}
         </div>
         <I.right />

@@ -1,0 +1,66 @@
+/* Puls Beheer: eigen indeling, kleuren uit de app */
+:root { --s-maand: #f0a03a; --s-jaar: #1d7a4c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --s-maand: #b06a1e; --s-jaar: #35a670; } }
+:root[data-theme='dark'] { --s-maand: #b06a1e; --s-jaar: #35a670; }
+
+.adm { max-width: 1040px; margin: 0 auto; padding: 16px 16px 48px; }
+.adm-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 18px; flex-wrap: wrap; }
+.adm-brand { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+.adm-brand span:last-child { color: var(--ink-3); font-weight: 700; }
+.adm-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--brand); }
+.adm-narrow { max-width: 440px; margin: 40px auto 0; }
+.adm-main { gap: 14px; }
+.adm-h1 { font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.adm-h2 { font-size: 17px; font-weight: 700; margin: 0; }
+.adm-demo { background: color-mix(in srgb, var(--carb) 18%, var(--surface)); border-radius: var(--r-md); padding: 10px 14px; font-size: 14px; font-weight: 600; }
+.adm-hero { display: grid; grid-template-columns: 1fr minmax(0, 280px); gap: 20px; align-items: end; }
+.adm-big { font-family: var(--font-display); font-size: 64px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin: 4px 0; }
+.adm-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.adm-tile { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.adm-val { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-splitbar { display: flex; gap: 2px; height: 14px; }
+.adm-splitbar i { border-radius: 4px; min-width: 4px; }
+.adm-splitbar .maand, .stackbar .maand { background: var(--s-maand); }
+.adm-splitbar .jaar, .stackbar .jaar { background: var(--s-jaar); }
+.adm-legend { display: flex; gap: 14px; font-size: 13px; color: var(--ink-2); font-weight: 600; flex-wrap: wrap; }
+.adm-legend > span { display: inline-flex; align-items: center; }
+.adm-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+.adm-key.maand { background: var(--s-maand); }
+.adm-key.jaar { background: var(--s-jaar); }
+
+.adm-chart { position: relative; padding-left: 28px; }
+.adm-grid { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; }
+.adm-grid .gl { position: absolute; left: 28px; right: 0; border-top: 1px solid var(--line); }
+.adm-grid .gl span { position: absolute; left: -28px; top: -8px; width: 22px; text-align: right; font-size: 11px; color: var(--ink-3); }
+.adm-bars { position: relative; display: flex; align-items: flex-end; gap: 6px; }
+.adm-col { flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative; outline: none; border-radius: 6px; }
+.adm-col.on, .adm-col:focus-visible { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.stackbar { width: min(100%, 26px); display: flex; flex-direction: column; gap: 2px; }
+.stackbar i { display: block; min-height: 2px; }
+.stackbar i:first-child { border-radius: 4px 4px 0 0; }
+.adm-tip { position: absolute; bottom: calc(100% - 40px); left: 60%; z-index: 3; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; font-size: 12.5px; white-space: nowrap; display: grid; gap: 2px; }
+.adm-tip.left { left: auto; right: 60%; }
+.adm-x { display: flex; gap: 6px; margin-top: 6px; }
+.adm-x span { flex: 1; text-align: center; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: visible; }
+
+.adm-table-wrap { overflow-x: auto; margin: 0 -4px; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.adm-table th { text-align: left; font-size: 12px; color: var(--ink-3); font-weight: 700; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.adm-table td { padding: 9px 4px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.adm-table .r { text-align: right; }
+.adm-table .ell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-table tr.off td { color: var(--ink-3); }
+.mono { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 700; }
+.adm-fresh { background: color-mix(in srgb, var(--brand) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); border-radius: var(--r-md); padding: 12px 14px; display: grid; gap: 8px; }
+.adm-code { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: 0.06em; }
+
+@media (max-width: 820px) { .adm-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .adm-hero { grid-template-columns: 1fr; }
+  .adm-big { font-size: 52px; }
+  .adm-val { font-size: 22px; }
+  .adm-bars, .adm-x { gap: 3px; }
+  .adm-table .ell { max-width: 120px; }
+}
+.adm-table td, .adm-table th { white-space: nowrap; }
+@media (max-width: 560px) { .adm-table { font-size: 13px; } .adm-table td, .adm-table th { padding-left: 6px; padding-right: 6px; } }

@@ -56,3 +56,31 @@ De workflow `.github/workflows/pages.yml` test en bouwt Puls en publiceert hem o
 4. **Abonnement en accounts**: een server voor accounts (bijv. Supabase of Firebase) zodat je op elk apparaat kunt inloggen, en echte betalingen via Mollie/Stripe (web) of App Store/Google Play (bijv. met RevenueCat). Vervang daarvoor `checkout` en de accountfuncties in `src/lib/account.ts`; de schermen staan al klaar.
 5. **Accounts en sync**: nu staat alles lokaal op het toestel; met een backend (bijv. Supabase of Firebase) kunnen gebruikers wisselen van telefoon.
 6. **Open Food Facts**: vermeld de bron (ODbL-licentie) in de app en stuur een eigen User-Agent mee vanuit de native app.
+
+## Server en beheer
+
+Zonder server werkt Puls helemaal op het toestel (accounts en abonnementen alleen lokaal). Met een gratis Supabase-project staan alle accounts op één plek, werken vriendencodes en zie je je cijfers in het beheeroverzicht.
+
+1. Maak een project op [supabase.com](https://supabase.com) (gratis).
+2. Ga naar **SQL Editor → New query**, plak de inhoud van `supabase/schema.sql` en klik **Run**.
+3. Maak jezelf beheerder: draai in de SQL Editor
+   `insert into public.admins (email) values ('jouw@email.nl');` (met jouw e-mailadres).
+4. Zet in **Authentication → Sign In / Providers → Email** de optie *Confirm email* uit als je wilt dat mensen meteen verder kunnen (aan laten kan ook: dan krijgen ze eerst een bevestigingsmail).
+5. Kopieer in **Project Settings → API** de *Project URL* en de *anon public key*, en zet ze in GitHub bij **Settings → Secrets and variables → Actions → Variables** als `SUPABASE_URL` en `SUPABASE_ANON_KEY`. Lokaal kan het in een bestand `.env.local`:
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+6. Na de volgende publicatie maak je in de app een account met het e-mailadres uit stap 3.
+
+**Beheeroverzicht:** open `admin.html` naast de app (bijv. `https://<jouw-site>/admin.html`) en log in met je beheerdersaccount. Je ziet:
+- betalende abonnees, met hoeveel per maand en per jaar
+- hoeveel mensen kochten, omzet per maand en van de laatste 30 dagen
+- accounts, wie in de proefperiode zit en wie na de proef niet kocht
+- aankopen per week en de laatste aankopen
+- **vriendencodes**: maak een code voor iemand, kopieer hem (of een kant-en-klaar berichtje) en zie wie hem gebruikt heeft. Met een code is Puls voor altijd gratis.
+
+Zonder server kun je het overzicht bekijken met verzonnen voorbeeldcijfers.
+
+**Let op:** betalen is nog een demo (`demo_checkout` in `schema.sql` zet het abonnement direct aan). Voor echte betalingen komt hier een betaalprovider (Mollie of Stripe) met een webhook die het abonnement en de aankoop wegschrijft.
+

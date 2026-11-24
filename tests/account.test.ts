@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessOf, checkout, checkSignup, hashPassword, PLANS, YEAR_SAVING } from '../src/lib/account';
+import { accessOf, checkout, checkSignup, hashPassword, makeCode, normCode, PLANS, YEAR_SAVING } from '../src/lib/account';
 
 const day = 864e5;
 const installed = '2026-01-01T10:00:00.000Z';
@@ -42,5 +42,20 @@ describe('account', () => {
     expect(h).not.toContain('geheim');
     expect(h).toBe(await hashPassword('jij@voorbeeld.nl ', 'geheim123'));
     expect(h).not.toBe(await hashPassword('jij@voorbeeld.nl', 'geheim124'));
+  });
+});
+
+describe('friend codes', () => {
+  it('makes readable codes without look-alike characters', () => {
+    const codes = new Set(Array.from({ length: 500 }, () => makeCode()));
+    expect(codes.size).toBe(500);
+    for (const c of codes) expect(c).toMatch(/^PULS-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+    expect(normCode(' puls-ab12-cd34 ')).toBe('PULS-AB12-CD34');
+  });
+  it('a friend code means free forever', async () => {
+    const friend = { plan: 'vriend' as const, since: installed, until: '9999-12-31T00:00:00.000Z', renews: false };
+    expect(accessOf(installed, friend, at(365 * 50)).kind).toBe('abo');
+    // betalen verandert er niets aan
+    expect(await checkout('maand', friend, installed, at(30))).toBe(friend);
   });
 });

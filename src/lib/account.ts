@@ -1,12 +1,15 @@
 // Account, proefperiode en abonnement.
 //
-// Let op: alles staat nu op dit apparaat. Betalen gaat via `checkout`, die nu een demo is.
-// Koppel hier later een echte betaalprovider (Mollie/Stripe of de App Store en Google Play)
-// en een server voor accounts, zodat je ook op een ander apparaat kunt inloggen.
+// Met een server (zie backend.ts) staan accounts, abonnementen en codes centraal. Zonder server
+// werkt alles lokaal op dit apparaat. Betalen is in beide gevallen nog een demo.
 
 export const TRIAL_DAYS = 14;
 
 export type Plan = 'maand' | 'jaar';
+/** 'vriend' = gratis voor altijd via een code */
+export type SubPlan = Plan | 'vriend';
+
+export const planLabel = (p: SubPlan) => (p === 'vriend' ? 'Gratis voor altijd' : PLANS[p].label);
 
 export const PLANS: Record<Plan, { price: number; label: string; per: string; months: number }> = {
   maand: { price: 2.99, label: 'Maandelijks', per: 'per maand', months: 1 },
@@ -20,13 +23,13 @@ export const euro = (n: number) => '€ ' + n.toLocaleString('nl-NL', { minimumF
 
 export interface Account {
   email: string;
-  /** gehashte wachtwoord, nooit het wachtwoord zelf */
-  passHash: string;
+  /** gehashte wachtwoord, nooit het wachtwoord zelf (alleen zonder server) */
+  passHash?: string;
   createdAt: string;
 }
 
 export interface Subscription {
-  plan: Plan;
+  plan: SubPlan;
   since: string;
   /** toegang tot en met dit moment */
   until: string;
@@ -86,8 +89,18 @@ export async function checkout(plan: Plan, current: Subscription | null, install
   // sluit aan op een lopend abonnement of op het einde van je proefperiode, zodat je geen dagen kwijtraakt
   const running = current && new Date(current.until) > now ? new Date(current.until) : null;
   const trial = trialEnd(installedAt);
+  if (current?.plan === 'vriend') return current;
   const start = running ?? (trial > now ? trial : now);
   return { plan, since: running ? current!.since : now.toISOString(), until: addMonths(start, PLANS[plan].months).toISOString(), renews: true };
 }
+
+/** Code die een vriend krijgt, bijv. PULS-7KX4-M2QD (zonder 0/O en 1/I, om verwarring te voorkomen). */
+export function makeCode(rand: () => number = Math.random) {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const part = () => Array.from({ length: 4 }, () => abc[Math.floor(rand() * abc.length)]).join('');
+  return `PULS-${part()}-${part()}`;
+}
+
+export const normCode = (c: string) => c.trim().toUpperCase().replace(/\s+/g, '');
 
 export const longDate = (iso: string | Date) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });

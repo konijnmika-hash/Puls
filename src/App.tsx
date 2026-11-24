@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { accessOf } from './lib/account';
-import { AuthScreen, Paywall, SubscriptionSheet } from './screens/Account';
+import { AuthScreen, Paywall, refreshFromServer, SubscriptionSheet } from './screens/Account';
 import { AddFoodSheet, EditEntrySheet } from './components/FoodSheets';
 import {
   ActivitySheet, ConnectSheet, ExerciseSheet, GoalsSheet, PlanEditSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
@@ -52,6 +52,9 @@ export function App() {
   const profile = useStore((s) => s.profile);
   const account = useStore((s) => s.account);
   const loggedIn = useStore((s) => s.loggedIn);
+
+  // Abonnement van de server ophalen (een code of betaling kan elders gebeurd zijn)
+  useEffect(() => { refreshFromServer(); }, []);
 
   // Spring na middernacht vanzelf naar de nieuwe dag als je op "vandaag" stond
   useEffect(() => {

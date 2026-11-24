@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: mode === 'single' ? 'dist-single' : 'dist',
     assetsInlineLimit: mode === 'single' ? 100_000_000 : 4096,
+    // naast de app ook het beheeroverzicht (admin.html)
+    rollupOptions: mode === 'single' ? undefined : { input: { main: 'index.html', admin: 'admin.html' } },
   },
   test: { environment: 'node' },
 }));

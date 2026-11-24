@@ -6,7 +6,7 @@ import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
 import { mergeShopping, portionNutrients, portionText, recipeFood, setLightRecipes, type Prefs, type ShopItem } from './recipes';
 import { isCut } from './calc';
-import type { Account, Subscription } from './account';
+import { TRIAL_DAYS, type Account, type Subscription } from './account';
 import { dateKey } from './date';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
 
@@ -116,6 +116,8 @@ interface State {
   createAccount: (a: Account) => void;
   setLoggedIn: (v: boolean) => void;
   setSubscription: (s: Subscription | null) => void;
+  /** gegevens van de server overnemen na inloggen of bij opstarten */
+  syncRemote: (r: { email: string; trialEnds: string; sub: Subscription | null }) => void;
   setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource' | 'theme'>>) => void;
   setReminders: (r: Partial<Reminders>) => void;
   markFired: (date: string, id: string) => void;
@@ -233,6 +235,14 @@ export const useStore = create<State>()(
         createAccount: (account) => set({ account, loggedIn: true }),
         setLoggedIn: (loggedIn) => set({ loggedIn }),
         setSubscription: (subscription) => set({ subscription }),
+        syncRemote: (r) =>
+          set((s) => ({
+            account: { email: r.email, createdAt: s.account?.createdAt ?? new Date().toISOString() },
+            loggedIn: true,
+            subscription: r.sub,
+            // de proefperiode loopt op de server; installedAt is het begin ervan
+            installedAt: new Date(new Date(r.trialEnds).getTime() - TRIAL_DAYS * 864e5).toISOString(),
+          })),
         setSettings: (st) => set(st),
         setReminders: (r) => set((s) => ({ reminders: { ...s.reminders, ...r } })),
         markFired: (date, id) => set((s) => ({ fired: { [date]: [...(s.fired[date] ?? []), id] } })),

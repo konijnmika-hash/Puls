@@ -10,7 +10,7 @@ import { requestNotifications } from '../components/Coach';
 import { Body } from '../components/Body';
 import { I, NumField, Ring, Switch, Wordmark } from '../components/ui';
 import { euro, PLANS, TRIAL_DAYS } from '../lib/account';
-import { AccountForm } from './Account';
+import { AccountChoice } from './Account';
 
 const ACT_EMOJI: Record<ActivityLevel, string> = { zittend: '🪑', licht: '🚶', gemiddeld: '🚴', actief: '🏃', zeer: '⛹️' };
 
@@ -369,7 +369,7 @@ export function Onboarding() {
   if (step === 'account') {
     content = (
       <Q title="Bewaar je plan" lead={`Maak een account met je e-mailadres. De eerste ${TRIAL_DAYS} dagen zijn gratis, daarna is het ${euro(PLANS.maand.price)} per maand of ${euro(PLANS.jaar.price)} per jaar voor de hele app.`}>
-        <AccountForm mode="signup" cta={`Start ${TRIAL_DAYS} dagen gratis`} onDone={() => void finish()} />
+        <AccountChoice signupCta={`Start ${TRIAL_DAYS} dagen gratis`} onDone={() => void finish()} />
         <p className="tiny" style={{ margin: 0, textAlign: 'center' }}>Je zit nergens aan vast. Je kunt in de proefperiode gewoon stoppen.</p>
       </Q>
     );
