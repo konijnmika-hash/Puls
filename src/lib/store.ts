@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { ALL_EQUIP } from '../data/exercises';
 import type { Food } from '../data/foods';
 import type { Recipe } from '../data/recipes';
+import type { WorkoutLog } from './training';
 import { mergeShopping, portionNutrients, portionText, recipeFood, type Prefs, type ShopItem } from './recipes';
 import { dateKey } from './date';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
@@ -61,6 +62,8 @@ interface State {
   customFoods: Food[];
   /** laatst gebruikte gewicht per oefening */
   lifts: Record<string, number>;
+  /** afgeronde trainingen met alle sets, nieuwste achteraan */
+  workoutLog: WorkoutLog[];
   premium: boolean;
   glassMl: number;
   stepsSource: 'handmatig' | 'health';
@@ -86,7 +89,7 @@ interface State {
   setSteps: (date: string, steps: number) => void;
   addActivity: (date: string, a: Omit<ActivityEntry, 'id'>) => void;
   removeActivity: (date: string, id: string) => void;
-  completeWorkout: (date: string, workoutId: string, a: Omit<ActivityEntry, 'id'>, lifts: Record<string, number>) => void;
+  completeWorkout: (date: string, workoutId: string, a: Omit<ActivityEntry, 'id'>, lifts: Record<string, number>, log?: WorkoutLog) => void;
   logWeight: (date: string, kg: number) => void;
   toggleFavorite: (id: string) => void;
   addCustomFood: (f: Food) => void;
@@ -112,6 +115,7 @@ const initial = {
   favorites: [],
   customFoods: [],
   lifts: {},
+  workoutLog: [] as WorkoutLog[],
   premium: false,
   glassMl: 250,
   stepsSource: 'handmatig' as const,
@@ -164,7 +168,9 @@ export const useStore = create<State>()(
         setSteps: (date, steps) => updateDay(date, (d) => ({ ...d, steps: Math.max(0, Math.round(steps)) })),
 
         addActivity: (date, a) => updateDay(date, (d) => ({ ...d, activities: [...d.activities, { ...a, id: uid() }] })),
-        removeActivity: (date, id) =>
+        removeActivity: (date, id) => {
+          const removed = useStore.getState().days[date]?.activities.find((a) => a.id === id);
+          if (removed?.workout) set((s) => ({ workoutLog: s.workoutLog.filter((l) => !(l.date === date && l.id === removed.workout)) }));
           updateDay(date, (d) => {
             const removed = d.activities.find((a) => a.id === id);
             return {
@@ -172,8 +178,10 @@ export const useStore = create<State>()(
               activities: d.activities.filter((a) => a.id !== id),
               workoutsDone: removed?.workout ? d.workoutsDone.filter((w) => w !== removed.workout) : d.workoutsDone,
             };
-          }),
-        completeWorkout: (date, workoutId, a, lifts) => {
+          });
+        },
+        completeWorkout: (date, workoutId, a, lifts, log) => {
+          if (log) set((s) => ({ workoutLog: [...s.workoutLog, log].slice(-150) }));
           updateDay(date, (d) => ({
             ...d,
             activities: [...d.activities, { ...a, id: uid(), workout: workoutId }],
@@ -224,10 +232,10 @@ export const useStore = create<State>()(
     },
     {
       name: 'puls-v1',
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         const s = persisted as State;
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false } } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false } } as State;
       },
     },
   ),

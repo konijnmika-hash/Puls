@@ -10,6 +10,7 @@ import { mealRange } from '../lib/calc';
 import { useStore } from '../lib/store';
 import { MEALS, type MealKey } from '../lib/types';
 import { useUI } from '../lib/ui';
+import { beep } from '../lib/sound';
 import { MEAL_META } from '../screens/Today';
 import { FoodArt } from './FoodArt';
 import { I, Sheet, toast } from './ui';
@@ -178,26 +179,6 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
 }
 
 /* ---------- Kookmodus ---------- */
-
-function beep() {
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    [0, 0.35, 0.7].forEach((at) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
-      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + at + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.25);
-      o.connect(g).connect(ctx.destination);
-      o.start(ctx.currentTime + at);
-      o.stop(ctx.currentTime + at + 0.3);
-    });
-  } catch {
-    /* geen geluid beschikbaar */
-  }
-}
 
 export function CookMode() {
   const cook = useUI((s) => s.cook);
