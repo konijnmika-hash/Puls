@@ -29,7 +29,6 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 ## Starten
 
 ```bash
-cd puls
 npm install
 npm run dev        # http://localhost:5173, open op je telefoon via het netwerkadres
 npm run telefoon   # zelfde, maar via https: nodig voor de camera (barcodescanner) op je telefoon
@@ -47,7 +46,7 @@ npm run build:single  # alles in één HTML-bestand (dist-single/) om te delen
 
 ## Online zetten (GitHub Pages)
 
-De workflow `.github/workflows/pages.yml` bouwt Puls mee en publiceert hem op `https://<gebruiker>.github.io/<repo>/puls/` zodra er naar `main` wordt gepusht. Via https werken camera, meldingen en “Zet op beginscherm”.
+De workflow `.github/workflows/pages.yml` test en bouwt Puls en publiceert hem op `https://<gebruiker>.github.io/<repo>/` zodra er naar `main` wordt gepusht. Zet eenmalig in de repo bij Settings → Pages de bron op “GitHub Actions”. Via https werken camera, meldingen en “Zet op beginscherm”.
 
 ## Volgende stappen richting App Store / Play Store
 
