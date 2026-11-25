@@ -75,9 +75,11 @@ function Instellen({ onKlaar }: { onKlaar: (d: BeheerData, k: CryptoKey) => void
   const [code2, setCode2] = useState('');
   const [bezig, setBezig] = useState(false);
 
-  const lees = async (f: File) => {
+  const [plak, setPlak] = useState('');
+  const lees = async (f: File | string) => {
     try {
-      const j = JSON.parse(await f.text());
+      const tekst = typeof f === 'string' ? f : await f.text();
+      const j = JSON.parse(tekst.slice(tekst.indexOf('{'), tekst.lastIndexOf('}') + 1));
       if (j?.soort === 'puls-beheer-sleutel' && j.sleutel?.d) {
         if (!hoortBijPuls(j.sleutel)) return toast('Deze sleutel hoort niet bij deze versie van Puls');
         setJwk(j.sleutel);
@@ -121,8 +123,12 @@ function Instellen({ onKlaar }: { onKlaar: (d: BeheerData, k: CryptoKey) => void
           <p className="small muted" style={{ margin: 0 }}>
             Dit is het bestand <code>puls-beheer-sleutel.json</code> (of een back-up van dit beheer). Alleen met deze sleutel kun je cadeaucodes maken die Puls accepteert.
           </p>
-          <input ref={file} type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files?.[0] && lees(e.target.files[0])} />
+          <input ref={file} type="file" hidden onChange={(e) => { if (e.target.files?.[0]) lees(e.target.files[0]); e.target.value = ''; }} />
           <button className="btn block" onClick={() => file.current?.click()}>Bestand kiezen</button>
+          <div className="of"><span>of</span></div>
+          <label className="small muted" htmlFor="plak">Open het bestand, kopieer alles en plak het hier:</label>
+          <textarea id="plak" className="input plakvak" value={plak} onChange={(e) => setPlak(e.target.value)} placeholder='{ "soort": "puls-beheer-sleutel", … }' spellCheck={false} autoCapitalize="off" autoCorrect="off" />
+          <button className="btn ghost block" disabled={!plak.trim()} onClick={() => lees(plak)}>Gebruik geplakte sleutel</button>
         </div>
       ) : (
         <div className="card stack">
