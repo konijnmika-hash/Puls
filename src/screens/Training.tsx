@@ -3,6 +3,7 @@ import { addDays, dateKey, DAY_LONG, DAY_SHORT, dayTitle, fmt, parseKey, weekday
 import { usePlan } from '../lib/hooks';
 import { FOCUS_OPTIONS, PLACE_OPTIONS } from '../lib/options';
 import { useStore } from '../lib/store';
+import { useBack } from '../lib/back';
 import { useUI } from '../lib/ui';
 import { EXPERIENCE, SPLIT_NAME, workoutKcal, type WorkoutDay } from '../lib/workout';
 import { dayMuscles, records, repRange, setVolume, suggestWeight, weekStreak, weightStep, type SetLog, type Suggestion, type WorkoutLog } from '../lib/training';
@@ -259,6 +260,15 @@ export function WorkoutSession({ id }: { id: string }) {
     ),
   );
   const endedRef = useRef(0);
+
+  // terugknop: eerst vragen als er al sets zijn afgevinkt
+  useBack(() => {
+    if (phase === 'summary') setPhase('work');
+    else if (confirmQuit) setConfirmQuit(false);
+    else if (state && Object.values(state).some((e) => e.sets.some((x) => x.done))) setConfirmQuit(true);
+    else startSession(null);
+    return true;
+  });
 
   // scherm aan, achtergrond stil
   useEffect(() => {

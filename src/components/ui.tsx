@@ -2,6 +2,7 @@ import { useEffect, useState, type InputHTMLAttributes, type ReactNode, type SVG
 import { create } from 'zustand';
 import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
+import { useBack } from '../lib/back';
 
 /* ---------- Icons (24px stroke) ---------- */
 const S = (props: SVGProps<SVGSVGElement>) => (
@@ -111,6 +112,7 @@ export function Bar({ value, color }: { value: number; color: string }) {
 
 /* ---------- Sheet ---------- */
 export function Sheet({ children, onClose, full = false, title, right }: { children: ReactNode; onClose: () => void; full?: boolean; title?: ReactNode; right?: ReactNode }) {
+  useBack(() => (onClose(), true));
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
