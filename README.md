@@ -24,6 +24,7 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 - **Activiteiten**: hardlopen, fietsen, padel, zwemmen enz. met kcal-schatting (MET).
 - **Voortgang**: gewichtslijn naar streefgewicht, calorieën, water en stappen per dag, streak.
 - **Premium (€ 4,99/mnd of € 39,99/jaar)**: barcodescanner, eigen doelen en 30-dagen-grafieken. Nu een demo-schakelaar; echte betalingen gaan straks via App Store / Google Play.
+- **Cadeaucodes**: een link `…/#cadeau=…` of een geplakte code geeft Premium voor altijd. Codes zijn ondertekend (ECDSA P-256); Puls controleert ze met de openbare sleutel in `src/lib/cadeau-sleutel.ts`, dus niemand kan zelf codes maken.
 - Licht en donker thema, werkt offline als PWA (installeerbaar op je beginscherm), gegevens blijven op het toestel.
 
 ## Starten
@@ -36,6 +37,17 @@ npm test           # rekenregels, database, schema-generator en recepten
 npm run build      # productiebuild in dist/
 npm run build:single  # alles in één HTML-bestand (dist-single/) om te delen
 ```
+
+## Puls Beheer (alleen voor de eigenaar)
+
+`beheer.html` (online: `https://<gebruiker>.github.io/<repo>/beheer.html`) is je eigen beheer-app in de Puls-stijl:
+
+- **Abonnementen**: hoeveel mensen Premium hebben, per soort (cadeau voor altijd, maandelijks, jaarlijks) en een grafiek per maand. Betaalde abonnementen staan op 0 zolang betalen nog een demo is.
+- **Premium cadeau geven**: naam invullen, link delen. Wie de link opent heeft Premium voor altijd.
+- **Lijst** van iedereen die een cadeau heeft gekregen, met datum en notitie; link opnieuw kopiëren of delen.
+- **Back-up** downloaden en terugzetten om naar een ander toestel te gaan.
+
+De pagina werkt alleen met het geheime sleutelbestand `puls-beheer-sleutel.json`. Dat staat **niet** in deze repo: bewaar het goed en deel het met niemand. Bij de eerste keer kies je het bestand en een beheercode; daarna staat de sleutel versleuteld op je toestel.
 
 ## Barcodescanner en camera
 

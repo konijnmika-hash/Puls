@@ -4,7 +4,8 @@ import { AddFoodSheet, EditEntrySheet } from './components/FoodSheets';
 import {
   ActivitySheet, ConnectSheet, ExerciseSheet, GoalsSheet, PlanEditSheet, PremiumSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
 } from './components/Sheets';
-import { I, Toast } from './components/ui';
+import { I, toast, Toast } from './components/ui';
+import { controleerCode } from './lib/cadeau';
 import { Celebrations, InboxSheet, useReminders } from './components/Coach';
 import { CookMode, RecipeSheet, ShoppingSheet } from './components/RecipeSheets';
 import { Recipes } from './screens/Recipes';
@@ -60,6 +61,19 @@ export function App() {
       }
     }, 60_000);
     return () => clearInterval(t);
+  }, []);
+
+  // Cadeaulink geopend (…#cadeau=…)? Dan krijg je Premium voor altijd.
+  useEffect(() => {
+    if (!location.hash.includes('cadeau=')) return;
+    const hash = location.hash;
+    history.replaceState(null, '', location.pathname + location.search);
+    controleerCode(hash).then((c) => {
+      if (c) {
+        useStore.getState().setCadeau(c);
+        setTimeout(() => toast(`Cadeau! Je hebt Puls Premium voor altijd, ${c.n}`), 400);
+      } else toast('Deze cadeaulink klopt niet');
+    });
   }, []);
 
   if (!profile) return <Onboarding />;

@@ -6,6 +6,7 @@ import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
 import { mergeShopping, portionNutrients, portionText, recipeFood, type Prefs, type ShopItem } from './recipes';
 import { dateKey } from './date';
+import type { Cadeau } from './cadeau';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
 
 export const emptyDay = (): DayLog => ({
@@ -65,6 +66,9 @@ interface State {
   /** afgeronde trainingen met alle sets, nieuwste achteraan */
   workoutLog: WorkoutLog[];
   premium: boolean;
+  /** Premium voor altijd gekregen via een cadeaucode */
+  cadeau: Cadeau | null;
+  setCadeau: (c: Cadeau) => void;
   glassMl: number;
   stepsSource: 'handmatig' | 'health';
   reminders: Reminders;
@@ -117,6 +121,7 @@ const initial = {
   lifts: {},
   workoutLog: [] as WorkoutLog[],
   premium: false,
+  cadeau: null as Cadeau | null,
   glassMl: 250,
   stepsSource: 'handmatig' as const,
   reminders: DEFAULT_REMINDERS,
@@ -204,12 +209,13 @@ export const useStore = create<State>()(
             favorites: s.favorites.includes(id) ? s.favorites.filter((f) => f !== id) : [...s.favorites, id],
           })),
         addCustomFood: (f) => set((s) => ({ customFoods: [f, ...s.customFoods] })),
-        setPremium: (premium) => set({ premium }),
+        setPremium: (premium) => set((s) => ({ premium: premium || !!s.cadeau })),
+        setCadeau: (cadeau) => set({ cadeau, premium: true }),
         setSettings: (st) => set(st),
         setReminders: (r) => set((s) => ({ reminders: { ...s.reminders, ...r } })),
         markFired: (date, id) => set((s) => ({ fired: { [date]: [...(s.fired[date] ?? []), id] } })),
         markCheered: (date, ids) => set((s) => ({ cheered: { [date]: [...new Set([...(s.cheered[date] ?? []), ...ids])] } })),
-        reset: () => set({ ...initial }),
+        reset: () => set((s) => ({ ...initial, cadeau: s.cadeau, premium: !!s.cadeau })),
 
         logRecipe: (date, meal, r, factor) => {
           // waarden van precies deze portie, met hele sneetjes en eieren
@@ -235,7 +241,7 @@ export const useStore = create<State>()(
       version: 4,
       migrate: (persisted) => {
         const s = persisted as State;
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false } } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null } as State;
       },
     },
   ),

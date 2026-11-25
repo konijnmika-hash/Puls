@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
 import { ACTIVITY, PACE, calcTargets, metKcal } from '../lib/calc';
+import { controleerCode } from '../lib/cadeau';
 import { dateKey, DAY_SHORT, fmt } from '../lib/date';
 import { useDay, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
@@ -152,9 +153,34 @@ const PREMIUM_FEATURES = [
   ['Volledige voortgang', 'Grafieken over 30 dagen in plaats van 7.'],
 ];
 
+function CadeauInvoer() {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [bezig, setBezig] = useState(false);
+  if (!open) return <button className="link small" style={{ alignSelf: 'center', color: 'var(--brand)', fontWeight: 600 }} onClick={() => setOpen(true)}>Ik heb een cadeaucode</button>;
+  const check = async () => {
+    setBezig(true);
+    const c = await controleerCode(code);
+    setBezig(false);
+    if (!c) return toast('Deze code klopt niet. Plak de hele link of code.');
+    useStore.getState().setCadeau(c);
+    toast(`Cadeau! Je hebt Puls Premium voor altijd, ${c.n}`);
+  };
+  return (
+    <div className="field">
+      <label htmlFor="cadeau">Cadeaulink of -code</label>
+      <div className="row">
+        <input id="cadeau" className="input" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Plak hier je link" autoComplete="off" />
+        <button className="btn sm" disabled={!code.trim() || bezig} onClick={check}>Activeer</button>
+      </div>
+    </div>
+  );
+}
+
 export function PremiumSheet({ reason }: { reason?: string }) {
   const close = useUI((s) => s.close);
   const premium = useStore((s) => s.premium);
+  const cadeau = useStore((s) => s.cadeau);
   const [plan, setPlan] = useState<'maand' | 'jaar'>('maand');
   return (
     <Sheet onClose={close}>
@@ -170,10 +196,16 @@ export function PremiumSheet({ reason }: { reason?: string }) {
             <div key={t} className="feat"><I.check /><div><b>{t}</b><div className="small muted">{s}</div></div></div>
           ))}
         </div>
-        {premium ? (
+        {cadeau ? (
+          <div className="card row">
+            <span className="tag gold">Cadeau</span>
+            <div className="grow"><b>Premium voor altijd</b><div className="small muted">Gekregen op {new Date(cadeau.t).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}. Je betaalt nooit iets.</div></div>
+          </div>
+        ) : premium ? (
           <>
             <div className="card row"><div className="grow"><b>Premium staat aan</b><div className="small muted">Alle functies zijn ontgrendeld.</div></div></div>
             <button className="btn outline block" onClick={() => { useStore.getState().setPremium(false); toast('Premium uitgezet (demo)'); }}>Premium uitzetten (demo)</button>
+            <CadeauInvoer />
           </>
         ) : (
           <>
@@ -191,6 +223,7 @@ export function PremiumSheet({ reason }: { reason?: string }) {
               Probeer 7 dagen gratis
             </button>
             <p className="tiny" style={{ textAlign: 'center', margin: 0 }}>Daarna {plan === 'maand' ? '€ 4,99 per maand' : '€ 39,99 per jaar'}. Op elk moment opzegbaar via de App Store of Google Play.</p>
+            <CadeauInvoer />
           </>
         )}
       </div>
