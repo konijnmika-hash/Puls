@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <title>Puls promo</title>
 <style>
-@font-face{font-family:Brico;src:url(fonts/bricolage-grotesque-latin-600-normal.woff2);font-weight:600}
-@font-face{font-family:Brico;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2);font-weight:700}
-@font-face{font-family:Brico;src:url(fonts/bricolage-grotesque-latin-800-normal.woff2);font-weight:800}
-@font-face{font-family:DM;src:url(fonts/dm-sans-latin-400-normal.woff2);font-weight:400}
-@font-face{font-family:DM;src:url(fonts/dm-sans-latin-500-normal.woff2);font-weight:500}
-@font-face{font-family:DM;src:url(fonts/dm-sans-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-800-normal.woff2);font-weight:800}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-700-normal.woff2);font-weight:700}
 :root{--bg:#06100c;--brand:#48c486;--brand2:#5fd49a;--lime:#c9f27a;--ink:#e6f1ea;--ink2:#a5bbaf;--ink3:#6c8478;
   --surface:#14241d;--surface2:#1c3128;--line:#253b31;--carb:#f0a03a;--protein:#e5527a;--fat:#7867ee;--water:#2b97e6}
 *{box-sizing:border-box}
@@ -544,6 +544,7 @@ function render(t) {
   $('#fade').style.opacity = 0;
 }
 window.render = render;
+window.VIDEO = { w: 1080, h: 1920, dur: 33, fps: 30, title: "Puls – overzicht" };
 window.ready = document.fonts.ready.then(() => true);
 </script>
 </body>

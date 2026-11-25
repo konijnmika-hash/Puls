@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Een dag met Puls</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+#sky{position:absolute;inset:0}
+#sun{position:absolute;width:220px;height:220px;border-radius:50%;margin:-110px 0 0 -110px}
+#clock{position:absolute;left:0;right:0;top:300px;text-align:center;font-family:Brico;font-weight:800;font-size:190px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#part{position:absolute;left:0;right:0;top:240px;text-align:center}
+.dcard{position:absolute;left:90px;right:90px;top:720px;border-radius:44px;padding:44px;box-shadow:0 40px 90px -30px rgba(16,38,29,.35)}
+.chip2{display:inline-block;padding:14px 24px;border-radius:999px;font-size:30px;font-weight:700;margin:0 12px 14px 0}
+.coachhead{display:flex;align-items:center;gap:18px;margin-bottom:26px;font-size:28px;font-weight:700}
+.coachhead .lg{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#2f9a62,#0f3a26)}
+.dsub{font-size:30px;line-height:1.35}
+.minirings{display:flex;justify-content:space-between;margin-top:10px}
+.mr{text-align:center;font-size:24px;font-weight:700}
+</style></head>
+<body><div id="stage">
+  <div id="sky"></div>
+  <div id="sun"></div>
+  <div id="stars" class="fill"></div>
+  <div id="part" class="label"></div>
+  <div id="clock">07:00</div>
+
+  <div class="scene" data-in="0" data-out="2.05" data-fo=".3">
+    <div class="abs center h rv" data-a="0.1" style="top:820px;font-size:120px">Een dag<br>met Puls</div>
+  </div>
+
+  <!-- 07:30 ochtendplan -->
+  <div class="scene" data-in="2" data-out="6.05" data-fo=".3"><div class="dcard" id="c1">
+    <div class="coachhead"><div class="lg" id="lg1"></div>Je coach</div>
+    <div class="h" style="font-size:66px;margin-bottom:16px">Goedemorgen, Sam ☀️</div>
+    <div class="dsub" style="margin-bottom:30px">Vandaag staat <b>Push</b> op je schema. Dit is je plan:</div>
+    <div><span class="chip2 pc">🔥 2.300 kcal</span><span class="chip2 pc">🥩 150 g eiwit</span><span class="chip2 pc">💧 2,8 L water</span><span class="chip2 pc">👟 9.000 stappen</span></div>
+  </div></div>
+
+  <!-- 12:30 lunch -->
+  <div class="scene" data-in="6" data-out="10.05" data-fo=".3"><div class="dcard" id="c2">
+    <div class="small" style="font-size:28px;margin-bottom:6px" id="c2l">Lunch · aanbevolen ± 650 kcal</div>
+    <div style="display:flex;align-items:center;gap:30px;margin:20px 0 30px">
+      <svg width="220" height="220" viewBox="0 0 220 220" style="flex:none">
+        <circle cx="110" cy="110" r="104" fill="#f1ebe0"/><circle cx="110" cy="110" r="86" fill="#e8dcc6"/>
+        <circle cx="80" cy="82" r="32" fill="#e9c46a"/><circle cx="142" cy="86" r="30" fill="#7cb342"/><circle cx="126" cy="146" r="34" fill="#d9a066"/>
+        <circle cx="76" cy="140" r="26" fill="#e76f51"/><circle cx="112" cy="112" r="16" fill="#f4f1de"/>
+        <circle cx="92" cy="74" r="5" fill="#fff6"/><circle cx="150" cy="80" r="5" fill="#fff6"/><circle cx="70" cy="146" r="4" fill="#fff6"/>
+      </svg>
+      <div style="flex:1"><div class="h" style="font-size:54px">Kip-quinoa bowl</div>
+        <div style="margin-top:14px"><span class="chip2" style="background:#fff2e0;color:#b4651a">610 kcal</span><span class="chip2" style="background:#fde8ee;color:#c23b62">45 g eiwit</span></div></div>
+    </div>
+    <div class="btn" id="addLunch" style="height:110px;line-height:110px;font-size:36px">+ Toevoegen aan lunch</div>
+    <div class="row" style="margin-top:30px;font-size:30px"><span>Vandaag</span><b><span id="kc">420</span> / 2.300 kcal</b></div>
+    <div class="bar" style="height:18px;margin-top:14px;background:#dfe9dc"><i id="kbar" style="background:linear-gradient(90deg,#1d7a4c,#7bc96f);width:18%"></i></div>
+  </div></div>
+
+  <!-- 15:00 water -->
+  <div class="scene" data-in="10" data-out="14.05" data-fo=".3">
+    <div class="notif" id="n1" style="position:absolute;left:70px;right:70px;top:640px;background:rgba(255,255,255,.86);color:#10261d;border-color:rgba(16,38,29,.08)">
+      <div class="ic" id="nic"></div>
+      <div style="flex:1"><div class="tt" style="color:#4f6a5b"><span>PULS</span><span>nu</span></div><b>Tijd voor een glas water</b><p style="color:#2d4538">1,2 van 2,8 liter. Je loopt iets achter op schema.</p></div>
+    </div>
+    <div class="dcard" id="c3" style="top:940px;display:flex;align-items:center;gap:40px">
+      <svg width="200" height="260" viewBox="0 0 190 250" style="flex:none">
+        <defs><clipPath id="gl3"><path d="M18 10h154l-18 226a10 10 0 0 1-10 9H46a10 10 0 0 1-10-9z"/></clipPath></defs>
+        <g clip-path="url(#gl3)"><rect width="190" height="250" fill="#e3f0f7"/><path id="wv2" fill="#7cc4f0"/><path id="wv" fill="#2b97e6"/></g>
+        <path d="M18 10h154l-18 226a10 10 0 0 1-10 9H46a10 10 0 0 1-10-9z" fill="none" stroke="#9fb7c4" stroke-width="5"/>
+      </svg>
+      <div style="flex:1"><div class="h" style="font-size:80px"><span id="wnum">1,2</span><span style="font-size:40px;opacity:.6"> / 2,8 L</span></div>
+        <div class="btn" id="wbtn" style="height:90px;line-height:90px;font-size:32px;margin-top:24px;background:#2b97e6;color:#fff">+ 250 ml</div></div>
+    </div>
+  </div>
+
+  <!-- 18:00 training -->
+  <div class="scene" data-in="14" data-out="18.05" data-fo=".3"><div class="dcard" id="c4">
+    <div class="row"><div><div class="small" style="font-size:28px">18:00 · Push</div><div class="h" style="font-size:62px">Borst &amp; triceps</div></div>
+      <div class="h" id="tpct" style="font-size:56px;color:#1d7a4c">0%</div></div>
+    <svg id="fig4" width="800" height="520" viewBox="0 -10 120 110" style="display:block;margin:10px auto 0"></svg>
+    <div class="row" style="font-size:30px;margin-top:6px"><b>Squat · 4 × 8 · 80 kg</b><span id="sets4" style="display:flex;gap:14px"></span></div>
+  </div></div>
+
+  <!-- 21:00 dagoverzicht -->
+  <div class="scene" data-in="18" data-out="22.05" data-fo=".35"><div class="dcard" id="c5">
+    <div class="small" style="font-size:28px;color:#a5bbaf">21:00 · Dagoverzicht</div>
+    <div class="h" style="font-size:66px;margin:8px 0 34px" id="c5h">Alle doelen gehaald</div>
+    <div class="minirings" id="rings"></div>
+    <div class="row" style="margin-top:40px;padding-top:30px;border-top:1px solid #253b31">
+      <div style="font-size:32px"><b>🔥 <span id="streak">12</span> dagen op rij</b><div class="small" style="font-size:24px;margin-top:6px">Bijhouden is het lastigste deel, en dat lukt je.</div></div>
+    </div>
+    <canvas id="conf" class="abs" width="900" height="1200" style="left:0;top:-300px;pointer-events:none"></canvas>
+  </div></div>
+
+  <!-- CTA -->
+  <div class="scene" data-in="22" data-out="99">
+    <div class="abs center h rv" data-a="22.1" style="top:520px;font-size:96px">Elke dag een<br>beetje beter.</div>
+    <div class="abs" id="ctaLogo" style="left:450px;top:800px;width:180px;height:180px"></div>
+    <div class="abs center xh" id="c14" style="top:1030px;font-size:170px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:1190px;font-size:170px;color:var(--lime)">gratis.</div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1440px">Download Puls nu →</div>
+  </div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 29.5, fps: 30, bpm: 120, title: 'Een dag met Puls' };
+$('#lg1').innerHTML = logoSVG(40, { noBg: true, sw: 48 });
+$('#nic').innerHTML = logoSVG(64);
+$('#ctaLogo').innerHTML = logoSVG(180);
+$('#rings').innerHTML = [['Calorieën', '#f0a03a', '2.240'], ['Eiwit', '#e5527a', '152 g'], ['Water', '#2b97e6', '2,8 L'], ['Stappen', '#ee7a37', '9.412']].map(([n, c, v], i) => `
+  <div class="mr"><svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="68" fill="none" stroke="#253b31" stroke-width="18"/>
+  <circle class="rg" cx="85" cy="85" r="68" fill="none" stroke="${c}" stroke-width="18" stroke-linecap="round" transform="rotate(-90 85 85)" stroke-dasharray="427.3" stroke-dashoffset="427.3"/>
+  <text class="ck" x="85" y="98" text-anchor="middle" font-size="44" fill="#e6f1ea" opacity="0">✓</text></svg><div style="margin-top:8px">${n}</div><div style="font-weight:500;color:#a5bbaf">${v}</div></div>`).join('');
+$('#sets4').innerHTML = [1, 2, 3, 4].map(i => `<span class="s4" style="width:52px;height:52px;border-radius:50%;border:3px solid #c8d6c4;display:grid;place-items:center;font-size:24px;font-weight:700">${i}</span>`).join('');
+const parts = makeConfetti(110, 3);
+
+// lucht per tijdstip: [seconde, boven, onder, zonkleur, tekstkleur, kaart, kaarttekst]
+const SKY = [
+  [0, '#1f3346', '#f0a77e', '#ffd36e', '#ffffff', '#ffffff', '#10261d'],
+  [2, '#ffc79a', '#fff1df', '#ffcf5a', '#10261d', '#ffffff', '#10261d'],
+  [6, '#bfe8d2', '#f3faef', '#fff09a', '#10261d', '#ffffff', '#10261d'],
+  [10, '#ffe7a6', '#eef7e6', '#ffd66b', '#10261d', '#ffffff', '#10261d'],
+  [14, '#ff8a5b', '#ffd3a1', '#ff7043', '#10261d', '#fffaf3', '#10261d'],
+  [18, '#0f1d2c', '#0c1813', '#e6f1ea', '#e6f1ea', '#14241d', '#e6f1ea'],
+  [22, '#06100c', '#0a1912', '#e6f1ea', '#e6f1ea', '#14241d', '#e6f1ea'],
+];
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mixc = (a, b2, k) => { const x = hex(a), y = hex(b2); return `rgb(${x.map((v, i) => Math.round(lerp(v, y[i], k))).join(',')})`; };
+function skyAt(t) {
+  let i = 0; while (i < SKY.length - 2 && t >= SKY[i + 1][0]) i++;
+  const a = SKY[i], z = SKY[i + 1], k = eio(P(t, z[0] - .6, z[0] + .3));
+  return a.slice(1).map((c, j) => mixc(c, z[j + 1], t >= z[0] - .6 ? k : 0));
+}
+const SLOTS = [[0, 7 * 60], [2, 7 * 60 + 30], [6, 12 * 60 + 30], [10, 15 * 60], [14, 18 * 60], [18, 21 * 60]];
+const PART = ['Ochtend', 'Ochtend', 'Middag', 'Middag', 'Avond', 'Avond'];
+let stars = ''; const r = seeded(5);
+for (let i = 0; i < 70; i++) stars += `<div style="position:absolute;left:${r() * 1080}px;top:${r() * 900}px;width:${2 + r() * 3}px;height:${2 + r() * 3}px;border-radius:50%;background:#fff;opacity:${.3 + r() * .6}"></div>`;
+$('#stars').innerHTML = stars;
+
+function render(t) {
+  const [top, bot, sunc, ink, card, cink] = skyAt(t);
+  $('#sky').style.background = `linear-gradient(180deg, ${top}, ${bot})`;
+  $('#stage').style.color = ink;
+  $('#stars').style.opacity = P(t, 17.6, 18.6) * .9;
+  // zon / maan op een boog
+  const day = cl((t - 0) / 18), ang = Math.PI * (1 - day);
+  const sun = $('#sun');
+  sun.style.left = (540 + Math.cos(ang) * 420) + 'px';
+  sun.style.top = (560 - Math.sin(ang) * 300) + 'px';
+  sun.style.background = `radial-gradient(circle, ${sunc}, ${sunc} 45%, transparent 70%)`;
+  sun.style.opacity = t > 17.5 ? 1 - P(t, 17.5, 18) + P(t, 18, 18.6) * .9 : .95;
+  if (t > 18) { sun.style.left = '820px'; sun.style.top = '200px'; sun.style.boxShadow = 'inset -40px -10px 0 0 rgba(15,29,44,.95)'; sun.style.width = sun.style.height = '150px'; }
+  else { sun.style.boxShadow = 'none'; sun.style.width = sun.style.height = '220px'; }
+  // klok
+  let i = 0; while (i < SLOTS.length - 1 && t >= SLOTS[i + 1][0]) i++;
+  const [s0, m0] = SLOTS[i], prev = i ? SLOTS[i - 1][1] : m0;
+  const m = Math.round(lerp(prev, m0, eo(P(t, s0, s0 + .6))));
+  $('#clock').textContent = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  $('#clock').style.transform = `scale(${1 + Math.exp(-Math.max(0, t - s0) * 7) * .06 * (i ? 1 : 0)})`;
+  $('#part').textContent = PART[i];
+  $('#clock').style.opacity = $('#part').style.opacity = 1 - P(t, 21.7, 22.1);
+  $('#part').style.color = t > 17.8 ? '#c9f27a' : t < 1.7 ? '#ffd9b0' : '#1d7a4c';
+  $$('.dcard').forEach(c => { c.style.background = card; c.style.color = cink; });
+
+  scenes(t); reveal(t);
+  // kaarten komen binnen
+  [['#c1', 2], ['#c2', 6], ['#c4', 14], ['#c5', 18]].forEach(([id, a]) => show(id, eo5(P(t, a, a + .55)), { y: 120, s: .94, blur: 0 }));
+
+  // 1 ochtend: chips op de tel
+  $$('.pc').forEach((c, j) => {
+    const k = back(P(t, 3 + j * .25, 3.4 + j * .25));
+    c.style.opacity = P(t, 3 + j * .25, 3.1 + j * .25); c.style.transform = `scale(${lerp(.5, 1, k)})`;
+    c.style.background = ['#fff2e0', '#fde8ee', '#e2f1fb', '#fdeee4'][j]; c.style.color = ['#b4651a', '#c23b62', '#1f6fb0', '#c35a1b'][j];
+  });
+  // 2 lunch
+  const press = P(t, 7.85, 8) - P(t, 8, 8.2), added = t > 8;
+  const ab = $('#addLunch');
+  ab.style.transform = `scale(${1 - press * .05})`;
+  ab.textContent = added ? '✓ Toegevoegd' : '+ Toevoegen aan lunch';
+  ab.style.background = added ? '#c9f27a' : '#1d7a4c'; ab.style.color = added ? '#10261d' : '#fff';
+  const kk = eo(P(t, 8.05, 9));
+  $('#kc').textContent = nl(lerp(420, 1030, kk));
+  $('#kbar').style.width = (lerp(420, 1030, kk) / 2300 * 100) + '%';
+  // 3 water
+  const nk = back(P(t, 10.1, 10.6));
+  $('#n1').style.transform = `translateY(${(1 - nk) * -200}px) scale(${lerp(.9, 1, nk)})`;
+  $('#n1').style.opacity = P(t, 10.1, 10.3);
+  show('#c3', eo5(P(t, 10.6, 11.1)), { y: 120, blur: 0 });
+  let lvl = .43; [11.5, 12].forEach(s => lvl += .09 * eo(P(t, s + .05, s + .6)));
+  const wob = 2 + 10 * Math.max(0, ...[11.5, 12].map(s => t > s ? Math.exp(-(t - s) * 2) : 0));
+  const wave = (level, ph, amp) => { const y0 = 250 - level * 235; let d = `M0 ${y0}`; for (let x = 0; x <= 190; x += 10) d += ` L${x} ${y0 + Math.sin(x / 26 + t * 4 + ph) * amp}`; return d + ' L190 250 L0 250Z'; };
+  $('#wv').setAttribute('d', wave(lvl, 0, wob)); $('#wv2').setAttribute('d', wave(lvl + .02, 2, wob * 1.2));
+  $('#wnum').textContent = nl(lvl * 2.8, 1);
+  $('#wbtn').style.transform = `scale(${1 - Math.max(0, ...[11.5, 12].map(s => P(t, s - .1, s) - P(t, s, s + .15))) * .06})`;
+  // 4 training: squat op de beat (2 tellen per herhaling)
+  if (t > 13.8 && t < 18.2) {
+    $('#fig4').innerHTML = figureSVG('squat', repK(t, 1.0, 14), { body: '#10261d', far: '#9db3a8', hi: '#1d7a4c', prop: '#bccbc2', plate: '#3a4a43', bgc: card, ground: '#d3dfd0' });
+    $$('.s4').forEach((e, j) => { const s = 15.5 + j * .5, on = t >= s; e.style.background = on ? '#1d7a4c' : 'transparent'; e.style.color = on ? '#fff' : '#9db3a8'; e.style.borderColor = on ? '#1d7a4c' : '#c8d6c4'; e.textContent = on ? '✓' : j + 1; e.style.transform = `scale(${on ? 1 + Math.sin(P(t, s, s + .25) * Math.PI) * .25 : 1})`; });
+    $('#tpct').textContent = Math.round(eo(P(t, 15.5, 17.2)) * 100) + '%';
+  }
+  // 5 dagoverzicht
+  $$('#rings .rg').forEach((e, j) => { const s = 19 + j * .5; e.style.strokeDashoffset = 427.3 * (1 - eo5(P(t, s - .4, s))); });
+  $$('#rings .ck').forEach((e, j) => e.setAttribute('opacity', P(t, 19 + j * .5, 19.15 + j * .5)));
+  $('#streak').textContent = t > 21 ? 13 : 12;
+  $('#streak').parentElement.style.color = t > 21 ? '#c9f27a' : '';
+  $('#streak').style.display = 'inline-block';
+  $('#streak').style.transform = `scale(${1 + (t > 21 ? Math.exp(-(t - 21) * 5) * .5 : 0)})`;
+  drawConfetti($('#conf'), parts, t - 21, 450, 700);
+
+  // CTA
+  if (t > 21.9) {
+    const pulse = beatPulse(t, 24, 10);
+    const L = $('#ctaLogo'), k = back(P(t, 23, 23.5));
+    L.style.opacity = P(t, 23, 23.1); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    L.style.filter = `drop-shadow(0 0 ${40 + pulse * 50}px rgba(201,242,122,${.3 + pulse * .3}))`;
+    logoDraw(L, eio(P(t, 23.1, 23.7)));
+    show('#c14', eo5(P(t, 24, 24.35)), { y: 0, s: 1.6, blur: 18 });
+    const g = eo5(P(t, 24.5, 24.85)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + pulse * 40}px rgba(201,242,122,${.35 + pulse * .25})`;
+    const c = $('#cta'), bk = back(P(t, 25.5, 26.1)), pl = t > 26.1 ? Math.sin((t - 26.1) * Math.PI * 2) * .5 + .5 : 0;
+    c.style.opacity = P(t, 25.5, 25.65); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+}
+boot(render);
+</script></body></html>
