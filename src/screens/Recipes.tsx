@@ -99,6 +99,7 @@ export function Recipes() {
 
       <div className="chips scroll">
         <button className={'chip' + (prefs.vega ? ' on' : '')} onClick={() => { useStore.getState().setRecipePrefs({ vega: !prefs.vega }); toast(prefs.vega ? 'Alle recepten weer zichtbaar' : 'Alleen vegetarisch, ook in je suggesties'); }}><span className="i14"><I.leaf /></span> Vega</button>
+        <button className={'chip' + (prefs.light ? ' on' : '')} aria-pressed={!!prefs.light} onClick={() => { useStore.getState().setRecipePrefs({ light: !prefs.light }); toast(prefs.light ? 'Recepten weer zoals bedoeld' : 'Lichter koken: lichtere sauzen en zuivel, minder olie, noten en zoet'); }}><span className="i14"><I.flame /></span> Lichter koken</button>
         {FILTERS.map((f) => (
           <button key={f} className={'chip' + (filters.includes(f) ? ' on' : '')} onClick={() => setFilters((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))}>
             {f === 'fav' ? 'Favorieten' : TAG_LABEL[f]}

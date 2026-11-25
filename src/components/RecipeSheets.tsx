@@ -4,7 +4,7 @@ import { RECIPE_BY_ID, type Recipe } from '../data/recipes';
 import { dateKey, fmt } from '../lib/date';
 import { dayTotals, useMealRoom, useTargets } from '../lib/hooks';
 import {
-  amountText, ingredients, plainName, portionFor, portionNutrients, portionText, PORTION_STEPS, recipeTags, scaledItems, TAG_LABEL,
+  amountText, ingredients, lightNotes, lightSaving, plainName, portionFor, portionNutrients, portionText, PORTION_STEPS, recipeTags, scaledItems, TAG_LABEL,
 } from '../lib/recipes';
 import { mealRange } from '../lib/calc';
 import { useStore } from '../lib/store';
@@ -122,6 +122,12 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
             </div>
           </div>
           {servings > 1 && <p className="tiny" style={{ margin: '-4px 0 0' }}>Hoeveelheden voor {servings} personen. Jouw eigen deel daarvan is {portionText(factor)}.</p>}
+          {lightNotes(recipe).length > 0 && (
+            <div className="coach-tip">
+              <span className="i18"><I.flame /></span>
+              <div><b>Lichter gemaakt{lightSaving(recipe) >= 5 ? ` (± ${fmt(lightSaving(recipe))} kcal minder per portie)` : ''}</b><div className="small">{lightNotes(recipe).join('; ')}. Zet dit uit bij Recepten → Lichter koken.</div></div>
+            </div>
+          )}
           <ul className="ings">
             {scaledItems(recipe, mult).map((it) => {
               const { food } = it;

@@ -188,6 +188,36 @@ describe('more recipes and smarter labels', () => {
   });
 });
 
+describe('lighter cooking', () => {
+  it('swaps to lighter ingredients and saves kcal, without odd amounts', async () => {
+    const { setLightRecipes, lightNotes, lightSaving, recipeFoods } = await import('../src/lib/recipes');
+    const r = RECIPES.find((x) => x.id === 'havermout-pindakaas-banaan')!;
+    const before = recipeNutrients(r).kcal;
+    const foodBefore = recipeFoods().find((f) => f.id === 'recipe-' + r.id)!.kcal;
+    setLightRecipes(true);
+    try {
+      expect(recipeNutrients(r).kcal).toBeLessThan(before);
+      expect(lightNotes(r).length).toBeGreaterThan(0);
+      expect(lightSaving(r)).toBeGreaterThan(20);
+      expect(recipeFoods().find((f) => f.id === 'recipe-' + r.id)!.kcal).toBeLessThan(foodBefore);
+      for (const x of RECIPES) {
+        expect(() => ingredients(x), x.id).not.toThrow();
+        for (const mult of [...PORTION_STEPS, 3]) {
+          for (const a of scaledItems(x, mult)) {
+            const text = amountText(a).amount;
+            expect(text, `${x.id} ${mult}x ${a.food.name}`).not.toMatch(/[¼¾⅓⅔]|\d,\d/);
+            if (a.count !== undefined && a.count % 1) expect(['stuk', 'struik', 'eetlepel', 'theelepel'], `${a.food.name} ${text}`).toContain(a.unit);
+          }
+        }
+      }
+    } finally {
+      setLightRecipes(false);
+    }
+    expect(recipeNutrients(r).kcal).toBeCloseTo(before, 5);
+    expect(lightNotes(r)).toEqual([]);
+  });
+});
+
 describe('number input', async () => {
   const { parseNum } = await import('../src/components/ui');
   it('reads Dutch numbers', () => {

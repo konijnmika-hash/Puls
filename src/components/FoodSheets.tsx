@@ -5,7 +5,7 @@ import { fmt } from '../lib/date';
 import { dayTotals, useDay, useTargets } from '../lib/hooks';
 import { lookupBarcode, searchOff } from '../lib/openfoodfacts';
 import { CAMERA_HELP, cameraAllowedHere, cameraProblem, decodeFile, getDecoder, inFrame, type CameraProblem } from '../lib/barcode';
-import { RECIPE_FOODS } from '../lib/recipes';
+import { recipeFoods } from '../lib/recipes';
 import { newId, useStore, type SavedMeal } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { MEALS, type FoodEntry, type MealKey } from '../lib/types';
@@ -96,7 +96,8 @@ function SearchView({ meal, onPick, onQuick, onView, onMealLogged }: { meal: Mea
   const custom = useStore((s) => s.customFoods);
   const premium = useStore((s) => s.premium);
   const open = useUI((s) => s.open);
-  const all = useMemo(() => [...custom, ...RECIPE_FOODS, ...FOODS], [custom]);
+  const light = useStore((s) => !!s.recipePrefs.light);
+  const all = useMemo(() => [...custom, ...recipeFoods(), ...FOODS], [custom, light]); // eslint-disable-line react-hooks/exhaustive-deps
   // wat je vaak gebruikt en je favorieten komen eerder in de zoekresultaten
   const boost = useMemo(() => {
     const rank = new Map(recent.map((f, i) => [f.id, 40 - i]));
@@ -190,7 +191,7 @@ function SearchView({ meal, onPick, onQuick, onView, onMealLogged }: { meal: Mea
 
       {!q && list.length === 0 && (tab === 'recent' || tab === 'fav') && (
         <div className="empty">
-          <p>{tab === 'fav' ? 'Tik op het hartje bij een product om het hier te bewaren.' : `Zoek in ${fmt(FOODS.length)} basisproducten, ${RECIPE_FOODS.length} recepten en miljoenen merkproducten.`}</p>
+          <p>{tab === 'fav' ? 'Tik op het hartje bij een product om het hier te bewaren.' : `Zoek in ${fmt(FOODS.length)} basisproducten, ${recipeFoods().length} recepten en miljoenen merkproducten.`}</p>
           <div className="chips" style={{ justifyContent: 'center' }}>
             {['Havermout', 'Banaan', 'Kipfilet', 'Skyr', 'Pindakaas', 'Broodje'].map((s) => (
               <button key={s} className="chip" onClick={() => setQ(s)}>{s}</button>

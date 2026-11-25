@@ -4,7 +4,7 @@ import { ALL_EQUIP } from '../data/exercises';
 import { FOOD_BY_ID, type Food } from '../data/foods';
 import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
-import { mergeShopping, portionNutrients, portionText, recipeFood, type Prefs, type ShopItem } from './recipes';
+import { mergeShopping, portionNutrients, portionText, recipeFood, setLightRecipes, type Prefs, type ShopItem } from './recipes';
 import { dateKey } from './date';
 import type { Cadeau } from './cadeau';
 import type { ActivityEntry, DayLog, FoodEntry, MealKey, Profile, WeightEntry } from './types';
@@ -16,6 +16,18 @@ export const emptyDay = (): DayLog => ({
   activities: [],
   workoutsDone: [],
 });
+
+export type Theme = 'systeem' | 'licht' | 'donker';
+
+/** Zet het thema op de pagina, ook de kleur van de statusbalk. */
+export function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  if (theme === 'systeem') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', theme === 'donker' ? 'dark' : 'light');
+  const dark = theme === 'donker' || (theme === 'systeem' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', dark ? '#0c1813' : '#edf3ea'));
+}
 
 export interface Reminders {
   on: boolean;
@@ -81,6 +93,8 @@ interface State {
   cadeau: Cadeau | null;
   setCadeau: (c: Cadeau) => void;
   glassMl: number;
+  /** licht, donker of volgens je telefoon */
+  theme: Theme;
   stepsSource: 'handmatig' | 'health';
   reminders: Reminders;
   /** per dag: welke reminders al zijn verstuurd */
@@ -112,7 +126,7 @@ interface State {
   toggleFavorite: (id: string) => void;
   addCustomFood: (f: Food) => void;
   setPremium: (v: boolean) => void;
-  setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource'>>) => void;
+  setSettings: (s: Partial<Pick<State, 'glassMl' | 'stepsSource' | 'theme'>>) => void;
   setReminders: (r: Partial<Reminders>) => void;
   markFired: (date: string, id: string) => void;
   markCheered: (date: string, ids: string[]) => void;
@@ -141,6 +155,7 @@ const initial = {
   premium: false,
   cadeau: null as Cadeau | null,
   glassMl: 250,
+  theme: 'systeem' as Theme,
   stepsSource: 'handmatig' as const,
   reminders: DEFAULT_REMINDERS,
   fired: {} as Record<string, string[]>,
@@ -289,10 +304,25 @@ export const useStore = create<State>()(
           }
         }
         if (s.recent) s.recent = s.recent.map(fresh);
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null, savedMeals: s.savedMeals ?? [] } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null, savedMeals: s.savedMeals ?? [], theme: s.theme ?? 'systeem' } as State;
       },
     },
   ),
 );
 
 export const newId = uid;
+
+// Lichter koken volgt je receptvoorkeur (vóór React opnieuw tekent, zodat alle waarden kloppen)
+setLightRecipes(!!useStore.getState().recipePrefs.light);
+useStore.subscribe((s, prev) => {
+  if (s.recipePrefs.light !== prev.recipePrefs.light) setLightRecipes(!!s.recipePrefs.light);
+});
+
+// Thema meteen toepassen, en opnieuw als je het wijzigt of je telefoon wisselt tussen licht en donker
+if (typeof window !== 'undefined') {
+  applyTheme(useStore.getState().theme);
+  useStore.subscribe((s, prev) => {
+    if (s.theme !== prev.theme) applyTheme(s.theme);
+  });
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme(useStore.getState().theme));
+}

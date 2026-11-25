@@ -6,7 +6,7 @@ import { controleerCode } from '../lib/cadeau';
 import { dateKey, DAY_SHORT, fmt, liters } from '../lib/date';
 import { useDay, useEnergyInsight, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
-import { useStore, type Reminders } from '../lib/store';
+import { useStore, type Reminders, type Theme } from '../lib/store';
 import { requestNotifications } from './Coach';
 import { mealForNow, useUI } from '../lib/ui';
 import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
@@ -520,9 +520,17 @@ export function ExerciseSheet({ id, slotKey }: { id: string; slotKey?: string })
 
 export function SettingsRows() {
   const glass = useStore((s) => s.glassMl);
+  const theme = useStore((s) => s.theme);
   const set = useStore((s) => s.setSettings);
+  const themes: [Theme, string][] = [['licht', 'Licht'], ['donker', 'Donker'], ['systeem', 'Auto']];
   return (
     <div className="list">
+      <div className="item">
+        <div className="grow"><div className="t">Weergave</div><div className="s">{theme === 'systeem' ? 'Volgt je telefoon' : theme === 'donker' ? 'Donkere modus' : 'Lichte modus'}</div></div>
+        <div className="seg" role="group" aria-label="Weergave">
+          {themes.map(([v, l]) => <button key={v} className={theme === v ? 'on' : ''} aria-pressed={theme === v} onClick={() => set({ theme: v })}>{l}</button>)}
+        </div>
+      </div>
       <div className="item">
         <div className="grow"><div className="t">Glasgrootte</div><div className="s">Hoeveel ml een glas water telt</div></div>
         <div className="seg">
