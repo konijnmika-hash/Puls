@@ -9,6 +9,7 @@ import {
 import { mealRange } from '../lib/calc';
 import { useStore } from '../lib/store';
 import { MEALS, type MealKey } from '../lib/types';
+import { useBack } from '../lib/back';
 import { useUI } from '../lib/ui';
 import { beep } from '../lib/sound';
 import { MEAL_META } from '../screens/Today';
@@ -223,6 +224,7 @@ export function CookMode() {
   }, [timer]);
 
   useEffect(() => setTimer(null), [step]);
+  useBack(() => (startCook(null), true));
 
   if (!cook || !recipe) return null;
   const steps = recipe.steps;

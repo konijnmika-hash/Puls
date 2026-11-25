@@ -11,6 +11,7 @@ import { CookMode, RecipeSheet, ShoppingSheet } from './components/RecipeSheets'
 import { Recipes } from './screens/Recipes';
 import { dateKey } from './lib/date';
 import { useStore } from './lib/store';
+import { useBack } from './lib/back';
 import { useUI, type Tab } from './lib/ui';
 import { Onboarding } from './screens/Onboarding';
 import { Progress } from './screens/Progress';
@@ -85,6 +86,8 @@ export function App() {
 function Main() {
   const { tab, setTab, open, session, cook } = useUI();
   useReminders();
+  // terugknop op een ander tabblad: eerst naar Vandaag
+  useBack(() => (tab !== 'vandaag' ? (setTab('vandaag'), true) : false));
 
   return (
     <div className="app">
