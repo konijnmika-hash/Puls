@@ -17,6 +17,11 @@ export const PACE: Record<Pace, { kgPerWeek: number; label: string }> = {
 
 const round = (n: number, to: number) => Math.round(n / to) * to;
 
+/** Absolute ondergrens voor het dagdoel: lager kan niet, ook niet met eigen doelen. */
+export const kcalFloor = (sex: Profile['sex']) => (sex === 'man' ? 1500 : sex === 'vrouw' ? 1200 : 1350);
+/** Onder deze grens vragen we of iemand het zeker weet. */
+export const kcalLow = (sex: Profile['sex']) => kcalFloor(sex) + 200;
+
 /** Basaal metabolisme volgens Mifflin-St Jeor. */
 export function bmr(p: Pick<Profile, 'sex' | 'weightKg' | 'heightCm' | 'age'>) {
   const base = 10 * p.weightKg + 6.25 * p.heightCm - 5 * p.age;
@@ -50,9 +55,8 @@ export function calcTargets(p: Profile): Targets {
   // Recomp: een klein tekort (± 10-12%), genoeg om vet te verliezen maar met ruimte om spieren op te bouwen
   const recompDeficit = Math.min(tdee * 0.12, 350);
   let kcal = tdee + (p.goal === 'afvallen' ? -daily : p.goal === 'recomp' ? -recompDeficit : p.goal === 'aankomen' ? daily * 0.6 : 0);
-  const floor = p.sex === 'man' ? 1500 : 1200;
-  kcal = Math.max(kcal, floor);
-  kcal = round(p.custom?.kcal ?? kcal, 10);
+  const floor = kcalFloor(p.sex);
+  kcal = round(Math.max(p.custom?.kcal ?? kcal, floor), 10);
 
   // Eiwit op basis van vetvrije massa: bij afvallen extra om spieren te behouden
   let perLbm = p.goal === 'recomp' ? 2.7 : p.goal === 'afvallen' ? 2.5 : p.goal === 'aankomen' ? 2.3 : 2.0;

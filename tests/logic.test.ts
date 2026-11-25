@@ -47,6 +47,10 @@ describe('calories', () => {
     const t = calcTargets({ ...base, sex: 'vrouw', weightKg: 45, heightCm: 150, age: 60, activity: 'zittend', pace: 'snel' });
     expect(t.kcal).toBeGreaterThanOrEqual(1200);
   });
+  it('custom targets cannot go below the floor', () => {
+    expect(calcTargets({ ...base, sex: 'vrouw', custom: { kcal: 900 } }).kcal).toBe(1200);
+    expect(calcTargets({ ...base, sex: 'man', custom: { kcal: 1300 } }).kcal).toBe(1500);
+  });
   it('respects custom targets', () => {
     const t = calcTargets({ ...base, custom: { kcal: 2222, steps: 15000 } });
     expect(t.kcal).toBe(2220);

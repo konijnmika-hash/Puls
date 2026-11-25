@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
-import { ACTIVITY, PACE, calcTargets, metKcal } from '../lib/calc';
+import { ACTIVITY, PACE, calcTargets, kcalFloor, kcalLow, metKcal } from '../lib/calc';
 import { dateKey, DAY_SHORT, fmt } from '../lib/date';
 import { useDay, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
@@ -203,19 +203,36 @@ export function GoalsSheet() {
   const profile = useStore((s) => s.profile)!;
   const auto = calcTargets({ ...profile, custom: undefined });
   const t = useTargets()!;
-  const [kcal, setKcal] = useState(t.kcal);
+  const floor = kcalFloor(profile.sex);
+  const [kcal, setKcalRaw] = useState(t.kcal);
   const [water, setWater] = useState(t.waterMl);
   const [steps, setSteps] = useState(t.steps);
+  const [sure, setSure] = useState(false);
+  const setKcal = (v: number) => { setKcalRaw(v); setSure(false); };
+  const tooLow = kcal < floor;
+  const low = !tooLow && kcal < kcalLow(profile.sex);
+  const save = () => {
+    if (tooLow) return;
+    if (low && !sure) { setSure(true); return; }
+    useStore.getState().updateProfile({ custom: { kcal, waterMl: water, steps } });
+    toast('Doelen opgeslagen');
+    close();
+  };
   return (
     <Sheet onClose={close} title="Eigen doelen">
       <div className="stack">
-        <div className="field"><span className="lbl">Calorieën per dag (advies {fmt(auto.kcal)})</span><Stepper id="g-kcal" value={kcal} onChange={setKcal} step={50} min={1000} max={6000} /></div>
+        <div className="field">
+          <span className="lbl">Calorieën per dag (advies {fmt(auto.kcal)})</span>
+          <Stepper id="g-kcal" value={kcal} onChange={setKcal} step={50} min={floor} max={6000} />
+          {tooLow && <span className="hint warn">Lager dan {fmt(floor)} kcal kan niet. Zo weinig eten is niet gezond.</span>}
+          {low && <span className="hint warn">Dit is een laag aantal. Weet je zeker dat je dit wilt? Lager dan {fmt(floor)} kcal kan niet.</span>}
+        </div>
         <div className="field"><span className="lbl">Water in ml (advies {fmt(auto.waterMl)})</span><Stepper id="g-water" value={water} onChange={setWater} step={250} min={1000} max={6000} /></div>
         <div className="field"><span className="lbl">Stappen (advies {fmt(auto.steps)})</span><Stepper id="g-steps" value={steps} onChange={setSteps} step={500} min={1000} max={40000} /></div>
-        <p className="tiny" style={{ margin: 0 }}>Eiwit, koolhydraten en vet worden automatisch over je nieuwe calorie-doel verdeeld.</p>
+        <p className="tiny" style={{ margin: 0 }}>Eiwit, koolhydraten en vet worden automatisch over je nieuwe calorie-doel verdeeld. Alle adviezen zijn schattingen en richtlijnen, geen regels die je moet volgen.</p>
         <div className="row">
           <button className="btn outline" onClick={() => { useStore.getState().updateProfile({ custom: undefined }); toast('Terug naar advieswaarden'); close(); }}>Advies</button>
-          <button className="btn grow" onClick={() => { useStore.getState().updateProfile({ custom: { kcal, waterMl: water, steps } }); toast('Doelen opgeslagen'); close(); }}>Opslaan</button>
+          <button className="btn grow" disabled={tooLow} onClick={save}>{sure ? 'Ja, ik weet het zeker' : 'Opslaan'}</button>
         </div>
       </div>
     </Sheet>
