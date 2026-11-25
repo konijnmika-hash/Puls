@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Gebouwd op wetenschap</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 2px,transparent 2px 5px);mix-blend-mode:screen}
+.term{position:absolute;left:70px;right:70px;border-radius:28px;background:rgba(9,22,16,.92);border:1px solid #2a4a3a;box-shadow:0 0 0 1px rgba(201,242,122,.06),0 40px 100px -40px #000;font-family:'DejaVu Sans Mono',monospace}
+.term .bar{height:58px;border-bottom:1px solid #22392e;display:flex;align-items:center;gap:12px;padding:0 24px}
+.term .bar i{width:16px;height:16px;border-radius:50%;background:#2f4a3c;display:block}
+.term .body{padding:30px 36px;font-size:36px;line-height:1.6;color:#cfe3d6}
+.k{color:#7f9a8c}.v{color:#c9f27a}.c{color:#5fd49a}
+.ln{white-space:pre;opacity:0}
+.big{font-family:'DejaVu Sans Mono',monospace;font-weight:700}
+.term .body .ln b{font-weight:700}
+.tok{display:inline-block;opacity:0}
+.res{font-family:Brico;font-weight:800;letter-spacing:-.04em}
+#donut text{font-family:'DejaVu Sans Mono',monospace}
+.cursor{display:inline-block;width:18px;height:34px;background:#c9f27a;vertical-align:-6px;margin-left:6px}
+</style></head>
+<body><div id="stage">
+  <div id="bgwrap"></div>
+  <div class="abs center label" id="toplabel" style="top:150px">Gebouwd op wetenschap</div>
+
+  <!-- terminal: invoer -->
+  <div class="scene" data-in="0" data-out="4.85" data-fo=".3">
+    <div class="term" style="top:470px"><div class="bar"><i></i><i></i><i></i><span style="margin-left:14px;color:#7f9a8c;font-size:24px">puls — persoonlijk plan</span></div>
+      <div class="body" id="tbody"></div></div>
+  </div>
+
+  <!-- Mifflin-St Jeor -->
+  <div class="scene" data-in="4.8" data-out="7.25" data-fo=".25">
+    <div class="abs center label rv" data-a="4.85" style="top:430px;color:#5fd49a">Formule 1 · Mifflin-St Jeor</div>
+    <div class="abs center big" id="f1" style="top:640px;font-size:62px;line-height:1.5;color:#e6f1ea"></div>
+    <div class="abs center res" id="r1" style="top:1150px;font-size:170px;color:var(--lime)">0</div>
+    <div class="abs center mono" style="top:1360px;font-size:32px;color:#7f9a8c">kcal rustverbranding</div>
+  </div>
+
+  <!-- Katch-McArdle -->
+  <div class="scene" data-in="7.2" data-out="9.65" data-fo=".25">
+    <div class="abs center label rv" data-a="7.25" style="top:430px;color:#5fd49a">Formule 2 · Katch-McArdle</div>
+    <div class="abs center mono" id="lbm" style="top:560px;font-size:34px;color:#7f9a8c">vetvrije massa (uit je schalen) ≈ <span class="v">64,9 kg</span></div>
+    <div class="abs center big" id="f2" style="top:700px;font-size:62px;line-height:1.5;color:#e6f1ea"></div>
+    <div class="abs center res" id="r2" style="top:960px;font-size:150px;color:var(--lime)">0</div>
+    <div class="abs center mono" id="avg" style="top:1230px;font-size:38px;color:#cfe3d6;line-height:1.6">gemiddelde van beide<br><span class="res" style="font-size:96px;color:#fff">1.775 kcal</span></div>
+  </div>
+
+  <!-- TDEE en doel -->
+  <div class="scene" data-in="9.6" data-out="12.05" data-fo=".25">
+    <div class="abs center label rv" data-a="9.65" style="top:430px;color:#5fd49a">Activiteit en doel</div>
+    <svg class="abs" id="bars" style="left:140px;top:560px" width="800" height="620" viewBox="0 0 800 620"></svg>
+    <div class="abs center res" id="r3" style="top:1220px;font-size:170px;color:var(--lime)">2.751</div>
+    <div class="abs center mono" id="r3l" style="top:1430px;font-size:34px;color:#7f9a8c">kcal per dag</div>
+  </div>
+
+  <!-- macro's -->
+  <div class="scene" data-in="12.0" data-out="14.45" data-fo=".25">
+    <div class="abs center label rv" data-a="12.05" style="top:430px;color:#5fd49a">Macro's</div>
+    <svg class="abs" id="donut" style="left:240px;top:540px" width="600" height="600" viewBox="0 0 600 600"></svg>
+    <div class="abs mono" id="mlist" style="left:120px;right:120px;top:1210px;font-size:34px;line-height:1.9"></div>
+  </div>
+
+  <!-- water en stappen -->
+  <div class="scene" data-in="14.4" data-out="16.85" data-fo=".25">
+    <div class="abs center label rv" data-a="14.45" style="top:430px;color:#5fd49a">Water en stappen</div>
+    <div class="abs center big rv" data-a="14.5" data-s=".15" data-fx="type" style="top:600px;font-size:60px;color:#e6f1ea">35 ml × 78 kg</div>
+    <div class="abs center res" id="r5" style="top:720px;font-size:170px;color:#6cc0ff">0,0 L</div>
+    <div class="abs center mono rv" data-a="15.6" style="top:940px;font-size:34px;color:#7f9a8c">+0,5 L op trainingsdagen</div>
+    <div class="abs center big rv" data-a="15.6" data-fx="type" style="top:1120px;font-size:60px;color:#e6f1ea">stappendoel</div>
+    <div class="abs center res" id="r6" style="top:1210px;font-size:170px;color:#ffb07a">0</div>
+  </div>
+
+  <div class="scene" data-in="16.8" data-out="19.25" data-fo=".25" data-outfx="zoom">
+    <div class="abs center xh rv" data-a="16.8" data-s=".3" data-fx="slam" style="top:700px;font-size:150px">Geen gokwerk.</div>
+    <div class="abs center xh rv" data-a="18.0" data-s=".3" data-fx="slam" style="top:880px;font-size:150px;color:var(--lime)">Jouw getallen.</div>
+  </div>
+
+  <div class="scene" data-in="19.2" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:440px;top:360px;width:200px;height:200px"></div>
+    <div class="abs center label rv" data-a="19.5" style="top:630px;font-size:30px">Download Puls nu</div>
+    <div class="abs center xh rv" data-a="19.8" data-s=".15" data-fx="slam" style="top:710px;font-size:200px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:910px;font-size:200px;color:var(--lime)">gratis.</div>
+    <div class="abs center rv" data-a="20.4" style="top:1170px;font-size:40px;color:var(--ink2);line-height:1.4">Je plan, berekend in een seconde.<br>Je gegevens blijven op je toestel.</div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1360px">Probeer 14 dagen gratis →</div>
+  </div>
+  <div id="scan"></div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 23, fps: 30, bpm: 100, title: 'Gebouwd op wetenschap' };
+$('#bgwrap').innerHTML = bgHTML('rgba(72,196,134,.22)', 'rgba(43,151,230,.12)');
+$('#ctaLogo').innerHTML = logoSVG(200);
+const SP = .6;
+// terminal-regels, elk op een achtste tel
+const LINES = [
+  ['<span class="c">❯</span> puls plan --voor sam', 0.2],
+  ['<span class="k">berekenen</span> <span id="spin">⠋</span>', 1.0],
+  ['<span class="k">geslacht .......</span> <span class="v">man</span>', b(3)],
+  ['<span class="k">leeftijd .......</span> <span class="v">29 jaar</span>', b(3.5)],
+  ['<span class="k">lengte .........</span> <span class="v">182 cm</span>', b(4)],
+  ['<span class="k">gewicht ........</span> <span class="v">78 kg</span>', b(4.5)],
+  ['<span class="k">vet (1-10) .....</span> <span class="v">4 · normaal</span>', b(5)],
+  ['<span class="k">spieren (1-10) .</span> <span class="v">6 · wat getraind</span>', b(5.5)],
+  ['<span class="k">activiteit .....</span> <span class="v">gemiddeld</span>', b(6)],
+  ['<span class="k">doel ...........</span> <span class="v">afvallen + spieren</span>', b(6.5)],
+];
+$('#tbody').innerHTML = LINES.map(([h], i) => `<div class="ln" id="tl${i}">${h}</div>`).join('') + '<div class="ln" id="tl_c" style="opacity:1"><span class="cursor" id="cur"></span></div>';
+const tok = (id, parts) => { $(id).innerHTML = parts.map((p, i) => `<span class="tok" data-i="${i}">${p}</span>`).join(' '); };
+tok('#f1', ['10 × 78', '<br>+ 6,25 × 182', '<br>− 5 × 29', '<br>+ 5']);
+tok('#f2', ['370', '+ 21,6 × 64,9']);
+// staafdiagram: rust -> x1,55 -> -450
+$('#bars').innerHTML = [['rust', 1775, '#5fd49a'], ['× 1,55', 2751, '#c9f27a'], ['doel −450', 2301, '#ffffff']].map(([n, v, c], i) => `
+  <rect class="br" data-v="${v}" x="${60 + i * 250}" y="560" width="170" height="0" rx="16" fill="${c}" opacity="${i === 2 ? .95 : .85}"/>
+  <text class="bt" x="${145 + i * 250}" y="600" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="28" fill="#7f9a8c">${n}</text>
+  <text class="bv" x="${145 + i * 250}" y="540" text-anchor="middle" font-family="DejaVu Sans Mono" font-weight="700" font-size="34" fill="#e6f1ea" opacity="0">${nl(v)}</text>`).join('');
+// donut
+const MAC = [['Eiwit', 596, '#e5527a', '2,3 g × 64,9 kg', '149 g'], ['Vet', 644, '#7867ee', '28% van je kcal', '72 g'], ['Koolhydraten', 1060, '#f0a03a', 'de rest', '265 g']];
+const C = 2 * Math.PI * 220;
+let acc = 0;
+$('#donut').innerHTML = `<circle cx="300" cy="300" r="220" fill="none" stroke="#14241d" stroke-width="70"/>` + MAC.map(([n, v, c], i) => {
+  const len = v / 2300 * C, s = `<circle class="seg" data-len="${len}" cx="300" cy="300" r="220" fill="none" stroke="${c}" stroke-width="70" stroke-dasharray="0 ${C}" transform="rotate(${-90 + acc / C * 360} 300 300)"/>`;
+  acc += len; return s; }).join('') + `<text x="300" y="300" text-anchor="middle" font-size="76" font-weight="700" fill="#fff" style="font-family:Brico">2.300</text><text x="300" y="350" text-anchor="middle" font-size="28" fill="#7f9a8c">kcal per dag</text>`;
+$('#mlist').innerHTML = MAC.map(([n, v, c, how, g], i) => `<div class="row mrow" id="ml${i}" style="opacity:0"><span><span style="color:${c}">■</span> ${n} <span class="k" style="font-size:26px">${how}</span></span><b style="color:#fff">${g}</b></div>`).join('');
+const SPIN = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏';
+
+function glitch(t, at) { const k = P(t, at, at + .18); return k > 0 && k < 1 ? `translateX(${Math.sin(t * 190) * 14 * (1 - k)}px)` : ''; }
+function render(t) {
+  bg(t, t > 19.2 ? .4 : 0);
+  scenes(t); reveal(t);
+  $('#stage').style.transform = [4.8, 7.2, 9.6, 12, 14.4, 16.8, 19.2].map(a => glitch(t, a)).join(' ');
+  // terminal
+  LINES.forEach(([h, a], i) => { const e = $('#tl' + i); e.style.opacity = t >= a ? 1 : 0; });
+  const sp = $('#spin'); if (sp) sp.textContent = t < b(3) ? SPIN[Math.floor(t * 14) % SPIN.length] : '✓';
+  $('#cur').style.opacity = Math.floor(t * 2.5) % 2 ? 0 : 1;
+  // formule 1: termen op de tel
+  $$('#f1 .tok').forEach((e, i) => { const a = b(8 + i * .75); e.style.opacity = t >= a ? 1 : 0; e.style.color = t >= a && t < a + .3 ? '#c9f27a' : '#e6f1ea'; });
+  const k1 = eo(P(t, b(11), b(11) + .5));
+  $('#r1').textContent = t < b(11) ? '…' : nl(1778 * k1);
+  $('#r1').style.transform = `scale(${1 + Math.exp(-Math.max(0, t - b(11) - .5) * 6) * .08 * (t > b(11) + .5)})`;
+  // formule 2
+  $$('#f2 .tok').forEach((e, i) => { const a = b(12.5 + i); e.style.opacity = t >= a ? 1 : 0; });
+  show('#lbm', eo(P(t, b(12), b(12) + .3)), { y: 20, blur: 0 });
+  const k2 = eo(P(t, b(14), b(14) + .4));
+  $('#r2').textContent = t < b(14) ? '…' : nl(1772 * k2);
+  show('#avg', eo5(P(t, b(15), b(15) + .4)), { y: 40, s: .9 });
+  // staven
+  $$('#bars .br').forEach((r, i) => { const a = b(16 + i * 1.2), k = eo5(P(t, a, a + .45)), v = +r.dataset.v, h = v / 2751 * 480 * k;
+    r.setAttribute('y', 560 - h); r.setAttribute('height', h); });
+  $$('#bars .bv').forEach((e, i) => { const a = b(16 + i * 1.2); e.setAttribute('opacity', P(t, a + .3, a + .45)); const v = +$$('#bars .br')[i].dataset.v; e.setAttribute('y', 540 - v / 2751 * 480); });
+  const k3 = eo(P(t, b(18.4), b(18.4) + .5));
+  $('#r3').textContent = nl(t < b(18.4) ? 1775 * eo(P(t, b(16), b(17))) + (2751 - 1775) * eo(P(t, b(17.2), b(17.8))) : lerp(2751, 2300, k3));
+  $('#r3l').textContent = t < b(18.4) ? 'kcal per dag (onderhoud)' : 'kcal per dag · jouw doel';
+  // donut
+  let off = 0;
+  $$('#donut .seg').forEach((e, i) => { const a = b(20 + i), len = +e.dataset.len * eo5(P(t, a, a + .5)); e.setAttribute('stroke-dasharray', `${len} ${C}`); });
+  $$('.mrow').forEach((e, i) => show(e, eo5(P(t, b(20 + i) + .1, b(20 + i) + .5)), { y: 30, blur: 6 }));
+  // water / stappen
+  $('#r5').textContent = nl(2.7 * eo(P(t, b(25), b(25) + .6)), 1) + ' L';
+  $('#r6').textContent = nl(9000 * eo(P(t, b(26.5), b(26.5) + .5)));
+  // CTA
+  if (t > 19) {
+    const pulse = beatPulse(t, 20, 10), L = $('#ctaLogo'), k = back(P(t, 19.2, 19.7));
+    L.style.opacity = P(t, 19.2, 19.3); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    L.style.filter = `drop-shadow(0 0 ${40 + pulse * 50}px rgba(201,242,122,${.3 + pulse * .3}))`;
+    logoDraw(L, eio(P(t, 19.3, 19.9)));
+    const g = eo5(P(t, b(34), b(34) + .35)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + pulse * 40}px rgba(201,242,122,${.35 + pulse * .25})`;
+    const c = $('#cta'), bk = back(P(t, b(35), b(35) + .5)), pl = t > b(35) + .5 ? Math.sin((t - b(35)) * Math.PI / SP) * .5 + .5 : 0;
+    c.style.opacity = P(t, b(35), b(35) + .12); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+  $('#toplabel').style.opacity = t < 16.6 ? 1 : 0;
+}
+boot(render);
+</script></body></html>

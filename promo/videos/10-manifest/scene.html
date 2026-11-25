@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Puls manifest</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+.shot{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;overflow:hidden}
+.mega{font-family:Brico;font-weight:800;letter-spacing:-.055em;line-height:.86;text-transform:uppercase;text-align:center;white-space:nowrap}
+.outline{color:transparent !important;-webkit-text-stroke:7px #c9f27a}
+.cell{display:flex;align-items:center;gap:30px;font-family:Brico;font-weight:800;font-size:120px;letter-spacing:-.04em;line-height:1}
+.cell .ic{font-size:96px}
+#hud{position:absolute;left:48px;right:48px;top:36px;display:flex;justify-content:space-between;font-family:'DejaVu Sans Mono',monospace;font-size:22px;letter-spacing:.18em;z-index:50;mix-blend-mode:difference;color:#fff}
+#prog{position:absolute;left:0;bottom:0;height:8px;background:#c9f27a;z-index:50}
+</style></head>
+<body><div id="stage">
+  <div id="shots"></div>
+  <div id="hud"><span>PULS · MANIFEST</span><span id="hudn">01</span></div>
+  <div id="prog"></div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1920, h: 1080, dur: 21, fps: 30, bpm: 124, title: 'Puls manifest' };
+const SP = 60 / 124;
+const D = '#06100c', L = '#c9f27a', G = '#1d7a4c', W = '#f3f7f1';
+// [startbeat, eindbeat, achtergrond, tekst, html, effect]
+const SHOTS = [
+  [0, 2, D, W, '<div class="mega" style="font-size:420px">EET</div>', 'slam'],
+  [2, 4, L, D, '<div class="mega" style="font-size:330px">SLIMMER.</div>', 'right'],
+  [4, 6, D, L, '<div class="mega outline" style="font-size:420px">TRAIN</div>', 'slam'],
+  [6, 8, G, W, '<div class="mega" style="font-size:380px">BETER.</div>', 'up'],
+  [8, 10, D, W, '<div class="mega" style="font-size:360px">VOEL JE</div>', 'slam'],
+  [10, 12, L, D, '<div class="mega" style="font-size:330px">STERKER.</div>', 'zoom'],
+  [12, 16, D, W, `<div id="grid1" style="display:grid;grid-template-columns:1fr 1fr;gap:60px 140px">
+     ${[['🔥', 'Calorieën'], ['🥩', 'Macro’s'], ['💧', 'Water'], ['👟', 'Stappen']].map(([i, t], k) => `<div class="cell g1" data-k="${k}"><span class="ic">${i}</span>${t}</div>`).join('')}</div>`, 'none'],
+  [16, 20, L, D, `<div style="display:grid;grid-template-columns:1fr 1fr;gap:60px 140px">
+     ${[['🏋️', 'Training'], ['🥗', 'Recepten'], ['📷', 'Scanner'], ['💬', 'Coach']].map(([i, t], k) => `<div class="cell g2" data-k="${k}"><span class="ic">${i}</span>${t}</div>`).join('')}</div>`, 'none'],
+  [20, 22, D, W, '<div class="mega" style="font-size:440px">ALLES.</div>', 'slam'],
+  [22, 24, W, G, '<div class="mega" style="font-size:250px">IN ÉÉN APP.</div>', 'right'],
+  [24, 28, D, W, `<div style="display:flex;align-items:center;gap:60px"><div id="lg"></div><div class="mega" id="pw" style="font-size:300px;text-transform:none;letter-spacing:-.06em">Puls</div></div>`, 'none'],
+  [28, 32, D, W, `<div class="h rv" id="tag" data-a="0" style="font-size:96px;text-align:center;line-height:1.12">Jouw persoonlijke coach voor<br><span style="color:#c9f27a">eten, trainen en energie.</span></div>`, 'none'],
+  [32, 99, D, W, `<div class="label" style="font-size:34px" id="dl">Download Puls nu</div>
+     <div class="mega" id="c14" style="font-size:250px;text-transform:none;margin-top:30px">14 dagen <span style="color:#c9f27a" id="cgr">gratis.</span></div>
+     <div class="cta-btn" id="cta" style="position:relative;width:760px;margin-top:70px">Probeer 14 dagen gratis →</div>`, 'none'],
+];
+$('#shots').innerHTML = SHOTS.map(([a, z, bgc, fg, html], i) => `<div class="shot" id="s${i}" style="background:${bgc};color:${fg}">${i === 12 ? bgHTML() : ''}${html}</div>`).join('');
+$('#lg').innerHTML = logoSVG(330);
+// tagline: woorden op de tel laten komen
+$('#tag').dataset.a = b(28.2); $('#tag').dataset.s = SP / 4; $('#tag').dataset.d = .45;
+
+function render(t) {
+  const beat = t * 124 / 60;
+  let cur = 0;
+  SHOTS.forEach(([a, z], i) => { if (beat >= a) cur = i; });
+  SHOTS.forEach(([a, z, bgc, fg, html, fx], i) => {
+    const el = $('#s' + i);
+    el.style.display = i === cur ? 'flex' : 'none';
+    if (i !== cur) return;
+    const lt = t - b(a), k = eo5(cl(lt / .22)), inner = el.firstElementChild.classList.contains('glow') ? null : el.firstElementChild;
+    if (inner) {
+      if (fx === 'slam') { inner.style.transform = `scale(${lerp(1.7, 1, k)})`; inner.style.filter = k < 1 ? `blur(${(1 - k) * 16}px)` : ''; }
+      else if (fx === 'right') inner.style.transform = `translateX(${(1 - k) * 900}px) skewX(${(1 - k) * -12}deg)`;
+      else if (fx === 'up') inner.style.transform = `translateY(${(1 - k) * 500}px)`;
+      else if (fx === 'zoom') inner.style.transform = `scale(${lerp(.4, 1, k) + Math.max(0, lt) * .06})`;
+      // langzaam doorzoomen tijdens het shot
+      if (fx !== 'zoom' && fx !== 'none') inner.style.transform += ` scale(${1 + Math.max(0, lt - .22) * .05})`;
+    }
+  });
+  // rasters: één woord per tel
+  $$('.g1').forEach(e => { const k = +e.dataset.k, a = b(12 + k), q = back(P(t, a, a + .25)); e.style.opacity = t >= a ? 1 : .08; e.style.transform = `scale(${t >= a ? lerp(.6, 1, q) : 1})`; e.style.color = t >= a && t < a + SP ? '#c9f27a' : '#f3f7f1'; });
+  $$('.g2').forEach(e => { const k = +e.dataset.k, a = b(16 + k), q = back(P(t, a, a + .25)); e.style.opacity = t >= a ? 1 : .12; e.style.transform = `scale(${t >= a ? lerp(.6, 1, q) : 1})`; });
+  // logo + woordmerk
+  if (cur === 10) {
+    const lg = $('#lg'), k = back(P(t, b(24), b(24) + .5));
+    lg.style.transform = `scale(${lerp(.2, 1, k) + beatPulse(t, b(25), 10) * .04})`;
+    lg.style.filter = `drop-shadow(0 0 ${50 + beatPulse(t, b(25)) * 40}px rgba(201,242,122,.5))`;
+    logoDraw(lg, eio(P(t, b(24.2), b(25.5))));
+    const pw = $('#pw'), q = eo5(P(t, b(25), b(25) + .4));
+    pw.style.opacity = q; pw.style.transform = `translateX(${(1 - q) * 120}px)`;
+  }
+  splitReveal(); reveal(t);
+  if (cur === 12) {
+    bg(t, .5);
+    const pulse = beatPulse(t, b(33), 10);
+    show('#dl', eo(P(t, b(32), b(32) + .3)), { y: 20, blur: 0 });
+    const c14 = $('#c14'), k = eo5(P(t, b(32.5), b(32.5) + .3));
+    c14.style.opacity = k; c14.style.transform = `scale(${lerp(1.5, 1, k) + pulse * .015})`; c14.style.filter = k < 1 ? `blur(${(1 - k) * 18}px)` : '';
+    $('#cgr').style.textShadow = `0 0 ${50 + pulse * 40}px rgba(201,242,122,${.3 + pulse * .3})`;
+    const c = $('#cta'), bk = back(P(t, b(34), b(34) + .45)), pl = t > b(34) + .45 ? Math.sin((t - b(34)) * Math.PI / SP / 2) * .5 + .5 : 0;
+    c.style.opacity = P(t, b(34), b(34) + .1); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+  // HUD: tegen elke achtergrond leesbaar (mix-blend difference)
+  $('#hudn').textContent = String(Math.min(cur + 1, SHOTS.length)).padStart(2, '0') + ' / ' + SHOTS.length;
+  $('#prog').style.width = (cl(t / b(40)) * 100) + '%';
+}
+boot(render);
+</script></body></html>

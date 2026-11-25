@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Jouw plan op maat</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+.q{position:absolute;left:0;right:0;top:250px;text-align:center}
+.opt{display:flex;align-items:center;gap:26px;padding:30px 34px;border-radius:34px;background:#14241d;border:2px solid #253b31;margin-bottom:22px}
+.opt .em{font-size:52px;width:84px;text-align:center}
+.opt b{font-size:38px;display:block}
+.opt span{font-size:26px;color:#a5bbaf}
+.sl{position:relative;height:18px;border-radius:9px;background:#1c3128}
+.sl i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,#48c486,#c9f27a)}
+.sl .kn{position:absolute;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.dchip{width:104px;height:104px;border-radius:30px;display:grid;place-items:center;font-family:Brico;font-weight:800;font-size:52px;background:#14241d;border:2px solid #253b31;color:#a5bbaf}
+.tile{position:absolute;width:440px;height:250px;border-radius:40px;background:#14241d;border:1px solid #2f4a3c;padding:30px 34px}
+.tile .v{font-family:Brico;font-weight:800;font-size:76px;letter-spacing:-.03em;line-height:1}
+.tile .l{font-size:28px;color:#a5bbaf;margin-top:10px}
+.tile .e{font-size:44px;margin-bottom:12px}
+</style></head>
+<body><div id="stage">
+  <div id="bgwrap"></div>
+  <div class="scene" data-in="0" data-out="2.2" data-fo=".3">
+    <div class="abs center label rv" data-a="0.05" style="top:640px">Persoonlijk plan</div>
+    <div class="abs center h rv" data-a="0.15" data-s=".12" style="top:720px;font-size:120px">Vertel Puls<br>wie je bent.</div>
+  </div>
+
+  <div class="scene" data-in="2.18" data-out="4.4" data-fo=".25">
+    <div class="q"><div class="label">Vraag 1</div><div class="h" style="font-size:96px;margin-top:20px">Wat is je doel?</div></div>
+    <div class="abs" id="opts" style="left:90px;right:90px;top:620px"></div>
+  </div>
+
+  <div class="scene" data-in="4.36" data-out="8.78" data-fo=".25">
+    <div class="q"><div class="label">Vraag 2</div><div class="h" style="font-size:96px;margin-top:20px">Hoe zie je eruit?</div></div>
+    <svg class="abs" id="body" style="left:290px;top:520px" width="500" height="716" viewBox="0 0 120 172"></svg>
+    <div class="abs" style="left:110px;right:110px;top:1300px">
+      <div class="row" style="font-size:34px;margin-bottom:22px"><b>Vet</b><span class="muted"><span id="fv">7</span>/10 · <span id="fl">Wat extra kilo’s</span></span></div>
+      <div class="sl" id="s1"><i></i><div class="kn"></div></div>
+      <div class="row" style="font-size:34px;margin:60px 0 22px"><b>Spieren</b><span class="muted"><span id="mv">3</span>/10 · <span id="mlb">Weinig</span></span></div>
+      <div class="sl" id="s2"><i></i><div class="kn"></div></div>
+    </div>
+  </div>
+
+  <div class="scene" data-in="8.73" data-out="10.95" data-fo=".25">
+    <div class="q"><div class="label">Vraag 3</div><div class="h" style="font-size:96px;margin-top:20px">Hoe vaak train je?</div></div>
+    <div class="abs" id="dchips" style="left:70px;right:70px;top:640px;display:flex;justify-content:space-between"></div>
+    <div class="abs center muted" style="top:800px;font-size:32px">dagen per week</div>
+    <div class="abs" style="left:90px;right:90px;top:950px;display:flex;gap:26px">
+      <div class="opt" id="gym" style="flex:1;flex-direction:column;gap:10px;padding:40px 0"><div style="font-size:80px">🏋️</div><b style="font-size:40px">In de gym</b></div>
+      <div class="opt" id="home" style="flex:1;flex-direction:column;gap:10px;padding:40px 0"><div style="font-size:80px">🏠</div><b style="font-size:40px">Thuis</b></div>
+    </div>
+  </div>
+
+  <div class="scene" data-in="10.9" data-out="13.15" data-fo=".2" data-outfx="zoom">
+    <svg class="abs" style="left:290px;top:560px" width="500" height="500" viewBox="0 0 500 500">
+      <circle cx="250" cy="250" r="200" fill="none" stroke="#14241d" stroke-width="34"/>
+      <circle id="load" cx="250" cy="250" r="200" fill="none" stroke="url(#lg9)" stroke-width="34" stroke-linecap="round" transform="rotate(-90 250 250)" stroke-dasharray="1256.6" stroke-dashoffset="1256.6"/>
+      <defs><linearGradient id="lg9"><stop offset="0" stop-color="#48c486"/><stop offset="1" stop-color="#c9f27a"/></linearGradient></defs>
+      <text id="lpct" x="250" y="272" text-anchor="middle" font-size="96" font-weight="800" fill="#fff" style="font-family:Brico">0%</text>
+    </svg>
+    <div class="abs center h" style="top:1160px;font-size:64px">Je plan wordt berekend…</div>
+    <div class="abs center mono" id="ltxt" style="top:1260px;font-size:30px;color:#7f9a8c"></div>
+  </div>
+
+  <div class="scene" data-in="13.09" data-out="17.5" data-fo=".3">
+    <div class="abs center h rv" data-a="13.15" data-s=".09" data-fx="pop" style="top:250px;font-size:100px">Je plan is klaar,<br><span class="lime">Sam.</span></div>
+    <div id="tiles"></div>
+  </div>
+
+  <div class="scene" data-in="17.45" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:440px;top:360px;width:200px;height:200px"></div>
+    <div class="abs center h rv" data-a="17.5" style="top:620px;font-size:84px">Jouw plan. Jouw tempo.</div>
+    <div class="abs center xh rv" data-a="18.0" data-s=".13" data-fx="slam" style="top:760px;font-size:200px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:960px;font-size:200px;color:var(--lime)">gratis.</div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1290px">Maak jouw plan →</div>
+  </div>
+  <div class="abs" id="flash" style="inset:0;background:#c9f27a;opacity:0;pointer-events:none"></div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 23.5, fps: 30, bpm: 110, title: 'Jouw plan op maat' };
+$('#bgwrap').innerHTML = bgHTML();
+$('#ctaLogo').innerHTML = logoSVG(200);
+const SP = 60 / 110;
+const GOALS = [['🔥', 'Afvallen', 'Vet verliezen en strakker worden'], ['🏋️', 'Afvallen en spieren opbouwen', 'Vet kwijt en sterker worden'], ['⚖️', 'Gewicht behouden', 'Fit blijven en gezonder eten'], ['💪', 'Aankomen', 'Spiermassa en gewicht opbouwen']];
+$('#opts').innerHTML = GOALS.map(([e, t, s], i) => `<div class="opt" id="o${i}"><div class="em">${e}</div><div style="flex:1"><b>${t}</b><span>${s}</span></div><div class="ok" style="width:56px;height:56px;border-radius:50%;border:3px solid #2f4a3c;display:grid;place-items:center;font-size:30px;font-weight:800"></div></div>`).join('');
+$('#dchips').innerHTML = [1, 2, 3, 4, 5, 6, 7].map(n => `<div class="dchip" id="dc${n}">${n}</div>`).join('');
+const FAT = ['Heel slank', 'Slank', 'Slank', 'Normaal', 'Normaal', 'Een beetje buikje', 'Wat extra kilo’s', 'Overgewicht', 'Flink overgewicht', 'Veel overgewicht'];
+const MUS = ['Heel weinig', 'Weinig', 'Weinig', 'Gemiddeld', 'Gemiddeld', 'Wat getraind', 'Sportief', 'Gespierd', 'Heel gespierd', 'Bodybuilder'];
+const TILES = [['🔥', '2.300', 'kcal per dag'], ['🥩', '150 g', 'eiwit per dag'], ['💧', '2,8 L', 'water per dag'], ['👟', '9.000', 'stappen per dag'], ['🏋️', '4×', 'training per week'], ['🥗', '77', 'recepten op maat']];
+$('#tiles').innerHTML = TILES.map(([e, v, l], i) => `<div class="tile" id="t${i}" style="left:${i % 2 ? 560 : 80}px;top:${600 + Math.floor(i / 2) * 280}px"><div class="e">${e}</div><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+const LTXT = ['rustverbranding…', 'activiteit…', 'calorieën en macro’s…', 'water en stappen…', 'trainingsschema…'];
+
+function render(t) {
+  bg(t, t > 13.09 ? .35 : 0);
+  scenes(t); reveal(t);
+  // doel kiezen
+  if (t > 2 && t < 4.6) {
+    const hl = t < b(5) ? -1 : t < b(6) ? 0 : 1;
+    GOALS.forEach((g, i) => {
+      const e = $('#o' + i), k = eo5(P(t, b(4) + i * .08, b(4) + i * .08 + .4));
+      e.style.opacity = k; e.style.transform = `translateX(${(1 - k) * 120}px)`;
+      const sel = i === 1 && t >= b(6.5), on = i === hl;
+      e.style.borderColor = sel ? '#c9f27a' : on ? '#48c486' : '#253b31';
+      e.style.background = sel ? 'linear-gradient(135deg,#1f4a30,#2b3716)' : '#14241d';
+      e.style.transform += ` scale(${sel ? 1 + Math.exp(-(t - b(6.5)) * 7) * .05 : 1})`;
+      const ok = e.querySelector('.ok'); ok.textContent = sel ? '✓' : ''; ok.style.background = sel ? '#c9f27a' : 'transparent'; ok.style.color = '#06100c'; ok.style.borderColor = sel ? '#c9f27a' : '#2f4a3c';
+    });
+  }
+  // silhouet en schuifjes
+  if (t > 4.2 && t < 9) {
+    const fat = lerp(7, 4, eio(P(t, b(8.5), b(11.5)))), mus = lerp(3, 6, eio(P(t, b(12), b(15))));
+    $('#body').innerHTML = `<defs><linearGradient id="bodyfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5fd49a"/><stop offset="1" stop-color="#2f9a62"/></linearGradient></defs>` + bodySVG(fat, mus);
+    $('#fv').textContent = Math.round(fat); $('#fl').textContent = FAT[Math.round(fat) - 1];
+    $('#mv').textContent = Math.round(mus); $('#mlb').textContent = MUS[Math.round(mus) - 1];
+    [['#s1', fat], ['#s2', mus]].forEach(([id, v]) => { const p = (v - 1) / 9 * 100; $(id + ' i').style.width = p + '%'; $(id + ' .kn').style.left = p + '%'; });
+    $('#s1 .kn').style.transform = `scale(${t > b(8.5) && t < b(11.5) ? 1.15 : 1})`;
+    $('#s2 .kn').style.transform = `scale(${t > b(12) && t < b(15) ? 1.15 : 1})`;
+  }
+  // dagen en plek
+  if (t > 8.5 && t < 11.2) {
+    const n = t < b(16.5) ? 0 : Math.min(4, Math.floor((t - b(16.5)) / (SP / 2)) + 1);
+    for (let i = 1; i <= 7; i++) { const e = $('#dc' + i), on = i === n; e.style.background = on ? '#c9f27a' : i < n ? '#1c3128' : '#14241d'; e.style.color = on ? '#06100c' : '#a5bbaf'; e.style.borderColor = on ? '#c9f27a' : '#253b31'; e.style.transform = `scale(${on ? 1.12 : 1})`; }
+    const gsel = t >= b(18.5);
+    $('#gym').style.borderColor = gsel ? '#c9f27a' : '#253b31'; $('#gym').style.background = gsel ? 'linear-gradient(135deg,#1f4a30,#2b3716)' : '#14241d';
+    $('#gym').style.transform = `scale(${gsel ? 1 + Math.exp(-(t - b(18.5)) * 7) * .06 : 1})`;
+  }
+  // berekenen
+  if (t > 10.8 && t < 13.3) {
+    const k = eio(P(t, b(20), b(23.8)));
+    $('#load').style.strokeDashoffset = 1256.6 * (1 - k);
+    $('#lpct').textContent = Math.round(k * 100) + '%';
+    $('#ltxt').textContent = LTXT[Math.min(4, Math.floor(k * 5))];
+  }
+  $('#flash').style.opacity = t >= b(24) ? .5 * (1 - P(t, b(24), b(24) + .35)) : 0;
+  // tegels op de tel
+  TILES.forEach((x, i) => { const a = b(25 + i * .5), k = back(P(t, a, a + .4)); const e = $('#t' + i); e.style.opacity = P(t, a, a + .1); e.style.transform = `translateY(${(1 - k) * 60}px) scale(${lerp(.6, 1, k)})`;
+    e.style.borderColor = t > a && t < a + .5 ? '#c9f27a' : '#2f4a3c'; });
+  // CTA
+  if (t > 17.3) {
+    const pulse = beatPulse(t, 18, 10), L = $('#ctaLogo'), k = back(P(t, 17.45, 17.95));
+    L.style.opacity = P(t, 17.45, 17.55); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    L.style.filter = `drop-shadow(0 0 ${40 + pulse * 50}px rgba(201,242,122,${.3 + pulse * .3}))`;
+    logoDraw(L, eio(P(t, 17.5, 18.1)));
+    const g = eo5(P(t, b(34), b(34) + .35)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + pulse * 40}px rgba(201,242,122,${.35 + pulse * .25})`;
+    const c = $('#cta'), bk = back(P(t, b(36), b(36) + .5)), pl = t > b(36) + .5 ? Math.sin((t - b(36)) * Math.PI / SP) * .5 + .5 : 0;
+    c.style.opacity = P(t, b(36), b(36) + .12); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+}
+boot(render);
+</script></body></html>
