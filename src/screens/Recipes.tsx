@@ -6,7 +6,7 @@ import { AvatarButton, I, toast } from '../components/ui';
 import { dateKey, fmt } from '../lib/date';
 import { dayTotals, useMealRoom, useTargets } from '../lib/hooks';
 import {
-  dayMenu, portionFor, portionNutrients, portionText, recentlyEaten, recipeTags, suggest, TAG_LABEL, type RecipeTag,
+  dayMenu, portionFor, portionNutrients, portionText, recentlyEaten, recipeNutrients, recipeTags, suggest, TAG_LABEL, type RecipeTag,
 } from '../lib/recipes';
 import { useStore } from '../lib/store';
 import { MEALS, type MealKey } from '../lib/types';
@@ -21,22 +21,26 @@ const MEAL_MOMENT: Record<MealKey, string> = {
 };
 
 type Filter = RecipeTag | 'fav';
-const FILTERS: Filter[] = ['fav', 'eiwitrijk', 'snel', 'mealprep', 'budget', 'zoet', 'comfort'];
+const FILTERS: Filter[] = ['fav', 'eiwitrijk', 'snel', 'vezelrijk', 'koolhydraatarm', 'vegan', 'mealprep', 'budget', 'zoet', 'comfort'];
+type Sort = 'aanbevolen' | 'eiwit' | 'kcal' | 'tijd';
+const SORTS: [Sort, string][] = [['aanbevolen', 'Aanbevolen'], ['eiwit', 'Meeste eiwit'], ['kcal', 'Minste kcal'], ['tijd', 'Snelst klaar']];
 
 export function Recipes() {
   const today = dateKey();
   const [meal, setMeal] = useState<MealKey | 'alles'>('alles');
   const [q, setQ] = useState('');
   const [filters, setFilters] = useState<Filter[]>([]);
+  const [sort, setSort] = useState<Sort>('aanbevolen');
   const prefs = useStore((s) => s.recipePrefs);
   const favs = useStore((s) => s.favRecipes);
+  const cooked = useStore((s) => s.cooked);
   const shopping = useStore((s) => s.shopping);
   const open = useUI((s) => s.open);
   const t = useTargets();
 
   const list = useMemo(() => {
     const terms = normalize(q.trim()).split(/\s+/).filter(Boolean);
-    return RECIPES.filter((r) => {
+    const found = RECIPES.filter((r) => {
       if (meal !== 'alles' && r.meal !== meal) return false;
       const tags = recipeTags(r);
       if (prefs.vega && !tags.includes('vega')) return false;
@@ -49,7 +53,13 @@ export function Recipes() {
       }
       return true;
     });
-  }, [meal, q, filters, prefs.vega, favs]);
+    if (sort === 'eiwit') return [...found].sort((a, b) => recipeNutrients(b).p - recipeNutrients(a).p);
+    if (sort === 'kcal') return [...found].sort((a, b) => recipeNutrients(a).kcal - recipeNutrients(b).kcal);
+    if (sort === 'tijd') return [...found].sort((a, b) => a.minutes - b.minutes);
+    // aanbevolen: favorieten en recepten die je vaak maakt eerst, daarna eiwit per kcal
+    const score = (r: (typeof found)[number]) => (favs.includes(r.id) ? 100 : 0) + Math.min(30, (cooked[r.id] ?? 0) * 10) + (recipeNutrients(r).p * 4 / recipeNutrients(r).kcal) * 60;
+    return [...found].sort((a, b) => score(b) - score(a));
+  }, [meal, q, filters, prefs.vega, favs, sort, cooked]);
 
   const toBuy = shopping.filter((i) => !i.done).length;
 
@@ -88,11 +98,18 @@ export function Recipes() {
       </div>
 
       <div className="chips scroll">
-        <button className={'chip' + (prefs.vega ? ' on' : '')} onClick={() => { useStore.getState().setRecipePrefs({ vega: !prefs.vega }); toast(prefs.vega ? 'Alle recepten weer zichtbaar' : 'Alleen vegetarisch, ook in je suggesties'); }}>🌱 Vega</button>
+        <button className={'chip' + (prefs.vega ? ' on' : '')} onClick={() => { useStore.getState().setRecipePrefs({ vega: !prefs.vega }); toast(prefs.vega ? 'Alle recepten weer zichtbaar' : 'Alleen vegetarisch, ook in je suggesties'); }}><span className="i14"><I.leaf /></span> Vega</button>
         {FILTERS.map((f) => (
           <button key={f} className={'chip' + (filters.includes(f) ? ' on' : '')} onClick={() => setFilters((cur) => (cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f]))}>
             {f === 'fav' ? 'Favorieten' : TAG_LABEL[f]}
           </button>
+        ))}
+      </div>
+
+      <div className="sortrow" role="radiogroup" aria-label="Sorteren">
+        <span className="tiny">Sorteren:</span>
+        {SORTS.map(([k, l]) => (
+          <button key={k} role="radio" aria-checked={sort === k} className={'sortbtn' + (sort === k ? ' on' : '')} onClick={() => setSort(k)}>{l}</button>
         ))}
       </div>
 

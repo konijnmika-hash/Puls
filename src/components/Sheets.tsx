@@ -78,6 +78,8 @@ export function ActivitySheet() {
   const [act, setAct] = useState(ACTIVITIES[0]);
   const [level, setLevel] = useState(() => mid(ACTIVITIES[0]));
   const [min, setMin] = useState(30);
+  const [all, setAll] = useState(false);
+  const shown = all ? ACTIVITIES : ACTIVITIES.filter((a) => POPULAR_ACT.includes(a.id) || a.id === act.id);
   const met = act.levels ? act.levels[Math.min(level, act.levels.length - 1)].met : act.met;
   // gecorrigeerd voor jouw eigen rustverbranding: nauwkeuriger dan het standaardgetal
   const kcal = metKcal(met, kg, min, t?.bmr);
@@ -89,12 +91,18 @@ export function ActivitySheet() {
     <Sheet onClose={close} title="Activiteit">
       <div className="stack">
         <div className="act-grid" role="radiogroup" aria-label="Soort activiteit">
-          {ACTIVITIES.map((a) => (
+          {shown.map((a) => (
             <button key={a.id} role="radio" aria-checked={a.id === act.id} className={'act' + (a.id === act.id ? ' on' : '')} onClick={() => pick(a)}>
               <span className="act-em">{a.emoji}</span>
               <span className="act-name">{a.name}</span>
             </button>
           ))}
+          {!all && (
+            <button className="act more" onClick={() => setAll(true)}>
+              <span className="i20"><I.plus /></span>
+              <span className="act-name">Meer sporten ({ACTIVITIES.length - shown.length})</span>
+            </button>
+          )}
         </div>
         {act.levels && (
           <div className="field">
@@ -125,6 +133,7 @@ export function ActivitySheet() {
 }
 
 const mid = (a: (typeof ACTIVITIES)[number]) => (a.levels ? Math.floor((a.levels.length - 1) / 2) : 0);
+const POPULAR_ACT = ['wandelen', 'hardlopen', 'fietsen', 'krachttraining', 'hiit', 'spinning', 'zwemmen', 'padel', 'voetbal', 'yoga', 'dansen'];
 
 /** Uitleg: hoe Puls je doelen berekent, met jouw eigen getallen. */
 export function ExplainSheet() {

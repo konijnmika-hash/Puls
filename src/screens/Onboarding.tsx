@@ -341,6 +341,9 @@ export function Onboarding() {
             <div className="label-cap">Per dag</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 56, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1 }} className="num">{fmt(targets.kcal)}</div>
             <div className="muted">kcal</div>
+            <div className="tiny num" style={{ marginTop: 6 }}>
+              Verbruik ± {fmt(targets.tdee)} kcal{Math.abs(targets.kgPerWeek) >= 0.05 ? ` · ± ${fmt(Math.abs(targets.kgPerWeek), 2)} kg per week ${targets.kgPerWeek < 0 ? 'eraf' : 'erbij'}` : ''}
+            </div>
           </div>
           <div className="plan-tiles">
             <div className="plan-tile"><div className="v num" style={{ color: 'var(--protein)' }}>{targets.p} g</div><div className="l">Eiwit</div></div>
@@ -356,7 +359,7 @@ export function Onboarding() {
             </div>
           </div>
           <p className="tiny" style={{ margin: 0 }}>
-            Berekend uit je lengte, gewicht, leeftijd en je geschatte vetpercentage (± {fmt(bf)}%) en vetvrije massa (± {fmt(leanMass(p))} kg). Je eiwit is afgestemd op je spiermassa.
+            Berekend uit je lengte, gewicht, leeftijd, je geschatte vetpercentage (± {fmt(bf)}%) en vetvrije massa (± {fmt(leanMass(p))} kg), je dagelijkse activiteit en {p.trainDays.length ? `${p.trainDays.length} trainingen per week` : 'je trainingen'}. Je eiwit is afgestemd op je spiermassa; daarnaast ± {targets.fib} g vezels per dag.
           </p>
         </Q>
       );

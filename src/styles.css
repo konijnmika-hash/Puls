@@ -607,7 +607,7 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.02e
 .pstep { display: flex; gap: 6px; }
 .pstep button { width: 44px; height: 44px; border-radius: 14px; background: var(--surface); font-size: 22px; font-weight: 700; }
 .pstep button:disabled { opacity: 0.35; }
-.pmacros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pmacros { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .pmacros div { background: var(--surface); border-radius: 12px; padding: 7px 4px; text-align: center; display: flex; flex-direction: column; }
 .pmacros b { font-family: var(--font-display); font-size: 16px; }
 .pmacros span { font-size: 11px; color: var(--ink-2); font-weight: 600; }
@@ -889,3 +889,26 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.02e
 .explain-btn { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--brand) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent); }
 .explain-btn > .i20 { color: var(--brand); width: 24px; height: 24px; }
 .explain-btn > svg { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
+
+/* ---------- Voortgang ---------- */
+.tile .v small { font-size: 13px; color: var(--ink-3); font-weight: 700; }
+.avg-rows { display: flex; flex-direction: column; gap: 10px; }
+.avg-row .bar { margin-top: 5px; }
+.forecast { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--brand) 8%, var(--surface-2)); }
+.forecast .i20 { margin-top: 1px; }
+.energy-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.energy-nums > div { background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.energy-nums .kpi { font-size: 26px; }
+.energy-nums .kpi.muted { color: var(--ink-2); }
+.conf { display: flex; flex-direction: column; gap: 2px; }
+.needs { display: flex; flex-direction: column; gap: 10px; }
+.needs .bar { margin-top: 4px; }
+
+/* ---------- Recepten sorteren ---------- */
+.sortrow { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: -4px -16px 0; padding: 0 16px; white-space: nowrap; }
+.sortrow::-webkit-scrollbar { display: none; }
+.sortrow .tiny { margin-right: 2px; }
+.sortbtn { font-size: 12.5px; font-weight: 700; color: var(--ink-2); padding: 5px 9px; border-radius: 99px; }
+.sortbtn.on { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+.act.more { border-style: dashed; color: var(--brand); }
+.act.more .act-name { color: var(--ink-2); }

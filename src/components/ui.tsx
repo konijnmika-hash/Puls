@@ -245,25 +245,28 @@ export function BarChart({ data, target, color, unit = '', height = 150 }: { dat
   );
 }
 
-export function LineChart({ points, goal, height = 160 }: { points: { label: string; value: number }[]; goal?: number; height?: number }) {
-  const W = 320, H = height, padL = 34, padB = 20, padT = 12;
+/** Gewichtslijn: metingen als puntjes, de gladgestreken trend als doorgetrokken lijn. */
+export function LineChart({ points, goal, height = 160, trend, unit = 'kg' }: { points: { label: string; value: number }[]; goal?: number; height?: number; trend?: number[]; unit?: string }) {
+  const W = 320, H = height, padL = 34, padB = 20, padT = 14;
   if (points.length === 0) return null;
-  const vals = points.map((p) => p.value).concat(goal ? [goal] : []);
+  const vals = points.map((p) => p.value).concat(goal ? [goal] : [], trend ?? []);
   let lo = Math.min(...vals), hi = Math.max(...vals);
   if (hi - lo < 2) { lo -= 1; hi += 1; }
   lo = Math.floor(lo - 0.5); hi = Math.ceil(hi + 0.5);
   const x = (i: number) => padL + 8 + (points.length === 1 ? (W - padL - 16) / 2 : (i * (W - padL - 16)) / (points.length - 1));
   const y = (v: number) => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
-  const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.value)}`).join(' ');
+  const line = (vs: number[]) => vs.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const main = trend && trend.length === points.length ? trend : points.map((p) => p.value);
+  const d = line(main);
   const area = `${d} L${x(points.length - 1)},${H - padB} L${x(0)},${H - padB} Z`;
   const ticks = [lo, (lo + hi) / 2, hi];
   const showEvery = Math.max(1, Math.ceil(points.length / 6));
-  const last = points[points.length - 1];
+  const lastV = main[main.length - 1];
   return (
-    <svg className="chart" viewBox={`0 0 ${W} ${H}`} width="100%" role="img">
+    <svg className="chart" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Gewicht, nu ${lastV.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} ${unit}`}>
       <defs>
         <linearGradient id="wfill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="var(--brand)" stopOpacity="0.28" />
+          <stop offset="0" stopColor="var(--brand)" stopOpacity="0.24" />
           <stop offset="1" stopColor="var(--brand)" stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -275,15 +278,17 @@ export function LineChart({ points, goal, height = 160 }: { points: { label: str
       ))}
       {goal !== undefined && <line x1={padL} x2={W} y1={y(goal)} y2={y(goal)} stroke="var(--carb)" strokeWidth={1.5} strokeDasharray="6 4" />}
       <path d={area} fill="url(#wfill)" />
-      <path d={d} fill="none" stroke="var(--brand)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      {trend && <path d={line(points.map((p) => p.value))} fill="none" stroke="var(--ink-3)" strokeWidth={1} strokeDasharray="2 3" opacity={0.7} />}
+      <path d={d} fill="none" stroke="var(--brand)" strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => (
         <g key={i}>
-          <circle cx={x(i)} cy={y(p.value)} r={i === points.length - 1 ? 5 : 2.5} fill={i === points.length - 1 ? 'var(--brand)' : 'var(--surface)'} stroke="var(--brand)" strokeWidth={2} />
+          <circle cx={x(i)} cy={y(p.value)} r={trend ? 2.6 : i === points.length - 1 ? 5 : 2.5} fill={trend ? 'var(--surface)' : i === points.length - 1 ? 'var(--brand)' : 'var(--surface)'} stroke={trend ? 'var(--ink-3)' : 'var(--brand)'} strokeWidth={trend ? 1.4 : 2} />
           {i % showEvery === 0 && <text x={x(i)} y={H - 5} textAnchor="middle">{p.label}</text>}
         </g>
       ))}
-      <text x={x(points.length - 1)} y={y(last.value) - 10} textAnchor="end" style={{ fill: 'var(--ink)', fontWeight: 700, fontSize: 11 }}>
-        {last.value.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} kg
+      {trend && <circle cx={x(points.length - 1)} cy={y(lastV)} r={5} fill="var(--brand)" stroke="var(--surface)" strokeWidth={2} />}
+      <text x={x(points.length - 1)} y={y(lastV) - 10} textAnchor="end" style={{ fill: 'var(--ink)', fontWeight: 700, fontSize: 11 }}>
+        {lastV.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} {unit}
       </text>
     </svg>
   );

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FOOD_BY_ID } from '../src/data/foods';
+import { FOOD_BY_ID, FOODS } from '../src/data/foods';
+
+const FOODS_BY_NAME = new Map(FOODS.map((f) => [f.name, f]));
 import { RECIPES } from '../src/data/recipes';
 import { ALL_EQUIP } from '../src/data/exercises';
 import { calcTargets, mealRange } from '../src/lib/calc';
@@ -139,6 +141,50 @@ describe('recipes', () => {
     const idea = feed.find((m) => m.id === 'idea-diner');
     expect(idea?.action?.kind).toBe('recipe');
     expect(idea?.action?.ref).toBeTruthy();
+  });
+});
+
+describe('more recipes and smarter labels', () => {
+  const byId = (id: string) => RECIPES.find((r) => r.id === id)!;
+  it('has well over a hundred recipes, spread over the day', () => {
+    expect(RECIPES.length).toBeGreaterThanOrEqual(140);
+    for (const m of MEALS) expect(RECIPES.filter((r) => r.meal === m).length, m).toBeGreaterThanOrEqual(25);
+  });
+  it('tells vegetarian and vegan apart, and champignons are not ham', () => {
+    expect(recipeTags(byId('champignonrisotto'))).toContain('vega');
+    expect(recipeTags(byId('erwtensoep-snel'))).not.toContain('vega');
+    expect(recipeTags(byId('toast-avocado-hummus'))).toContain('vegan');
+    expect(recipeTags(byId('pita-falafel-tahin'))).toContain('vega');
+    expect(recipeTags(byId('pita-falafel-tahin'))).not.toContain('vegan');
+    expect(recipeTags(byId('curry-zoete-aardappel-kikkererwten'))).toEqual(expect.arrayContaining(['vegan', 'vezelrijk']));
+    expect(recipeTags(byId('eimuffins-groente'))).toContain('koolhydraatarm');
+    for (const r of RECIPES) {
+      const tags = recipeTags(r);
+      expect(new Set(tags).size, r.id).toBe(tags.length);
+      if (tags.includes('vegan')) expect(tags, r.id).toContain('vega');
+    }
+  });
+  it('recognises meat and animal products by whole words', async () => {
+    const { isMeat, isAnimal } = await import('../src/lib/recipes');
+    const f = (name: string) => FOODS_BY_NAME.get(name)!;
+    for (const n of ['Champignons', 'Pompoen', 'Pompoenpitten', 'Sushirijst (bereid)', 'Lasagnebladen (droog)', 'Vegetarische kipstukjes', 'Pindakaas']) expect(isMeat(f(n)), n).toBe(false);
+    for (const n of ['Achterham', 'Kipfilet (beleg)', 'Frikandel', 'Babi pangang', 'Pom (Surinaams)', 'Sushi (maki)', 'Vissaus']) expect(isMeat(f(n)), n).toBe(true);
+    for (const n of ['Honingmeloen', 'Paneermeel', 'Sojadrink', 'Kokosyoghurt', 'Pindakaas', 'Hummus']) expect(isAnimal(f(n)), n).toBe(false);
+    for (const n of ['Honing', 'Halfvolle melk', 'Ei (rauw)', 'Geraspte kaas 30+', 'Proteïnepoeder (whey)', 'Mayonaise']) expect(isAnimal(f(n)), n).toBe(true);
+  });
+  it('counts fibre in recipes and logged portions', () => {
+    const r = byId('linzensoep-wortel');
+    expect(recipeNutrients(r).fib).toBeGreaterThan(8);
+    expect(recipeFood(r, 1).fib).toBeGreaterThan(0);
+  });
+  it('skips breakfast in the day menu when you eat 16:8', () => {
+    const fasting = calcTargets({ ...profile, pattern: 'geen-ontbijt' });
+    const menu = dayMenu(fasting, { vega: false }, 'seed')!;
+    expect(menu.meals).not.toContain('ontbijt');
+    expect(menu.items.ontbijt).toBeUndefined();
+    expect(Math.abs(menu.total.kcal - fasting.kcal) / fasting.kcal).toBeLessThan(0.15);
+    // opent je toch een ontbijtrecept, dan krijg je een redelijke portie
+    expect(roomFor('ontbijt', fasting, emptyDay(), { kcal: 0, p: 0 }).kcal).toBeGreaterThan(200);
   });
 });
 

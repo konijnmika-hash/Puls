@@ -1,3 +1,4 @@
+import { skipsMeal } from './calc';
 import { addDays, fmt, greeting, liters } from './date';
 import { dayTotals } from './hooks';
 import type { DayLog, MealKey, Profile, Targets, WeightEntry } from './types';
@@ -43,7 +44,7 @@ const IDEA: Record<MealKey, { from: number; to: number; title: string; prio: num
 /** Een receptvoorstel voor de maaltijd die nu aan de beurt is. */
 function mealIdea(c: CoachCtx): CoachMsg | null {
   const meal = (Object.keys(IDEA) as MealKey[]).find((m) => c.hour >= IDEA[m].from && c.hour <= IDEA[m].to);
-  if (!meal || c.day.meals[meal].length) return null;
+  if (!meal || c.day.meals[meal].length || skipsMeal(meal, c.t.split)) return null;
   const { eaten } = dayTotals(c.day);
   const room = roomFor(meal, c.t, c.day, eaten);
   const best = suggest(meal, room, { prefs: c.prefs ?? { vega: false }, favorites: c.favorites, recent: recentlyEaten(c.days, c.date), seed: c.date })[0];
@@ -140,6 +141,13 @@ export function coachFeed(c: CoachCtx): CoachMsg[] {
       text: snack ? `${snack.recipe.name}: ${fmt(snack.n.p)} g eiwit, ${fmt(snack.n.kcal)} kcal.` : 'Bijvoorbeeld skyr (17 g), kipfilet (36 g) of linzen (14 g).',
       action: snack ? { label: 'Bekijk snack', kind: 'recipe', ref: snack.recipe.id, meal: 'snacks' } : { label: 'Eten toevoegen', kind: 'food' },
     });
+  }
+
+  // Vezels
+  if (eaten.fib >= t.fib * 0.95 && count > 0) {
+    out.push({ id: 'fiber-done', tone: 'cheer', prio: 44, title: 'Vezeldoel gehaald', text: `${fmt(eaten.fib)} g vezels vandaag. Goed voor je darmen en je verzadiging.` });
+  } else if (hour >= 15 && count >= 2 && eaten.fib < t.fib * 0.45) {
+    out.push({ id: 'fiber', tone: 'tip', prio: 42, title: `Nog ${fmt(t.fib - eaten.fib)} g vezels te gaan`, text: 'Kies bij het avondeten volkoren pasta of rijst, peulvruchten of een extra portie groente.', action: { label: 'Eten toevoegen', kind: 'food' } });
   }
 
   // Receptidee voor de volgende maaltijd

@@ -113,7 +113,7 @@ export function ProfileScreen() {
           <button className="btn danger block sm" onClick={() => setConfirm(true)}>Gegevens wissen en opnieuw beginnen</button>
         )}
       </section>
-      <p className="tiny" style={{ textAlign: 'center' }}>Puls 0.2 · Je gegevens blijven op dit apparaat.<br />Voedingswaarden: eigen basisdatabase + Open Food Facts (ODbL).</p>
+      <p className="tiny" style={{ textAlign: 'center' }}>Puls 0.3 · Je gegevens blijven op dit apparaat.<br />Voedingswaarden: eigen basisdatabase + Open Food Facts (ODbL).</p>
     </div>
   );
 }

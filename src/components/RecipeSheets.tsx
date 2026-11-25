@@ -45,7 +45,7 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
   const tags = recipeTags(recipe);
   const eaten = day ? dayTotals(day).eaten : { kcal: 0, p: 0 };
   const after = Math.round(t.kcal - eaten.kcal - n.kcal);
-  const [lo, hi] = mealRange(meal, t.kcal);
+  const [lo, hi] = mealRange(meal, t.kcal, t.split);
   const setF = (f: number) => {
     touched.current = true;
     setFactor(f);
@@ -97,13 +97,14 @@ export function RecipeSheet({ id, meal: mealProp, planned }: { id: string; meal?
             </div>
             <div className="pmacros num">
               <div><b>{fmt(n.kcal)}</b><span>kcal</span></div>
-              <div><b style={{ color: 'var(--protein)' }}>{fmt(n.p)} g</b><span>eiwit</span></div>
-              <div><b style={{ color: 'var(--carb)' }}>{fmt(n.c)} g</b><span>koolh.</span></div>
-              <div><b style={{ color: 'var(--fat)' }}>{fmt(n.f)} g</b><span>vet</span></div>
+              <div><b style={{ color: 'var(--protein)' }}>{fmt(n.p)}</b><span>eiwit g</span></div>
+              <div><b style={{ color: 'var(--carb)' }}>{fmt(n.c)}</b><span>koolh. g</span></div>
+              <div><b style={{ color: 'var(--fat)' }}>{fmt(n.f)}</b><span>vet g</span></div>
+              <div><b style={{ color: 'var(--fiber)' }}>{fmt(n.fib)}</b><span>vezels g</span></div>
             </div>
             <p className="portion-why">
               {factor === advised
-                ? <>{fromMenu ? 'Portie volgens je dagmenu.' : room?.adjusted ? `Na wat je vandaag al at, is er voor ${MEAL_META[meal].label.toLowerCase()} nog ongeveer ${fmt(Math.round((room.kcal) / 10) * 10)} kcal.` : `Voor ${MEAL_META[meal].label.toLowerCase()} past ${fmt(lo)}–${fmt(hi)} kcal bij je doel.`}{factor !== 1 && !fromMenu ? ` Aanbevolen: ${portionText(factor)}.` : ''}</>
+                ? <>{fromMenu ? 'Portie volgens je dagmenu.' : !hi ? `Je slaat ${MEAL_META[meal].label.toLowerCase()} over in je eetpatroon; dit is een kleine portie van ± ${fmt(Math.round((room?.kcal ?? 0) / 10) * 10)} kcal.` : room?.adjusted ? `Na wat je vandaag al at, is er voor ${MEAL_META[meal].label.toLowerCase()} nog ongeveer ${fmt(Math.round((room.kcal) / 10) * 10)} kcal.` : `Voor ${MEAL_META[meal].label.toLowerCase()} past ${fmt(lo)}–${fmt(hi)} kcal bij je doel.`}{factor !== 1 && !fromMenu ? ` Aanbevolen: ${portionText(factor)}.` : ''}</>
                 : <>Aanbevolen was {portionText(advised)} ({fmt(portionNutrients(recipe, advised).kcal)} kcal). <button className="link" onClick={() => setF(advised)}>Terug naar advies</button></>}
               {logDate === today && <> Na deze maaltijd heb je vandaag nog <b className="num">{after >= 0 ? `${fmt(after)} kcal` : `${fmt(-after)} kcal te veel`}</b>{after >= 0 ? ' over' : ''}.</>}
             </p>
@@ -311,10 +312,16 @@ const AISLES: { label: string; cats: (FoodCategory | 'x')[] }[] = [
   { label: 'Zuivel & eieren', cats: ['zuivel'] },
   { label: 'Vlees, vis & vega', cats: ['vlees', 'vega'] },
   { label: 'Brood & ontbijt', cats: ['brood', 'beleg'] },
-  { label: 'Pasta, rijst & granen', cats: ['granen', 'gerecht'] },
-  { label: 'Voorraadkast', cats: ['saus', 'snack', 'drank'] },
+  { label: 'Pasta, rijst & granen', cats: ['granen', 'gerecht', 'afhaal'] },
+  { label: 'Voorraadkast', cats: ['saus', 'snack', 'zoet', 'drank'] },
   { label: 'Kruiden & extra’s', cats: ['x'] },
 ];
+
+/** De afdeling van een product; onbekende categorieën komen bij de extra's, zodat er nooit iets verdwijnt. */
+const aisleOf = (id: string) => {
+  const cat = (FOOD_BY_ID.get(id)?.cat ?? 'x') as FoodCategory | 'x';
+  return AISLES.find((a) => a.cats.includes(cat)) ?? AISLES[AISLES.length - 1];
+};
 
 export function ShoppingSheet() {
   const close = useUI((s) => s.close);
@@ -325,10 +332,7 @@ export function ShoppingSheet() {
       AISLES.map((a) => ({
         ...a,
         items: list
-          .filter((i) => {
-            const cat = FOOD_BY_ID.get(i.id)?.cat ?? 'x';
-            return a.cats.includes(cat as FoodCategory | 'x');
-          })
+          .filter((i) => aisleOf(i.id) === a)
           .sort((x, y) => Number(x.done) - Number(y.done) || x.name.localeCompare(y.name)),
       })).filter((g) => g.items.length),
     [list],
