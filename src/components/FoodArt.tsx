@@ -1,6 +1,6 @@
 // Tekent een recept als een "flat lay" foodfoto: ondergrond, servies, gerecht en licht.
-// Alles is vector, dus scherp op elk scherm en werkt offline. Een echte foto (recipe.photo) gaat voor.
-import { memo, useId, type ReactNode } from 'react';
+// Alles is vector, dus scherp op elk scherm en werkt offline. Een echte foto (src/assets/recepten/<id>.webp) gaat voor.
+import { memo, useId, useState, type ReactNode } from 'react';
 import type { Art, Base, Bg, Item, Part, Recipe } from '../data/recipes';
 
 const W = 400;
@@ -591,10 +591,22 @@ function Defs({ id, art }: { id: string; art: Art }) {
   );
 }
 
+/** Voor recepten zonder tekening: een leeg bord op linnen. */
+const PLAIN_ART: Art = { bg: 'linnen', dish: 'bord', parts: [] };
+
+/** Echte foto's in src/assets/recepten/<id>.webp; Vite zet ze in de build (en in de losse preview). */
+const PHOTOS: Record<string, string> = Object.fromEntries(
+  Object.entries(import.meta.glob('../assets/recepten/*.webp', { eager: true, query: '?url', import: 'default' })).map(
+    ([path, url]) => [path.slice(path.lastIndexOf('/') + 1, -'.webp'.length), url as string],
+  ),
+);
+
+export const photoFor = (recipe: Recipe) => recipe.photo ?? PHOTOS[recipe.id];
+
 function ArtSvg({ recipe }: { recipe: Recipe }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = `a${uid}`;
-  const art = recipe.art;
+  const art = recipe.art ?? PLAIN_ART;
   const rng = rngFor(recipe.id);
   const f = frameFor(art);
   const round = art.dish === 'kom' || art.dish === 'bord' || art.dish === 'pan';
@@ -623,9 +635,11 @@ function ArtSvg({ recipe }: { recipe: Recipe }) {
 
 /** Foto van een recept: een echte foto als die er is, anders de getekende versie. */
 export const FoodArt = memo(function FoodArt({ recipe, className = '' }: { recipe: Recipe; className?: string }) {
+  const photo = photoFor(recipe);
+  const [broken, setBroken] = useState(false);
   return (
     <div className={'foodphoto ' + className}>
-      {recipe.photo ? <img src={recipe.photo} alt={recipe.name} loading="lazy" /> : <ArtSvg recipe={recipe} />}
+      {photo && !broken ? <img src={photo} alt={recipe.name} loading="lazy" decoding="async" onError={() => setBroken(true)} /> : <ArtSvg recipe={recipe} />}
     </div>
   );
 });

@@ -66,8 +66,9 @@ export interface Recipe {
   tip?: string;
   /** handmatige labels; vega, eiwitrijk en snel worden berekend */
   tags?: ('mealprep' | 'budget' | 'zoet' | 'comfort')[];
-  art: Art;
-  /** optioneel: pad naar een echte foto in public/, bijv. "recepten/overnight-oats.jpg" */
+  /** getekende versie; wordt alleen gebruikt als er geen foto in src/assets/recepten/<id>.webp staat */
+  art?: Art;
+  /** optioneel: ander pad of url voor de foto */
   photo?: string;
 }
 
