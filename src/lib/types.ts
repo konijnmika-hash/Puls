@@ -53,7 +53,18 @@ export interface Targets {
   waterMl: number;
   steps: number;
   bmr: number;
+  /** totaal verbruik per dag, inclusief trainingen (gemiddeld over de week) */
   tdee: number;
+  /** verbruik door rust en dagelijkse activiteit, zonder trainingen */
+  dailyKcal: number;
+  /** gemiddeld extra verbruik per dag door je trainingen */
+  trainKcal: number;
+  /** advies t.o.v. je verbruik: negatief = tekort, positief = overschot */
+  delta: number;
+  /** verwachte verandering in kg per week bij het advies */
+  kgPerWeek: number;
+  /** hier gaat je advies nooit onder */
+  minKcal: number;
 }
 
 export interface FoodEntry {

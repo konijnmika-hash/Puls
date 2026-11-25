@@ -65,6 +65,7 @@ const TONE: Record<CoachMsg['tone'], { label: string; color: string }> = {
   nudge: { label: 'Herinnering', color: 'var(--steps)' },
   tip: { label: 'Tip', color: 'var(--water)' },
   plan: { label: 'Vandaag', color: 'var(--brand)' },
+  care: { label: 'Let op je gezondheid', color: 'var(--danger)' },
 };
 
 export function CoachCard({ date }: { date: string }) {

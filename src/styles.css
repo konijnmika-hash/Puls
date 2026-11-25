@@ -785,3 +785,21 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.02e
 }
 .tr-sum-check { width: 72px; height: 72px; border-radius: 50%; background: var(--ok); color: #fff; display: grid; place-items: center; margin: 18px auto 0; }
 .tr-sum-check svg { width: 36px; height: 36px; }
+
+/* Gezondheidswaarschuwingen */
+.health-note {
+  --c: var(--steps);
+  border-radius: var(--r-sm);
+  border-left: 4px solid var(--c);
+  background: color-mix(in srgb, var(--c) 11%, var(--surface));
+  padding: 10px 12px;
+  text-align: left;
+}
+.health-note.stop { --c: var(--danger); }
+.health-note b { display: block; font-size: 14.5px; }
+.health-note p { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
+.kcal-sum { display: grid; gap: 4px; font-size: 13.5px; }
+.kcal-sum > div { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-2); }
+.kcal-sum > div b { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.kcal-sum > .tot { border-top: 1px solid var(--line); padding-top: 4px; color: var(--ink); font-weight: 700; }
+.kcal-sum > .tot b { font-weight: 800; }

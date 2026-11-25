@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { HealthNotes } from './HealthNotes';
+import { planNotes, trainingPlanNotes } from '../lib/health';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
 import { ACTIVITY, PACE, calcTargets, metKcal } from '../lib/calc';
@@ -212,6 +214,7 @@ export function GoalsSheet() {
         <div className="field"><span className="lbl">Calorieën per dag (advies {fmt(auto.kcal)})</span><Stepper id="g-kcal" value={kcal} onChange={setKcal} step={50} min={1000} max={6000} /></div>
         <div className="field"><span className="lbl">Water in ml (advies {fmt(auto.waterMl)})</span><Stepper id="g-water" value={water} onChange={setWater} step={250} min={1000} max={6000} /></div>
         <div className="field"><span className="lbl">Stappen (advies {fmt(auto.steps)})</span><Stepper id="g-steps" value={steps} onChange={setSteps} step={500} min={1000} max={40000} /></div>
+        <HealthNotes notes={planNotes({ ...profile, custom: { kcal } }, calcTargets({ ...profile, custom: { kcal } })).filter((n) => n.id.startsWith('custom'))} />
         <p className="tiny" style={{ margin: 0 }}>Eiwit, koolhydraten en vet worden automatisch over je nieuwe calorie-doel verdeeld.</p>
         <div className="row">
           <button className="btn outline" onClick={() => { useStore.getState().updateProfile({ custom: undefined }); toast('Terug naar advieswaarden'); close(); }}>Advies</button>
@@ -286,6 +289,7 @@ export function PlanEditSheet() {
             })}
           </div>
           {days.length > 0 && <span className="tiny">Schema: {SPLIT_NAME(days.length)}</span>}
+          <HealthNotes notes={trainingPlanNotes(days, experience)} />
         </div>
         <div className="field"><span className="lbl">Waar train je?</span>
           <div className="chips">{PLACE_OPTIONS.map((o) => <button key={o.v} className={'chip' + (place === o.v ? ' on' : '')} onClick={() => { setPlace(o.v); setEquipment(defaultEquipment(o.v)); }}>{o.em} {o.t}</button>)}</div>

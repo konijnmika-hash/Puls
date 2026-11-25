@@ -140,7 +140,7 @@ export function Today() {
 function Bell() {
   const ctx = useCoachCtx(dateKey());
   const open = useUI((s) => s.open);
-  const n = ctx ? coachFeed(ctx).filter((m) => m.tone === 'nudge').length : 0;
+  const n = ctx ? coachFeed(ctx).filter((m) => m.tone === 'nudge' || m.tone === 'care').length : 0;
   return (
     <button className="iconbtn bell" style={{ width: 42, height: 42, background: 'var(--surface)' }} onClick={() => open({ type: 'inbox' })} aria-label={`Tips en herinneringen${n ? `, ${n} nieuw` : ''}`}>
       <I.bell />

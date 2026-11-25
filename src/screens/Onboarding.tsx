@@ -8,6 +8,8 @@ import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
 import { EXPERIENCE, SPLIT_NAME } from '../lib/workout';
 import { requestNotifications } from '../components/Coach';
 import { Body } from '../components/Body';
+import { HealthNotes } from '../components/HealthNotes';
+import { planNotes, trainingPlanNotes } from '../lib/health';
 import { I, NumField, Ring, Switch, Wordmark } from '../components/ui';
 
 const ACT_EMOJI: Record<ActivityLevel, string> = { zittend: '🪑', licht: '🚶', gemiddeld: '🚴', actief: '🏃', zeer: '⛹️' };
@@ -207,12 +209,13 @@ export function Onboarding() {
               );
             })}
           </div>
+          <HealthNotes notes={planNotes({ ...p, createdAt: '' }, targets).filter((n) => n.id !== 'young' && !n.id.startsWith('plan'))} />
         </Q>
       );
       break;
     case 'activiteit':
       content = (
-        <Q title="Hoe actief ben je op een normale dag?" lead="Zonder je trainingen mee te tellen. Hiermee bepalen we ook je stappendoel.">
+        <Q title="Hoe actief ben je op een normale dag?" lead="Denk aan je werk of school, zonder sport. Je trainingen rekenen we apart mee.">
           <div className="stack">
             {(Object.keys(ACTIVITY) as ActivityLevel[]).map((k) => (
               <button key={k} className={'choice' + (p.activity === k ? ' on' : '')} onClick={() => { set('activity', k); next(); }} style={{ padding: 12 }}>
@@ -243,6 +246,7 @@ export function Onboarding() {
               );
             })}
           </div>
+          <HealthNotes notes={trainingPlanNotes(p.trainDays, p.experience)} />
           {p.trainDays.length > 0 && (
             <div className="card flat small">
               <b>{SPLIT_NAME(p.trainDays.length)}</b>
@@ -354,8 +358,11 @@ export function Onboarding() {
               <div className="small muted">{p.trainDays.map((d) => DAY_SHORT[d]).join(', ') || 'Je kunt later dagen kiezen'} · {EXPERIENCE[p.experience].t.toLowerCase()}</div>
             </div>
           </div>
+          <HealthNotes notes={planNotes({ ...p, createdAt: '' }, targets)} />
           <p className="tiny" style={{ margin: 0 }}>
-            Berekend uit je lengte, gewicht, leeftijd en je geschatte vetpercentage (± {fmt(bf)}%) en vetvrije massa (± {fmt(leanMass(p))} kg). Je eiwit is afgestemd op je spiermassa.
+            Je verbruikt ongeveer {fmt(targets.tdee)} kcal per dag: {fmt(targets.bmr)} in rust, {fmt(targets.dailyKcal - targets.bmr)} door je dagelijkse activiteit en gemiddeld {fmt(targets.trainKcal)} door je trainingen.
+            {targets.delta < -20 ? ` Met ${fmt(-targets.delta)} kcal minder val je ± ${fmt(-targets.kgPerWeek, 2)} kg per week af.` : targets.delta > 20 ? ` Met ${fmt(targets.delta)} kcal extra kom je ± ${fmt(targets.kgPerWeek, 2)} kg per week aan.` : ''}
+            {' '}Je eiwit is afgestemd op je vetvrije massa (± {fmt(leanMass(p))} kg, vetpercentage ± {fmt(bf)}%). We gaan nooit onder {fmt(targets.minKcal)} kcal.
           </p>
         </Q>
       );

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FOODS, searchFoods } from '../src/data/foods';
 import { ALL_EQUIP, EXERCISES } from '../src/data/exercises';
-import { bmr, bodyFat, calcTargets, entryNutrients, mealRange } from '../src/lib/calc';
+import { bmr, bodyFat, calcTargets, entryNutrients, mealRange, trainingKcalPerDay } from '../src/lib/calc';
+import { behaviorNotes, longestRun, planNotes, trainingPlanNotes } from '../src/lib/health';
 import { coachFeed } from '../src/lib/coach';
 import { emptyDay } from '../src/lib/store';
 import { addDays, weekday } from '../src/lib/date';
@@ -20,12 +21,27 @@ describe('calories', () => {
     expect(bmr(base)).toBe(10 * 80 + 6.25 * 180 - 5 * 30 + 5); // 1780
     expect(bmr({ ...base, sex: 'vrouw' })).toBe(1780 - 166);
   });
-  it('blends Mifflin-St Jeor with lean mass and applies a 0.5 kg/week deficit', () => {
+  it('blends Mifflin-St Jeor with lean mass, adds training separately and applies a 0.5 kg/week deficit', () => {
     const t = calcTargets(base);
     const lbm = 80 * (1 - bodyFat(base) / 100);
     const b = (1780 + 370 + 21.6 * lbm) / 2;
     expect(t.bmr).toBe(Math.round(b));
-    expect(t.kcal).toBe(Math.round((b * 1.55 - 550) / 10) * 10);
+    const train = trainingKcalPerDay(base);
+    expect(t.trainKcal).toBe(Math.round(train));
+    expect(t.kcal).toBe(Math.round((b * 1.45 + train - 550) / 10) * 10);
+    expect(t.kgPerWeek).toBeCloseTo(-0.5, 1);
+  });
+  it('more training days means more food', () => {
+    expect(calcTargets({ ...base, trainDays: [0, 1, 2, 3, 4] }).kcal).toBeGreaterThan(calcTargets({ ...base, trainDays: [] }).kcal);
+  });
+  it('caps the deficit: max 1% of body weight per week and never below resting burn', () => {
+    const small = calcTargets({ ...base, sex: 'vrouw', weightKg: 55, heightCm: 160, activity: 'zittend', pace: 'snel', trainDays: [] });
+    expect(-small.kgPerWeek).toBeLessThanOrEqual(0.55);
+    expect(small.kcal).toBeGreaterThanOrEqual(small.bmr * 0.9 - 10);
+    expect(small.kcal).toBeGreaterThanOrEqual(1200);
+    // slank iemand krijgt een kleiner tekort
+    const lean = calcTargets({ ...base, fat: 2, pace: 'snel' });
+    expect(lean.delta).toBeGreaterThanOrEqual(-lean.tdee * 0.15 - 1);
   });
   it('uses the fat and muscle scales', () => {
     expect(bodyFat({ sex: 'man', fat: 1, muscle: 5 })).toBe(7);
@@ -182,5 +198,46 @@ describe('recomp goal', () => {
     expect(keep.kcal - recomp.kcal).toBeLessThanOrEqual(360);
     expect(recomp.p).toBeGreaterThan(lose.p);
     expect(recomp.steps).toBe(lose.steps);
+  });
+});
+
+describe('health checks', () => {
+  const t = calcTargets(base);
+  it('warns about training without rest days', () => {
+    expect(trainingPlanNotes([0, 1, 2, 3, 4, 5, 6])[0]).toMatchObject({ id: 'plan-7', level: 'stop' });
+    expect(trainingPlanNotes([0, 1, 2, 3, 4, 5])[0].id).toBe('plan-6');
+    expect(trainingPlanNotes([0, 2, 4])).toEqual([]);
+    expect(longestRun([5, 6, 0, 1])).toBe(4);
+    expect(trainingPlanNotes([5, 6, 0, 1], 'beginner')[0].id).toBe('plan-run');
+  });
+  it('warns about a goal weight that is too low and a custom target that is too low', () => {
+    expect(planNotes({ ...base, goalWeightKg: 55 }, t).some((n) => n.id === 'goal-low')).toBe(true);
+    const custom = { ...base, custom: { kcal: 1000 } };
+    expect(planNotes(custom, calcTargets(custom)).some((n) => n.id === 'custom-low')).toBe(true);
+    expect(planNotes(base, t).filter((n) => n.level === 'stop')).toEqual([]);
+  });
+  const oats = FOODS.find((f) => f.name === 'Havermout')!;
+  const logged = (kcal: number, workout = false) => {
+    const e = (id: string) => ({ id, food: oats, grams: (kcal / 3 / oats.kcal) * 100, label: '' });
+    return { ...emptyDay(), meals: { ontbijt: [e('a')], lunch: [e('b')], diner: [e('c')], snacks: [] }, workoutsDone: workout ? ['push'] : [] };
+  };
+  const today = '2026-11-25';
+  const ctx = (days: Record<string, ReturnType<typeof logged>>) => ({ profile: base, t, days, today, hour: 12, weights: [] });
+  it('tells you to rest after many training days in a row', () => {
+    const days = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((i) => [addDays(today, -i), logged(t.kcal, true)]));
+    expect(behaviorNotes(ctx(days)).find((n) => n.id === 'rest-now')?.level).toBe('stop');
+    const feed = coachFeed({ profile: base, t, day: emptyDay(), days, date: today, today, hour: 12, waterTarget: 3000, weights: [] });
+    expect(feed[0].tone).toBe('care');
+    expect(behaviorNotes(ctx({ [addDays(today, -1)]: logged(t.kcal, true) }))).toEqual([]);
+  });
+  it('warns when you eat far too little for several days', () => {
+    const days = Object.fromEntries([1, 2, 3].map((i) => [addDays(today, -i), logged(800)]));
+    expect(behaviorNotes(ctx(days)).find((n) => n.id === 'eat-more')?.level).toBe('stop');
+    const ok = Object.fromEntries([1, 2, 3].map((i) => [addDays(today, -i), logged(t.kcal)]));
+    expect(behaviorNotes(ctx(ok))).toEqual([]);
+  });
+  it('warns when weight drops too fast', () => {
+    const weights = [{ date: '2026-10-28', kg: 84 }, { date: '2026-11-25', kg: 79 }];
+    expect(behaviorNotes({ ...ctx({}), weights }).some((n) => n.id === 'fast-loss')).toBe(true);
   });
 });

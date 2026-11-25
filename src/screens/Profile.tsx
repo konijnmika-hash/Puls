@@ -7,6 +7,8 @@ import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { ReminderRows, SettingsRows } from '../components/Sheets';
 import { I } from '../components/ui';
+import { HealthNotes } from '../components/HealthNotes';
+import { planNotes } from '../lib/health';
 
 export function ProfileScreen() {
   const profile = useStore((s) => s.profile)!;
@@ -66,10 +68,21 @@ export function ProfileScreen() {
           <Goal v={`${t.p}`} u="g" l="Eiwit" c="var(--protein)" small />
           <Goal v={`${t.f}`} u="g" l="Vet" c="var(--fat)" small />
         </div>
+        <div className="kcal-sum num">
+          <div><span>Rustverbranding</span><b>{fmt(t.bmr)}</b></div>
+          <div><span>Dagelijkse activiteit</span><b>+ {fmt(t.dailyKcal - t.bmr)}</b></div>
+          <div><span>Trainingen ({profile.trainDays.length}× per week, gemiddeld)</span><b>+ {fmt(t.trainKcal)}</b></div>
+          <div className="tot"><span>Je verbruik per dag</span><b>{fmt(t.tdee)}</b></div>
+          {!profile.custom?.kcal && Math.abs(t.delta) > 20 && (
+            <div><span>{t.delta < 0 ? `Tekort (± ${fmt(-t.kgPerWeek, 2)} kg per week eraf)` : `Overschot (± ${fmt(t.kgPerWeek, 2)} kg per week erbij)`}</span><b>{t.delta < 0 ? '−' : '+'} {fmt(Math.abs(t.delta))}</b></div>
+          )}
+          <div className="tot"><span>Jouw doel</span><b>{fmt(t.kcal)} kcal</b></div>
+        </div>
         <p className="tiny" style={{ margin: 0 }}>
-          Berekend uit je lengte, gewicht, leeftijd en vetpercentage (Mifflin-St Jeor en Katch-McArdle): je rustverbranding is {fmt(t.bmr)} kcal, met je dagelijkse activiteit verbruik je ongeveer {fmt(t.tdee)} kcal.
+          Berekend uit je lengte, gewicht, leeftijd en vetpercentage (Mifflin-St Jeor en Katch-McArdle). Je advies gaat nooit onder {fmt(t.minKcal)} kcal: minder is niet gezond.
           {profile.custom ? ' Je gebruikt eigen doelen.' : ''}
         </p>
+        <HealthNotes notes={planNotes(profile, t)} />
       </section>
 
       <div className="section-title"><h2>Coach &amp; reminders</h2></div>
