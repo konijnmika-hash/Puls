@@ -2,6 +2,7 @@
 // zodat calorieën en macro's precies kloppen. Kruiden, zout en peper tellen niet mee.
 import type { MealKey } from '../lib/types';
 import { MORE_RECIPES } from './recipes-meer';
+import { EXTRA_RECIPES } from './recipes-extra';
 
 /** Ondergrond van de foto */
 export type Bg = 'hout' | 'eiken' | 'linnen' | 'marmer' | 'leisteen' | 'terrazzo';
@@ -62,8 +63,9 @@ export interface Recipe {
   tip?: string;
   /** handmatige labels; vega, eiwitrijk en snel worden berekend */
   tags?: ('mealprep' | 'budget' | 'zoet' | 'comfort')[];
-  art: Art;
-  /** optioneel: pad naar een echte foto in public/, bijv. "recepten/overnight-oats.jpg" */
+  /** getekende versie; wordt alleen gebruikt als er geen foto in src/assets/recepten/<id>.webp staat */
+  art?: Art;
+  /** optioneel: ander pad of url voor de foto */
   photo?: string;
 }
 
@@ -746,6 +748,6 @@ const BASE_RECIPES: Recipe[] = [
   },
 ];
 
-export const RECIPES: Recipe[] = [...BASE_RECIPES, ...MORE_RECIPES];
+export const RECIPES: Recipe[] = [...BASE_RECIPES, ...MORE_RECIPES, ...EXTRA_RECIPES];
 
 export const RECIPE_BY_ID = new Map(RECIPES.map((r) => [r.id, r]));
