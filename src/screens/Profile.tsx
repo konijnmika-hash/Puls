@@ -77,6 +77,9 @@ export function ProfileScreen() {
           </span>
           <I.right />
         </button>
+        <p className="tiny" style={{ margin: 0 }}>
+          Dit zijn schattingen, geen exacte waarden en geen regels die je moet volgen. Zie ze als richtlijn en luister naar je lichaam. Twijfel je, overleg dan met je huisarts of een diëtist.
+        </p>
       </section>
 
       <div className="section-title"><h2>Voeding</h2></div>

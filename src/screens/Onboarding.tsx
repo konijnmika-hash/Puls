@@ -336,7 +336,7 @@ export function Onboarding() {
       break;
     case 'plan':
       content = (
-        <Q title={`${p.name ? p.name + ', j' : 'J'}e plan staat klaar`} lead="Dit zijn je dagelijkse doelen. Je kunt ze altijd aanpassen.">
+        <Q title={`${p.name ? p.name + ', j' : 'J'}e plan staat klaar`} lead="Dit zijn geschatte dagdoelen: een richtlijn, geen verplichting. Je kunt ze altijd aanpassen.">
           <div className="daycard" style={{ textAlign: 'center' }}>
             <div className="label-cap">Per dag</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 56, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1 }} className="num">{fmt(targets.kcal)}</div>
@@ -359,7 +359,7 @@ export function Onboarding() {
             </div>
           </div>
           <p className="tiny" style={{ margin: 0 }}>
-            Berekend uit je lengte, gewicht, leeftijd, je geschatte vetpercentage (± {fmt(bf)}%) en vetvrije massa (± {fmt(leanMass(p))} kg), je dagelijkse activiteit en {p.trainDays.length ? `${p.trainDays.length} trainingen per week` : 'je trainingen'}. Je eiwit is afgestemd op je spiermassa; daarnaast ± {targets.fib} g vezels per dag.
+            Berekend uit je lengte, gewicht, leeftijd, je geschatte vetpercentage (± {fmt(bf)}%) en vetvrije massa (± {fmt(leanMass(p))} kg), je dagelijkse activiteit en {p.trainDays.length ? `${p.trainDays.length} trainingen per week` : 'je trainingen'}. Je eiwit is afgestemd op je spiermassa; daarnaast ± {targets.fib} g vezels per dag. Het blijven schattingen: iedereen is anders, dus zie het als startpunt en niet als iets wat je moet halen.
           </p>
         </Q>
       );

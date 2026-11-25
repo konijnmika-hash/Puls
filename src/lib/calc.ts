@@ -53,6 +53,11 @@ export const MACRO_STYLE: Record<MacroStyle, { label: string; hint: string; fat:
 const round = (n: number, to: number) => Math.round(n / to) * to;
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
+/** Absolute ondergrens voor het dagdoel: lager kan niet, ook niet met eigen doelen. */
+export const kcalFloor = (sex: Profile['sex']) => (sex === 'man' ? 1500 : sex === 'vrouw' ? 1200 : 1350);
+/** Onder deze grens vragen we of iemand het zeker weet. */
+export const kcalLow = (sex: Profile['sex']) => kcalFloor(sex) + 200;
+
 /** Basaal metabolisme volgens Mifflin-St Jeor. */
 export function bmr(p: Pick<Profile, 'sex' | 'weightKg' | 'heightCm' | 'age'>) {
   const base = 10 * p.weightKg + 6.25 * p.heightCm - 5 * p.age;
@@ -148,9 +153,10 @@ export function calcTargets(p: Profile, measured?: Measured | null): Targets {
   if (p.goal === 'afvallen') delta = -tdee * Math.max(0.08, PACE[p.pace].cut + (highFat ? 0.03 : 0) - (leanCut ? 0.04 : 0));
   else if (p.goal === 'recomp') delta = -Math.min(tdee * 0.1, 350);
   else if (p.goal === 'aankomen') delta = tdee * PACE[p.pace].bulk * (p.experience === 'ervaren' ? 0.7 : 1);
-  const floor = Math.max(p.sex === 'man' ? 1500 : p.sex === 'vrouw' ? 1200 : 1350, rest * 0.9);
+  const floor = Math.max(kcalFloor(p.sex), rest * 0.9);
   let kcal = Math.max(tdee + delta, floor);
-  kcal = round(p.custom?.kcal ?? kcal, 10);
+  // eigen doel mag lager dan het advies, maar nooit onder de absolute ondergrens
+  kcal = round(Math.max(p.custom?.kcal ?? kcal, kcalFloor(p.sex)), 10);
 
   // Eiwit op basis van vetvrije massa: bij afvallen extra om spieren te behouden, vanaf 50 jaar iets meer
   let perLbm = PROTEIN[p.goal];
