@@ -84,6 +84,10 @@ export interface Targets {
   split: Record<MealKey, [number, number]>;
   /** het verbruik is bijgestuurd met je eigen gegevens */
   adaptive: boolean;
+  /** hier gaat het advies nooit onder (ondergrens en ± rustverbranding) */
+  minKcal: number;
+  /** het tekort dat bij je tempo hoort, vóór de ondergrens (om te zien of die het tempo beperkt) */
+  wantedDelta: number;
 }
 
 export interface FoodEntry {

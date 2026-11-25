@@ -8,6 +8,7 @@ import { addDays, weekday } from '../src/lib/date';
 import { fromOff } from '../src/lib/openfoodfacts';
 import type { Profile } from '../src/lib/types';
 import { buildPlan, workoutKcal } from '../src/lib/workout';
+import { behaviorNotes, longestRun, planNotes, trainingPlanNotes } from '../src/lib/health';
 
 const base: Profile = {
   name: 'Test', sex: 'man', age: 30, heightCm: 180, weightKg: 80, goalWeightKg: 75, activity: 'gemiddeld', goal: 'afvallen',
@@ -262,5 +263,60 @@ describe('recomp goal', () => {
     expect(keep.kcal - recomp.kcal).toBeLessThanOrEqual(360);
     expect(recomp.p).toBeGreaterThan(lose.p);
     expect(recomp.steps).toBe(lose.steps);
+  });
+});
+
+describe('health checks', () => {
+  const t = calcTargets(base);
+  it('gives lean people a smaller deficit and never goes below the minimum', () => {
+    const lean = calcTargets({ ...base, fat: 1, muscle: 5, pace: 'snel' });
+    const avg = calcTargets({ ...base, pace: 'snel' });
+    expect(-lean.delta / lean.tdee).toBeLessThan(-avg.delta / avg.tdee);
+    const small = calcTargets({ ...base, sex: 'vrouw', weightKg: 50, heightCm: 158, age: 55, activity: 'zittend', pace: 'snel', trainDays: [] });
+    expect(small.kcal).toBeGreaterThanOrEqual(small.minKcal);
+    expect(small.minKcal).toBeGreaterThanOrEqual(1200);
+  });
+  it('warns about training without rest days', () => {
+    expect(trainingPlanNotes([0, 1, 2, 3, 4, 5, 6])[0]).toMatchObject({ id: 'plan-7', level: 'stop' });
+    expect(trainingPlanNotes([0, 1, 2, 3, 4, 5])[0].id).toBe('plan-6');
+    expect(trainingPlanNotes([0, 2, 4])).toEqual([]);
+    expect(longestRun([5, 6, 0, 1])).toBe(4);
+    expect(trainingPlanNotes([5, 6, 0, 1], 'beginner')[0].id).toBe('plan-run');
+  });
+  it('warns about a goal weight that is too low and a custom target that is too low', () => {
+    expect(planNotes({ ...base, goalWeightKg: 55 }, t).some((n) => n.id === 'goal-low')).toBe(true);
+    const custom = { ...base, custom: { kcal: 1000 } };
+    expect(planNotes(custom, calcTargets(custom)).some((n) => n.id === 'custom-low')).toBe(true);
+    expect(planNotes(base, t).filter((n) => n.level === 'stop')).toEqual([]);
+  });
+  it('says so when the minimum limits your pace', () => {
+    const small = { ...base, sex: 'vrouw' as const, weightKg: 52, heightCm: 160, age: 50, activity: 'zittend' as const, pace: 'snel' as const, trainDays: [] };
+    const ts = calcTargets(small);
+    if (ts.delta > ts.wantedDelta + 50) expect(planNotes(small, ts).some((n) => n.id === 'pace-capped')).toBe(true);
+    expect(planNotes(base, t).some((n) => n.id === 'pace-capped')).toBe(false);
+  });
+  const oats = FOODS.find((f) => f.name === 'Havermout')!;
+  const logged = (kcal: number, workout = false) => {
+    const e = (id: string) => ({ id, food: oats, grams: (kcal / 3 / oats.kcal) * 100, label: '' });
+    return { ...emptyDay(), meals: { ontbijt: [e('a')], lunch: [e('b')], diner: [e('c')], snacks: [] }, workoutsDone: workout ? ['push'] : [] };
+  };
+  const today = '2026-11-25';
+  const ctx = (days: Record<string, ReturnType<typeof logged>>) => ({ profile: base, t, days, today, hour: 12, weights: [] });
+  it('tells you to rest after many training days in a row', () => {
+    const days = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((i) => [addDays(today, -i), logged(t.kcal, true)]));
+    expect(behaviorNotes(ctx(days)).find((n) => n.id === 'rest-now')?.level).toBe('stop');
+    const feed = coachFeed({ profile: base, t, day: emptyDay(), days, date: today, today, hour: 12, waterTarget: 3000, weights: [] });
+    expect(feed[0].tone).toBe('care');
+    expect(behaviorNotes(ctx({ [addDays(today, -1)]: logged(t.kcal, true) }))).toEqual([]);
+  });
+  it('warns when you eat far too little for several days', () => {
+    const days = Object.fromEntries([1, 2, 3].map((i) => [addDays(today, -i), logged(800)]));
+    expect(behaviorNotes(ctx(days)).find((n) => n.id === 'eat-more')?.level).toBe('stop');
+    const ok = Object.fromEntries([1, 2, 3].map((i) => [addDays(today, -i), logged(t.kcal)]));
+    expect(behaviorNotes(ctx(ok))).toEqual([]);
+  });
+  it('warns when weight drops too fast', () => {
+    const weights = [{ date: '2026-10-28', kg: 84 }, { date: '2026-11-25', kg: 79 }];
+    expect(behaviorNotes({ ...ctx({}), weights }).some((n) => n.id === 'fast-loss')).toBe(true);
   });
 });

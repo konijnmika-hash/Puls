@@ -12,6 +12,8 @@ import { mealForNow, useUI } from '../lib/ui';
 import type { ActivityLevel, Experience, Pace, Profile } from '../lib/types';
 import { EXPERIENCE, SPLIT_NAME } from '../lib/workout';
 import { Figure } from './Figure';
+import { HealthNotes } from './HealthNotes';
+import { planNotes, trainingPlanNotes } from '../lib/health';
 import { I, Sheet, Stepper, Switch, toast } from './ui';
 
 export function StepsSheet() {
@@ -347,6 +349,7 @@ export function GoalsSheet() {
           {tooLow && <span className="hint warn">Lager dan {fmt(floor)} kcal kan niet. Zo weinig eten is niet gezond.</span>}
           {low && <span className="hint warn">Dit is een laag aantal. Weet je zeker dat je dit wilt? Lager dan {fmt(floor)} kcal kan niet.</span>}
         </div>
+        {!tooLow && <HealthNotes notes={planNotes({ ...profile, custom: { kcal } }, calcTargets({ ...profile, custom: { kcal } }, insight)).filter((n) => n.id.startsWith('custom'))} />}
         <div className="field"><span className="lbl">Water in ml (advies {fmt(auto.waterMl)})</span><Stepper id="g-water" value={water} onChange={setWater} step={250} min={1000} max={6000} /></div>
         <div className="field"><span className="lbl">Stappen (advies {fmt(auto.steps)})</span><Stepper id="g-steps" value={steps} onChange={setSteps} step={500} min={1000} max={40000} /></div>
         <p className="tiny" style={{ margin: 0 }}>Eiwit, koolhydraten, vet en vezels worden automatisch over je nieuwe calorie-doel verdeeld. Alle adviezen zijn schattingen en richtlijnen, geen regels die je moet volgen.</p>
@@ -423,6 +426,7 @@ export function PlanEditSheet() {
             })}
           </div>
           {days.length > 0 && <span className="tiny">Schema: {SPLIT_NAME(days.length)}</span>}
+          <HealthNotes notes={trainingPlanNotes(days, experience)} />
         </div>
         <div className="field"><span className="lbl">Waar train je?</span>
           <div className="chips">{PLACE_OPTIONS.map((o) => <button key={o.v} className={'chip' + (place === o.v ? ' on' : '')} onClick={() => { setPlace(o.v); setEquipment(defaultEquipment(o.v)); }}>{o.em} {o.t}</button>)}</div>

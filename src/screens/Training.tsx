@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, dateKey, DAY_LONG, DAY_SHORT, dayTitle, fmt, parseKey, weekday } from '../lib/date';
-import { usePlan } from '../lib/hooks';
+import { usePlan, useTargets } from '../lib/hooks';
+import { behaviorNotes } from '../lib/health';
+import { HealthNotes } from '../components/HealthNotes';
 import { FOCUS_OPTIONS, PLACE_OPTIONS } from '../lib/options';
 import { useStore } from '../lib/store';
 import { useBack } from '../lib/back';
@@ -20,6 +22,8 @@ const kgText = (kg: number) => `${fmt(kg, 1)} kg`;
 export function Training() {
   const profile = useStore((s) => s.profile)!;
   const days = useStore((s) => s.days);
+  const weights = useStore((s) => s.weights);
+  const targets = useTargets()!;
   const log = useStore((s) => s.workoutLog) ?? NO_LOG;
   const plan = usePlan();
   const { open, startSession } = useUI();
@@ -81,6 +85,7 @@ export function Training() {
         </div>
       </section>
 
+      <HealthNotes notes={behaviorNotes({ profile, t: targets, days, today, hour: new Date().getHours(), weights }).filter((n) => n.id.startsWith('rest'))} />
       {plan.length === 0 ? (
         <div className="card empty">
           <p>Kies op welke dagen je wilt trainen. Je krijgt dan een schema dat past bij je apparatuur en ervaring.</p>

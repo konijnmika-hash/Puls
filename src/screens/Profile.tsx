@@ -8,6 +8,8 @@ import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
 import type { EatPattern, MacroStyle } from '../lib/types';
 import { ReminderRows, SettingsRows } from '../components/Sheets';
+import { HealthNotes } from '../components/HealthNotes';
+import { planNotes } from '../lib/health';
 import { I, Switch, toast } from '../components/ui';
 
 export function ProfileScreen() {
@@ -77,6 +79,7 @@ export function ProfileScreen() {
           </span>
           <I.right />
         </button>
+        <HealthNotes notes={planNotes(profile, t)} />
         <p className="tiny" style={{ margin: 0 }}>
           Dit zijn schattingen, geen exacte waarden en geen regels die je moet volgen. Zie ze als richtlijn en luister naar je lichaam. Twijfel je, overleg dan met je huisarts of een diëtist.
         </p>

@@ -912,3 +912,16 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.02e
 .sortbtn.on { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
 .act.more { border-style: dashed; color: var(--brand); }
 .act.more .act-name { color: var(--ink-2); }
+
+/* ---------- Gezondheidswaarschuwingen ---------- */
+.health-note {
+  --c: var(--steps);
+  border-radius: var(--r-sm);
+  border-left: 4px solid var(--c);
+  background: color-mix(in srgb, var(--c) 11%, var(--surface));
+  padding: 10px 12px;
+  text-align: left;
+}
+.health-note.stop { --c: var(--danger); }
+.health-note b { display: block; font-size: 14.5px; }
+.health-note p { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }

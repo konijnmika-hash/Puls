@@ -2,10 +2,11 @@ import { skipsMeal } from './calc';
 import { addDays, fmt, greeting, liters } from './date';
 import { dayTotals } from './hooks';
 import type { DayLog, MealKey, Profile, Targets, WeightEntry } from './types';
+import { behaviorNotes, planNotes, trainStreak } from './health';
 import { recentlyEaten, roomFor, suggest, type Prefs } from './recipes';
 import type { WorkoutDay } from './workout';
 
-export type Tone = 'cheer' | 'nudge' | 'tip' | 'plan';
+export type Tone = 'cheer' | 'nudge' | 'tip' | 'plan' | 'care';
 export type CoachAction = 'water' | 'food' | 'train' | 'steps' | 'weight' | 'activity' | 'recipe';
 
 export interface CoachMsg {
@@ -112,8 +113,18 @@ export function coachFeed(c: CoachCtx): CoachMsg[] {
     });
   }
 
+  // Gezondheid: te weinig eten, te veel trainen, te snel afvallen
+  const care = behaviorNotes({ profile, t, days: c.days, today: c.today, hour, weights: c.weights });
+  const run = trainStreak(c.days, c.today);
+  const restNow = !run.includesToday && run.days >= 5;
+  for (const n of [...care, ...planNotes(profile, t).filter((x) => x.level === 'stop')]) {
+    out.push({ id: `care-${n.id}`, tone: 'care', prio: n.level === 'stop' ? 95 : 85, title: n.title, text: n.text });
+  }
+
   // Training
-  if (c.workout && !workoutDone && hour >= 11) {
+  if (c.workout && !workoutDone && hour >= 11 && restNow) {
+    out.push({ id: 'train-skip', tone: 'tip', prio: 70, title: `${c.workout.name} mag je overslaan`, text: 'Na zoveel trainingen achter elkaar is rust nu beter voor je resultaat dan nog een sessie.' });
+  } else if (c.workout && !workoutDone && hour >= 11) {
     out.push({ id: 'train', tone: 'nudge', prio: hour >= 16 ? 78 : 66, title: `${c.workout.name} staat nog open`, text: `${c.workout.exercises.length} oefeningen, ± ${c.workout.estMinutes} minuten. Nog te doen vandaag.`, action: { label: 'Start training', kind: 'train' } });
   }
   if (workoutDone) out.push({ id: 'train-done', tone: 'cheer', prio: 80, title: 'Training gedaan', text: 'Eet in de komende uren een eiwitrijke maaltijd en drink wat extra water.' });

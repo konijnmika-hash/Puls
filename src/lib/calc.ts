@@ -199,6 +199,8 @@ export function calcTargets(p: Profile, measured?: Measured | null): Targets {
     lbm,
     split: PATTERNS[p.pattern ?? 'standaard'].split,
     adaptive,
+    minKcal: round(floor, 10),
+    wantedDelta: Math.round(delta),
   };
 }
 
