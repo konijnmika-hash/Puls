@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Scan alles</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+#cam{position:absolute;left:60px;right:60px;top:300px;height:780px;border-radius:56px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#1f2c27,#050908 78%);box-shadow:0 0 0 2px #22352c inset,0 40px 100px -30px rgba(0,0,0,.8)}
+.prod{position:absolute;left:50%;top:50%;width:330px;height:460px;margin:-230px 0 0 -165px}
+.pk{position:absolute;inset:0;box-shadow:0 40px 80px rgba(0,0,0,.55)}
+.pk .nm{position:absolute;left:18px;right:18px;text-align:center;font-family:Brico;font-weight:800;line-height:.95}
+.pk svg{position:absolute;left:50%;margin-left:-90px;bottom:34px}
+#finder{position:absolute;left:50%;top:50%;width:470px;height:330px;margin:-60px 0 0 -235px}
+#log{position:absolute;left:60px;right:60px;top:1120px;height:620px;border-radius:44px;background:#14241d;border:1px solid #253b31;padding:30px 36px;overflow:hidden}
+.lrow{display:flex;align-items:center;gap:20px;height:72px;border-top:1px solid #253b31;font-size:28px}
+.lrow .em{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:26px}
+#chip{position:absolute;left:50%;top:1000px;transform:translateX(-50%);padding:16px 30px;border-radius:999px;background:#c9f27a;color:#06100c;font-weight:700;font-size:30px;white-space:nowrap;z-index:5}
+.wallbc{position:absolute;width:118px;height:84px;border-radius:12px;background:#fff;padding:8px}
+</style></head>
+<body><div id="stage">
+  <div id="bgwrap"></div>
+  <div class="scene" data-in="0" data-out="1.9" data-fo=".2" data-outfx="zoom">
+    <div class="abs center xh rv" data-a="0" data-s=".2" data-fx="slam" style="top:700px;font-size:150px">Eten loggen?</div>
+    <div class="abs center xh rv" data-a="0.94" data-s=".2" data-fx="slam" style="top:880px;font-size:150px;color:var(--lime)">Eén scan.</div>
+  </div>
+
+  <div class="scene" id="scanScene" data-in="1.8" data-out="7.55" data-fo=".3">
+    <div class="abs center label" style="top:200px">Scan <span id="sn">1</span>/6 · <span id="clockS" class="tab-num">0,0</span> s</div>
+    <div id="cam">
+      <div id="prods"></div>
+      <svg id="finder" viewBox="0 0 470 330"><g id="corners" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"><path d="M5 66V5h61M404 5h61v61M465 264v61h-61M66 325H5v-61"/></g>
+        <rect id="laser" x="22" y="163" width="426" height="5" rx="2.5" fill="#ff4d5e"/></svg>
+      <div class="abs" id="flash" style="inset:0;background:#c9f27a;opacity:0"></div>
+    </div>
+    <div id="chip"></div>
+    <div id="log"><div class="row" style="margin-bottom:16px"><b style="font-size:32px">Vandaag gelogd</b><b class="h" style="font-size:44px;color:var(--lime)"><span id="tot" class="tab-num">0</span> kcal</b></div><div id="rows"></div></div>
+  </div>
+
+  <div class="scene" data-in="7.5" data-out="9.4" data-fo=".25" data-outfx="zoom">
+    <div class="abs center xh rv" data-a="7.55" data-s=".23" data-fx="slam" style="top:640px;font-size:160px">6 producten.</div>
+    <div class="abs center xh rv" data-a="8.45" data-s=".23" data-fx="slam" style="top:820px;font-size:160px;color:var(--lime)">6 seconden.</div>
+    <div class="abs center rv" data-a="8.7" style="top:1060px;font-size:44px;color:var(--ink2)">850 kcal en 77 g eiwit gelogd.</div>
+  </div>
+
+  <div class="scene" data-in="9.37" data-out="13.2" data-fo=".3">
+    <div id="wall" class="fill" style="opacity:.9"></div>
+    <div class="abs fill" style="background:radial-gradient(ellipse 60% 40% at 50% 50%, rgba(6,16,12,.96), rgba(6,16,12,.55) 70%, rgba(6,16,12,.2))"></div>
+    <div class="abs center h rv" data-a="9.45" style="top:700px;font-size:118px">Miljoenen<br>merkproducten.</div>
+    <div class="abs center rv" data-a="10.4" style="top:990px;font-size:46px;color:var(--ink2);line-height:1.4">Plus 500+ Nederlandse basisproducten<br>met porties als <b style="color:var(--ink)">snee, plak en glas</b>.</div>
+  </div>
+
+  <div class="scene" data-in="13.12" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:440px;top:360px;width:200px;height:200px"></div>
+    <div class="abs center label rv" data-a="13.5" style="top:630px;font-size:30px">Download Puls nu</div>
+    <div class="abs center xh rv" data-a="13.6" data-s=".117" data-fx="slam" style="top:710px;font-size:200px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:910px;font-size:200px;color:var(--lime)">gratis.</div>
+    <div class="abs center rv" data-a="14.6" style="top:1170px;font-size:42px;color:var(--ink2)">Scan. Log. Klaar.</div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1320px">Probeer 14 dagen gratis →</div>
+  </div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 18, fps: 30, bpm: 128, title: 'Scan alles' };
+$('#bgwrap').innerHTML = bgHTML();
+$('#ctaLogo').innerHTML = logoSVG(200);
+const barcodeSVG = (seed, w = 180, h = 110) => {
+  let x = 8, s = `<rect width="${w}" height="${h}" fill="#fff" rx="4"/>`, r = seeded(seed);
+  while (x < w - 10) { const bw = 1 + Math.floor(r() * 4); if (r() > .45) s += `<rect x="${x}" y="6" width="${bw}" height="${h - 24}" fill="#111"/>`; x += bw + 1; }
+  return s + `<text x="${w / 2}" y="${h - 5}" text-anchor="middle" font-size="12" font-family="DejaVu Sans Mono" fill="#111">8 7${String(seed * 7919).padStart(5, '0').slice(0, 5)} ${String(seed * 104729).slice(0, 6)}</text>`;
+};
+// [naam, portie, kcal, eiwit, emoji, kleuren, vorm]
+const PRODS = [
+  ['Griekse yoghurt 0%', '150 g', 86, 15, '🥛', ['#ffffff', '#3a74ba', '#1b4f8f'], 'pot', 'GRIEKSE\nYOGHURT'],
+  ['Havermout', '40 g', 150, 5, '🌾', ['#f2e3c4', '#b5762c', '#6b4410'], 'box', 'HAVER-\nMOUT'],
+  ['Pindakaas', '15 g', 94, 4, '🥜', ['#c98a4b', '#c0392b', '#5a2d0c'], 'jar', 'PINDA-\nKAAS'],
+  ['Volkorenbrood', '2 sneetjes', 180, 8, '🍞', ['#f4e6cf', '#d4a259', '#7a4f1d'], 'bag', 'VOLKOREN'],
+  ['Kwark naturel', '250 g', 140, 25, '🥣', ['#f7faf7', '#48c486', '#15603a'], 'tub', 'KWARK\nNATUREL'],
+  ['Proteïnereep', '1 reep', 200, 20, '🍫', ['#7867ee', '#c9f27a', '#ffffff'], 'bar', 'PROTEIN\n20G'],
+];
+const shapeCSS = {
+  pot: 'border-radius:44px 44px 80px 80px', box: 'border-radius:16px', jar: 'border-radius:60px 60px 40px 40px',
+  bag: 'border-radius:70px 70px 26px 26px', tub: 'border-radius:30px 30px 70px 70px', bar: 'border-radius:22px;top:120px;height:240px',
+};
+$('#prods').innerHTML = PRODS.map(([n, p, k, e, em, c, sh, lbl], i) => `
+  <div class="prod" id="p${i}"><div class="pk" style="${shapeCSS[sh]};background:linear-gradient(90deg, ${c[0]}, #ffffff 45%, ${c[0]})">
+    <div style="position:absolute;left:0;right:0;top:0;height:${sh === 'bar' ? 0 : 70}px;border-radius:inherit;background:${c[1]}"></div>
+    <div class="nm" style="top:${sh === 'bar' ? 26 : 96}px;font-size:${sh === 'bar' ? 48 : 52}px;color:${c[2]}">${lbl.replace('\n', '<br>')}</div>
+    <svg width="180" height="110" style="${sh === 'bar' ? 'bottom:18px;transform:scale(.8)' : ''}">${barcodeSVG(i + 3)}</svg>
+  </div></div>`).join('');
+$('#rows').innerHTML = PRODS.map(([n, p, k, e, em], i) => `<div class="lrow" id="r${i}"><div class="em" style="background:#1c3128">${em}</div><div style="flex:1"><b>${n}</b> <span class="muted" style="font-size:24px">· ${p}</span></div><b>${k}</b></div>`).join('');
+// muur met barcodes
+let wall = ''; const r = seeded(11);
+for (let y = 0; y < 21; y++) for (let x = 0; x < 8; x++) wall += `<div class="wallbc" data-k="${r()}" style="left:${x * 136 + (y % 2) * 68 - 40}px;top:${y * 96 - 40}px"><svg width="102" height="68" viewBox="0 0 180 110">${barcodeSVG(x * 31 + y * 7 + 1)}</svg></div>`;
+$('#wall').innerHTML = wall;
+
+const SP = 60 / 128;           // seconden per tel
+const T0 = b(4);               // eerste product
+function render(t) {
+  bg(t, t > 13.1 ? .4 : 0);
+  scenes(t); reveal(t);
+  // producten: elk 2 tellen. binnen op de tel, gescand op de volgende tel
+  let idx = Math.floor((t - T0) / (2 * SP));
+  PRODS.forEach((pr, i) => {
+    const a = T0 + i * 2 * SP, det = a + SP, z = a + 2 * SP, el = $('#p' + i);
+    const on = t > a - .1 && t < z + .2;
+    el.style.display = on ? '' : 'none';
+    if (!on) return;
+    const kin = eo5(P(t, a - .08, a + .18)), kout = eio(P(t, z - .12, z + .12));
+    el.style.transform = `translateX(${(1 - kin) * 700 - kout * 700}px) rotate(${(1 - kin) * 12 - kout * 10 + Math.sin(t * 3 + i) * 1.5}deg)`;
+  });
+  const cur = cl(idx, 0, 5), a = T0 + cur * 2 * SP, det = a + SP;
+  const scanning = t >= T0 && t < det && idx >= 0 && idx < 6;
+  $('#laser').setAttribute('y', scanning ? 163 + Math.sin((t - a) * 14) * 130 : 163);
+  $('#laser').setAttribute('opacity', scanning ? 1 : 0);
+  const hit = t >= det && idx < 6 && idx >= 0;
+  $('#corners').setAttribute('stroke', hit ? '#c9f27a' : '#fff');
+  $('#finder').style.transform = `scale(${1 + (hit ? Math.sin(P(t, det, det + .25) * Math.PI) * .07 : 0)})`;
+  $('#flash').style.opacity = hit ? .4 * (1 - P(t, det, det + .25)) : 0;
+  $('#sn').textContent = cur + 1;
+  $('#clockS').textContent = nl(cl(t - T0, 0, 6 * 2 * SP), 1);
+  // chip met resultaat, vliegt naar de lijst
+  const chip = $('#chip'), pr = PRODS[cur];
+  chip.textContent = `✓ ${pr[0]} · ${pr[2]} kcal`;
+  const ck = back(P(t, det, det + .2)), fly = eio(P(t, det + .28, det + .46));
+  chip.style.opacity = hit ? (1 - fly) : 0;
+  chip.style.transform = `translateX(-50%) translateY(${fly * 260}px) scale(${lerp(.5, 1, ck) * (1 - fly * .4)})`;
+  // lijst
+  let total = 0;
+  PRODS.forEach((p, i) => {
+    const s = T0 + i * 2 * SP + SP + .4, k = back(P(t, s, s + .3)), row = $('#r' + i);
+    row.style.opacity = P(t, s, s + .1); row.style.transform = `translateX(${(1 - k) * -80}px)`;
+    row.style.background = t > s && t < s + .5 ? `rgba(201,242,122,${.18 * (1 - P(t, s + .1, s + .5))})` : 'transparent';
+    total += p[2] * eo(P(t, s, s + .35));
+  });
+  $('#tot').textContent = nl(total);
+  // barcodemuur licht op op de beat
+  if (t > 9.2 && t < 13.3) {
+    const beatN = Math.floor((t - 9.375) / SP);
+    $$('.wallbc').forEach((e, i) => {
+      const k = +e.dataset.k, lit = ((Math.floor(k * 97) + beatN) % 9) === 0;
+      e.style.opacity = .18 + (lit ? .8 * (1 - ((t - 9.375) % SP) / SP) : 0);
+      e.style.boxShadow = lit ? '0 0 30px rgba(201,242,122,.7)' : 'none';
+    });
+    $('#wall').style.transform = `translateY(${-(t - 9.4) * 40}px) scale(1.05)`;
+  }
+  // CTA
+  if (t > 13) {
+    const pulse = beatPulse(t, 14, 10), L = $('#ctaLogo'), k = back(P(t, 13.12, 13.6));
+    L.style.opacity = P(t, 13.12, 13.2); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    L.style.filter = `drop-shadow(0 0 ${40 + pulse * 50}px rgba(201,242,122,${.3 + pulse * .3}))`;
+    logoDraw(L, eio(P(t, 13.2, 13.8)));
+    const g = eo5(P(t, 14.06, 14.4)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + pulse * 40}px rgba(201,242,122,${.35 + pulse * .25})`;
+    const c = $('#cta'), bk = back(P(t, 15, 15.5)), pl = t > 15.5 ? Math.sin((t - 15.5) * Math.PI * 128 / 60) * .5 + .5 : 0;
+    c.style.opacity = P(t, 15, 15.12); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+}
+boot(render);
+</script></body></html>

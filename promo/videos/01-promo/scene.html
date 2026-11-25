@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Puls promo</title>
+<style>
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:Brico;src:url(../../fonts/bricolage-grotesque-latin-800-normal.woff2);font-weight:800}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:DM;src:url(../../fonts/dm-sans-latin-700-normal.woff2);font-weight:700}
+:root{--bg:#06100c;--brand:#48c486;--brand2:#5fd49a;--lime:#c9f27a;--ink:#e6f1ea;--ink2:#a5bbaf;--ink3:#6c8478;
+  --surface:#14241d;--surface2:#1c3128;--line:#253b31;--carb:#f0a03a;--protein:#e5527a;--fat:#7867ee;--water:#2b97e6}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:DM,sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+.abs{position:absolute}
+.glow{position:absolute;border-radius:50%;pointer-events:none}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,242,122,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(201,242,122,.045) 1px,transparent 1px);background-size:72px 72px;background-position:36px 0;-webkit-mask-image:radial-gradient(ellipse 70% 55% at 50% 45%,#000 10%,transparent 80%)}
+.scene{position:absolute;inset:0}
+.label{font-family:'DejaVu Sans Mono',monospace;font-size:24px;letter-spacing:.22em;color:var(--lime);text-transform:uppercase}
+.h{font-family:Brico;font-weight:700;letter-spacing:-.035em;line-height:1.02}
+.rv .w{display:inline-block;white-space:pre}
+.center{left:0;right:0;text-align:center}
+.muted{color:var(--ink2)}
+
+/* phone */
+#phoneWrap{position:absolute;left:210px;top:560px;width:660px;height:1340px;perspective:2200px}
+#phone{position:absolute;inset:0;border-radius:96px;background:linear-gradient(145deg,#2c3b34,#0b1310 40%,#1b2722);padding:14px;
+  box-shadow:0 0 0 2px #33463d inset,0 80px 160px -40px rgba(0,0,0,.9),0 0 120px -20px rgba(72,196,134,.25)}
+#screen{position:absolute;inset:14px;border-radius:84px;background:#0c1813;overflow:hidden}
+.island{position:absolute;top:22px;left:50%;width:190px;height:54px;margin-left:-95px;background:#000;border-radius:30px;z-index:20}
+.status{position:absolute;top:30px;left:56px;right:52px;display:flex;justify-content:space-between;font-weight:700;font-size:26px;z-index:19}
+.scr{position:absolute;inset:0;padding:120px 40px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:30px;padding:28px}
+.small{font-size:22px;color:var(--ink3)}
+.bar{height:14px;border-radius:7px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px;width:0}
+.row{display:flex;align-items:center;justify-content:space-between}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:128px;background:rgba(12,24,19,.92);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-start;padding-top:20px;z-index:15}
+.tab{width:100px;text-align:center;font-size:18px;color:var(--ink3);font-weight:500;position:relative}
+.tab svg{display:block;margin:0 auto 6px;width:38px;height:38px}
+.tab.on{color:var(--brand2)}
+.meal{display:flex;align-items:center;gap:20px;padding:20px 0;border-top:1px solid var(--line)}
+.meal:first-child{border-top:0}
+.dot{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;flex:none}
+.chip{display:inline-block;padding:10px 18px;border-radius:999px;background:var(--surface2);font-size:22px;font-weight:500;margin-right:10px}
+.btn{border-radius:999px;background:var(--brand);color:#04150d;font-weight:700;text-align:center}
+.set{width:46px;height:46px;border-radius:50%;border:3px solid var(--line);display:grid;place-items:center;font-size:22px;font-weight:700;color:#04150d}
+.ex{display:flex;align-items:center;gap:22px;padding:22px 0;border-top:1px solid var(--line)}
+.bubble{background:var(--surface2);border:1px solid var(--line);border-radius:30px 30px 30px 10px;padding:24px 28px;font-size:27px;line-height:1.35}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glow" id="g1" style="width:1400px;height:1400px;background:radial-gradient(circle,rgba(72,196,134,.30),rgba(72,196,134,0) 62%)"></div>
+  <div class="glow" id="g2" style="width:1200px;height:1200px;background:radial-gradient(circle,rgba(201,242,122,.16),rgba(201,242,122,0) 62%)"></div>
+  <div class="grid" id="grid"></div>
+
+  <!-- S1: heartbeat intro -->
+  <div class="scene" id="s1" data-in="0" data-out="3.5">
+    <svg class="abs" style="left:0;top:700px" width="1080" height="400" viewBox="0 0 1080 400">
+      <defs>
+        <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#48c486" stop-opacity="0"/><stop offset=".25" stop-color="#48c486"/><stop offset="1" stop-color="#c9f27a"/></linearGradient>
+        <filter id="blur"><feGaussianBlur stdDeviation="10"/></filter>
+      </defs>
+      <path id="pulseGlow" d="M-20 220H330l50-120 80 210 60-170 32 80H1100" fill="none" stroke="#c9f27a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#blur)" opacity=".55"/>
+      <path id="pulse" d="M-20 220H330l50-120 80 210 60-170 32 80H1100" fill="none" stroke="url(#lg)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle id="pdot" r="14" fill="#eaffc2"/>
+    </svg>
+    <div class="abs center h rv" data-a="0.7" style="top:470px;font-size:84px">Je lichaam heeft een ritme.</div>
+    <div class="abs center h rv" data-a="1.7" style="top:1180px;font-size:84px;color:var(--lime)">Tijd om het te volgen.</div>
+  </div>
+
+  <!-- S2: logo reveal -->
+  <div class="scene" id="s2" data-in="3.3" data-out="6.2">
+    <svg id="logo2" class="abs" style="left:390px;top:560px" width="300" height="300" viewBox="0 0 512 512">
+      <defs><linearGradient id="ig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f9a62"/><stop offset="1" stop-color="#0f3a26"/></linearGradient></defs>
+      <rect width="512" height="512" rx="112" fill="url(#ig)"/>
+      <path id="logoPath" d="M80 280h80l42-96 67 176 51-136 26 56h86" fill="none" stroke="#c9f27a" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="abs center h rv" data-a="3.75" data-s=".09" style="top:900px;font-size:200px;font-weight:800;letter-spacing:-.05em" data-letters>Puls</div>
+    <div class="abs center rv" data-a="4.3" data-s=".04" style="top:1150px;font-size:40px;color:var(--ink2);padding:0 120px;line-height:1.35">Jouw persoonlijke coach voor eten, trainen en energie.</div>
+  </div>
+
+  <!-- phone headlines -->
+  <div class="scene" id="s3" data-in="6.1" data-out="11.4">
+    <div class="abs center label rv" data-a="6.2" style="top:170px">01 — Voeding</div>
+    <div class="abs center h rv" data-a="6.35" style="top:230px;font-size:100px">Elke hap.<br>Elke macro.</div>
+  </div>
+  <div class="scene" id="s4" data-in="11.4" data-out="15.5">
+    <div class="abs center label rv" data-a="11.5" style="top:170px">02 — Barcode&nbsp;scanner</div>
+    <div class="abs center h rv" data-a="11.65" style="top:230px;font-size:100px">Scan.<br><span style="color:var(--lime)">Klaar.</span></div>
+  </div>
+  <div class="scene" id="s5" data-in="15.5" data-out="19.8">
+    <div class="abs center label rv" data-a="15.6" style="top:170px">03 — Training</div>
+    <div class="abs center h rv" data-a="15.75" style="top:230px;font-size:100px">Een schema dat<br>bij jóu past.</div>
+  </div>
+  <div class="scene" id="s6" data-in="19.8" data-out="24.2">
+    <div class="abs center label rv" data-a="19.9" style="top:170px">04 — Coach</div>
+    <div class="abs center h rv" data-a="20.05" style="top:230px;font-size:100px">Een coach die<br>met je meedenkt.</div>
+  </div>
+
+  <!-- phone -->
+  <div id="phoneWrap"><div id="phone"><div id="screen">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span style="letter-spacing:4px">▮▮▮ ◔</span></div>
+
+    <!-- today -->
+    <div class="scr" id="p1">
+      <div class="small">Woensdag 25 november</div>
+      <div class="h" style="font-size:50px;margin:6px 0 26px">Goedemorgen, Sam</div>
+      <div class="card" style="background:linear-gradient(135deg,#163d2a,#2b3716);display:flex;align-items:center;gap:30px;border-color:#2f4a36">
+        <svg width="230" height="230" viewBox="0 0 230 230" style="flex:none">
+          <circle cx="115" cy="115" r="98" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="22"/>
+          <circle id="ring" cx="115" cy="115" r="98" fill="none" stroke="#c9f27a" stroke-width="22" stroke-linecap="round" transform="rotate(-90 115 115)" stroke-dasharray="615.75" stroke-dashoffset="615.75"/>
+          <text id="ringNum" x="115" y="118" text-anchor="middle" font-family="Brico" font-weight="700" font-size="52" fill="#e6f1ea">0</text>
+          <text x="115" y="152" text-anchor="middle" font-family="DM" font-size="20" fill="#a5bbaf">van 2.300 kcal</text>
+        </svg>
+        <div style="flex:1">
+          <div class="small" style="color:#a5bbaf">Nog over</div>
+          <div class="h" style="font-size:58px" id="leftNum">2.300</div>
+          <div class="small" style="color:#a5bbaf;margin-top:14px">Verbrand</div>
+          <div class="h" style="font-size:40px;color:var(--lime)" id="burnNum">0</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:22px">
+        <div class="row" style="font-size:24px;margin-bottom:10px"><b>Koolhydraten</b><span class="muted" id="m1t">0 / 260 g</span></div>
+        <div class="bar"><i id="m1" style="background:var(--carb)"></i></div>
+        <div class="row" style="font-size:24px;margin:20px 0 10px"><b>Eiwit</b><span class="muted" id="m2t">0 / 150 g</span></div>
+        <div class="bar"><i id="m2" style="background:var(--protein)"></i></div>
+        <div class="row" style="font-size:24px;margin:20px 0 10px"><b>Vet</b><span class="muted" id="m3t">0 / 72 g</span></div>
+        <div class="bar"><i id="m3" style="background:var(--fat)"></i></div>
+      </div>
+      <div class="card" style="margin-top:22px;padding:8px 28px">
+        <div class="meal" id="meal1"><div class="dot" style="background:#3a2c12">🥣</div><div style="flex:1"><b style="font-size:26px">Ontbijt</b><div class="small">Havermout met blauwe bessen</div></div><b style="font-size:26px">420</b></div>
+        <div class="meal" id="meal2"><div class="dot" style="background:#123a2a">🥗</div><div style="flex:1"><b style="font-size:26px">Lunch</b><div class="small">Kip-quinoa bowl</div></div><b style="font-size:26px">610</b></div>
+        <div class="meal" id="meal3"><div class="dot" style="background:#3a1626">🍓</div><div style="flex:1"><b style="font-size:26px">Snack</b><div class="small">Kwark met aardbeien</div></div><b style="font-size:26px">190</b></div>
+      </div>
+    </div>
+
+    <!-- scan -->
+    <div class="scr" id="p2" style="padding:0;background:radial-gradient(ellipse at 50% 40%,#22302a,#070c0a 75%)">
+      <div class="abs" id="pot" style="left:154px;top:260px;width:300px;height:420px">
+        <div style="position:absolute;inset:0;border-radius:40px 40px 70px 70px;background:linear-gradient(90deg,#d9e2dc,#ffffff 40%,#c3cec7);box-shadow:0 40px 80px rgba(0,0,0,.6)"></div>
+        <div style="position:absolute;left:0;right:0;top:-24px;height:50px;border-radius:20px;background:linear-gradient(90deg,#4a8bd8,#7fb6f0 45%,#3a74ba)"></div>
+        <div style="position:absolute;left:30px;right:30px;top:60px;text-align:center;font-family:Brico;font-weight:800;font-size:46px;color:#1b4f8f;line-height:1">GRIEKSE<br>YOGHURT</div>
+        <div style="position:absolute;left:0;right:0;top:170px;text-align:center;font-weight:700;font-size:30px;color:#4a8bd8">0% vet</div>
+        <svg id="barcode" style="position:absolute;left:50px;top:240px" width="200" height="120"></svg>
+      </div>
+      <svg class="abs" id="finder" style="left:94px;top:420px" width="420" height="300" viewBox="0 0 420 300">
+        <g id="corners" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round">
+          <path d="M4 60V4h56M360 4h56v56M416 240v56h-56M60 296H4v-56"/>
+        </g>
+        <rect id="laser" x="20" y="148" width="380" height="4" rx="2" fill="#ff4d5e"/>
+      </svg>
+      <div class="abs center" id="scanHint" style="top:770px;font-size:26px;color:#cfd8d3">Richt op de barcode</div>
+      <div class="abs" id="flash" style="inset:0;background:#c9f27a;opacity:0"></div>
+      <div class="abs" id="sheet" style="left:0;right:0;bottom:0;height:560px;background:#14241d;border-radius:50px 50px 0 0;border-top:1px solid #2f4a3c;padding:26px 40px;z-index:16">
+        <div style="width:80px;height:8px;border-radius:4px;background:#2f4a3c;margin:0 auto 26px"></div>
+        <div class="row"><div><div class="small">Gevonden · 150 g</div><div class="h" style="font-size:44px">Griekse yoghurt 0%</div></div>
+          <div id="okBadge" style="width:70px;height:70px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#04150d;font-size:40px;font-weight:700">✓</div></div>
+        <div style="margin:24px 0 30px"><span class="chip">86 kcal</span><span class="chip" style="color:#ff86a6">15 g eiwit</span><span class="chip" style="color:#ffc46b">6 g kh</span></div>
+        <div class="btn" id="addBtn" style="height:96px;line-height:96px;font-size:30px">Toevoegen aan ontbijt</div>
+      </div>
+    </div>
+
+    <!-- training -->
+    <div class="scr" id="p3">
+      <div class="small">Vandaag · Push</div>
+      <div class="h" style="font-size:54px;margin:6px 0 8px">Borst &amp; triceps</div>
+      <div class="small" style="margin-bottom:22px">4 oefeningen · ± 50 min · Gym</div>
+      <div class="row" style="font-size:22px;margin-bottom:10px"><span class="muted">Sessie</span><b id="sessPct" style="color:var(--lime)">0%</b></div>
+      <div class="bar" style="margin-bottom:24px"><i id="sessBar" style="background:linear-gradient(90deg,#48c486,#c9f27a)"></i></div>
+      <div class="card" style="padding:6px 28px">
+        <div class="ex" style="border-top:0;flex-wrap:wrap">
+          <div class="dot" style="background:#1d3a2c">🏋️</div>
+          <div style="flex:1"><b style="font-size:28px">Bankdrukken</b><div class="small">4 × 8 · 60 kg</div></div>
+          <div style="width:100%;display:flex;gap:14px;padding-left:80px;margin-top:6px">
+            <div class="set" id="set1">1</div><div class="set" id="set2">2</div><div class="set" id="set3">3</div><div class="set" id="set4">4</div>
+          </div>
+        </div>
+        <div class="ex"><div class="dot" style="background:#1d2c3a">💪</div><div style="flex:1"><b style="font-size:28px">Incline dumbbell press</b><div class="small">3 × 10 · 22 kg</div></div></div>
+        <div class="ex"><div class="dot" style="background:#2c1d3a">🔗</div><div style="flex:1"><b style="font-size:28px">Cable fly</b><div class="small">3 × 12 · 15 kg</div></div></div>
+        <div class="ex"><div class="dot" style="background:#3a2a1d">⚡</div><div style="flex:1"><b style="font-size:28px">Triceps pushdown</b><div class="small">3 × 12 · 25 kg</div></div></div>
+      </div>
+      <div class="abs" id="rest" style="left:40px;right:40px;top:905px;height:110px;border-radius:30px;background:#1c3128;border:1px solid #2f4a3c;display:flex;align-items:center;padding:0 30px;gap:24px">
+        <svg width="70" height="70" viewBox="0 0 70 70"><circle cx="35" cy="35" r="29" fill="none" stroke="#253b31" stroke-width="8"/><circle id="restRing" cx="35" cy="35" r="29" fill="none" stroke="#c9f27a" stroke-width="8" stroke-linecap="round" transform="rotate(-90 35 35)" stroke-dasharray="182.2" stroke-dashoffset="0"/></svg>
+        <div style="flex:1"><div class="small">Rusttimer</div><b style="font-size:30px">Volgende oefening</b></div>
+        <b class="h" id="restNum" style="font-size:48px;font-variant-numeric:tabular-nums">1:30</b>
+      </div>
+    </div>
+
+    <!-- coach -->
+    <div class="scr" id="p4">
+      <div class="small">Vandaag</div>
+      <div class="h" style="font-size:54px;margin:6px 0 26px">Water</div>
+      <div class="card" style="display:flex;align-items:center;gap:34px">
+        <svg width="190" height="250" viewBox="0 0 190 250" style="flex:none">
+          <defs><clipPath id="glass"><path d="M18 10h154l-18 226a10 10 0 0 1-10 9H46a10 10 0 0 1-10-9z"/></clipPath></defs>
+          <g clip-path="url(#glass)">
+            <rect x="0" y="0" width="190" height="250" fill="#10202a"/>
+            <path id="wave2" fill="#1f6fb0" opacity=".6"/>
+            <path id="wave" fill="#2b97e6"/>
+          </g>
+          <path d="M18 10h154l-18 226a10 10 0 0 1-10 9H46a10 10 0 0 1-10-9z" fill="none" stroke="#3b5348" stroke-width="5"/>
+        </svg>
+        <div style="flex:1">
+          <div class="h" style="font-size:70px"><span id="waterNum">1,2</span><span style="font-size:36px;color:var(--ink2)"> / 2,8 L</span></div>
+          <div class="btn" id="plusBtn" style="height:80px;line-height:80px;font-size:28px;margin-top:22px;background:#2b97e6;color:#fff">+ 250 ml</div>
+        </div>
+      </div>
+      <div style="margin-top:34px;display:flex;align-items:center;gap:16px">
+        <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#2f9a62,#0f3a26);display:grid;place-items:center">
+          <svg width="34" height="34" viewBox="0 0 512 512"><path d="M80 280h80l42-96 67 176 51-136 26 56h86" fill="none" stroke="#c9f27a" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <b style="font-size:26px">Je coach</b>
+      </div>
+      <div class="bubble" id="b1" style="margin-top:18px">Lekker bezig! Nog <b style="color:#6cc0ff">2 glazen</b> en je haalt je waterdoel. 💧</div>
+      <div class="bubble" id="b2" style="margin-top:16px;background:linear-gradient(135deg,#163d2a,#2b3716);border-color:#3c5a3a">Eiwitdoel gehaald! 💪<br><span style="color:var(--lime);font-weight:700">12 dagen op rij</span> on track.</div>
+      <canvas id="confetti" class="abs" width="608" height="1288" style="left:0;top:0;pointer-events:none;z-index:18"></canvas>
+    </div>
+
+    <div class="tabbar" id="tabbar">
+      <div class="tab" data-i="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Vandaag</div>
+      <div class="tab" data-i="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11h16a8 8 0 0 1-16 0zM8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4"/></svg>Recepten</div>
+      <div class="tab" data-i="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9v6M6 6v12M18 6v12M21 9v6M6 12h12"/></svg>Training</div>
+      <div class="tab" data-i="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19l5-6 4 3 7-9"/></svg>Voortgang</div>
+      <div class="tab" data-i="4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profiel</div>
+      <div id="tabInd" style="position:absolute;top:0;height:4px;width:60px;border-radius:2px;background:var(--brand2)"></div>
+    </div>
+  </div></div></div>
+
+  <!-- S7: stats -->
+  <div class="scene" id="s7" data-in="24.3" data-out="27.2">
+    <div class="abs center label rv" data-a="24.4" style="top:430px">Alles in één app</div>
+    <div class="abs center" style="top:540px">
+      <div class="h" style="font-size:190px;color:var(--lime)"><span id="st1">0</span>+</div>
+      <div class="rv" data-a="24.6" style="font-size:42px;color:var(--ink2);margin-top:-6px">Nederlandse producten</div>
+    </div>
+    <div class="abs center" style="top:900px">
+      <div class="h" style="font-size:190px"><span id="st2">0</span></div>
+      <div class="rv" data-a="25.0" style="font-size:42px;color:var(--ink2);margin-top:-6px">recepten op jouw maat</div>
+    </div>
+    <div class="abs center" style="top:1260px">
+      <div class="h" style="font-size:190px;color:var(--brand2)"><span id="st3">0</span></div>
+      <div class="rv" data-a="25.4" style="font-size:42px;color:var(--ink2);margin-top:-6px">coach die altijd bij je is</div>
+    </div>
+  </div>
+
+  <!-- S8: CTA -->
+  <div class="scene" id="s8" data-in="27.1" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:430px;top:330px;width:220px;height:220px">
+      <svg width="220" height="220" viewBox="0 0 512 512">
+        <defs><linearGradient id="ig2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f9a62"/><stop offset="1" stop-color="#0f3a26"/></linearGradient></defs>
+        <rect width="512" height="512" rx="112" fill="url(#ig2)"/>
+        <path id="ctaPath" d="M80 280h80l42-96 67 176 51-136 26 56h86" fill="none" stroke="#c9f27a" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="abs center label rv" data-a="27.6" style="top:640px;font-size:30px">Download Puls nu</div>
+    <div class="abs center h rv" data-a="27.8" data-s=".1" style="top:720px;font-size:210px;font-weight:800;letter-spacing:-.05em;line-height:.95">14 dagen</div>
+    <div class="abs center h" id="gratis" style="top:930px;font-size:210px;font-weight:800;letter-spacing:-.05em;line-height:.95;color:var(--lime)">gratis.</div>
+    <div class="abs center rv" data-a="28.9" data-s=".04" style="top:1200px;font-size:42px;color:var(--ink2);line-height:1.4">Eten, trainen en energie.<br>Eén coach. Start vandaag.</div>
+    <div class="abs btn" id="cta" style="left:190px;width:700px;top:1420px;height:130px;line-height:130px;font-size:44px;background:var(--lime);color:#06100c">Probeer 14 dagen gratis →</div>
+    <div class="abs center" id="ctaFoot" style="top:1610px;font-size:28px;color:var(--ink3);letter-spacing:.04em">Download nu · Je eerste 14 dagen zijn gratis</div>
+  </div>
+
+  <div class="abs" id="fade" style="inset:0;background:#000;opacity:0;pointer-events:none"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const P = (t, a, b) => cl((t - a) / (b - a));
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eo5 = x => 1 - Math.pow(1 - x, 5);
+const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, k) => a + (b - a) * k;
+const nl = n => Math.round(n).toLocaleString('nl-NL');
+
+// split reveal text into word (or letter) spans, keeping <br>/<span> structure
+$$('.rv').forEach(el => {
+  const letters = el.hasAttribute('data-letters');
+  const walk = node => {
+    [...node.childNodes].forEach(c => {
+      if (c.nodeType === 3) {
+        const parts = letters ? [...c.textContent] : c.textContent.split(/(\s+)/).filter(Boolean);
+        const frag = document.createDocumentFragment();
+        parts.forEach(p => {
+          if (/^\s+$/.test(p) && !letters) { frag.appendChild(document.createTextNode(' ')); return; }
+          const s = document.createElement('span'); s.className = 'w'; s.textContent = p; frag.appendChild(s);
+        });
+        c.replaceWith(frag);
+      } else if (c.nodeType === 1 && c.tagName !== 'BR') walk(c);
+    });
+  };
+  walk(el);
+});
+
+// barcode
+(() => {
+  let x = 0, s = '', seed = 7;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  s += `<rect width="200" height="120" fill="#fff"/>`;
+  x = 12;
+  while (x < 186) { const w = 1 + Math.floor(r() * 4); if (r() > .45) s += `<rect x="${x}" y="8" width="${w}" height="96" fill="#111"/>`; x += w + 1; }
+  s += `<text x="100" y="117" text-anchor="middle" font-size="12" font-family="DejaVu Sans Mono" fill="#111">8 710400 128352</text>`;
+  $('#barcode').innerHTML = s;
+})();
+
+// confetti particles
+const conf = (() => {
+  let seed = 42; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const cols = ['#c9f27a', '#48c486', '#5fd49a', '#2b97e6', '#e5527a', '#f0a03a', '#ffffff'];
+  return Array.from({ length: 90 }, () => ({ a: -Math.PI / 2 + (r() - .5) * 2.4, v: 700 + r() * 900, c: cols[Math.floor(r() * cols.length)], w: 10 + r() * 12, h: 6 + r() * 8, spin: (r() - .5) * 18, rot: r() * 6 }));
+})();
+
+const pathLen = $('#pulse').getTotalLength();
+$('#pulse').style.strokeDasharray = pathLen; $('#pulseGlow').style.strokeDasharray = pathLen;
+const logoLen = $('#logoPath').getTotalLength();
+$('#logoPath').style.strokeDasharray = logoLen; $('#ctaPath').style.strokeDasharray = logoLen;
+
+function sceneVis(el, t) {
+  const a = +el.dataset.in, b = +el.dataset.out;
+  const kOut = P(t, b - .4, b);
+  const on = t >= a - .01 && t <= b;
+  el.style.display = on ? '' : 'none';
+  if (!on) return false;
+  el.style.opacity = 1 - eo(kOut);
+  el.style.transform = `translateY(${-40 * eo(kOut)}px)`;
+  el.style.filter = kOut > 0 ? `blur(${kOut * 12}px)` : '';
+  return true;
+}
+
+function revealAll(t) {
+  $$('.rv').forEach(el => {
+    const a = +el.dataset.a, s = +(el.dataset.s || .07);
+    el.querySelectorAll('.w').forEach((w, i) => {
+      const k = eo5(P(t, a + i * s, a + i * s + .7));
+      w.style.opacity = k;
+      w.style.transform = `translateY(${(1 - k) * 46}px)`;
+      w.style.filter = k < 1 ? `blur(${(1 - k) * 14}px)` : '';
+    });
+  });
+}
+
+function wavePath(level, t, phase, amp) { // level 0..1 fill
+  const y0 = 250 - level * 235; let d = `M0 ${y0}`;
+  for (let x = 0; x <= 190; x += 10) d += ` L${x} ${y0 + Math.sin(x / 26 + t * 4 + phase) * amp}`;
+  return d + ' L190 250 L0 250Z';
+}
+
+function render(t) {
+  // background drift
+  $('#g1').style.transform = `translate(${-160 + Math.sin(t * .35) * 120}px, ${200 + Math.cos(t * .28) * 160}px)`;
+  $('#g2').style.transform = `translate(${300 + Math.cos(t * .3) * 140}px, ${900 + Math.sin(t * .4) * 180}px)`;
+  const ctaGlow = eo(P(t, 27, 28.5));
+  $('#g1').style.opacity = .8 + ctaGlow * .4;
+  $('#grid').style.backgroundPosition = `36px ${-t * 18}px`;
+
+  $$('.scene').forEach(el => sceneVis(el, t));
+  revealAll(t);
+
+  // S1 pulse line
+  if (t < 3.6) {
+    const k = eio(P(t, .1, 2.6));
+    const off = pathLen * (1 - k);
+    $('#pulse').style.strokeDashoffset = off; $('#pulseGlow').style.strokeDashoffset = off;
+    const pt = $('#pulse').getPointAtLength(Math.max(1, pathLen * k));
+    $('#pdot').setAttribute('cx', pt.x); $('#pdot').setAttribute('cy', pt.y);
+    $('#pdot').setAttribute('opacity', k > .01 && k < .995 ? 1 : 0);
+  }
+  // S2 logo
+  if (t > 3.2 && t < 6.3) {
+    const k = back(P(t, 3.3, 4.1));
+    $('#logo2').style.transform = `scale(${lerp(.4, 1, k)}) rotate(${(1 - eo(P(t, 3.3, 4.1))) * -12}deg)`;
+    $('#logo2').style.opacity = P(t, 3.3, 3.5);
+    $('#logoPath').style.strokeDashoffset = logoLen * (1 - eio(P(t, 3.5, 4.3)));
+    const beat = Math.max(0, Math.sin((t - 4.3) * Math.PI / .65)) ** 8 * (t > 4.3 ? 1 : 0);
+    $('#logo2').style.filter = `drop-shadow(0 0 ${30 + beat * 40}px rgba(201,242,122,${.25 + beat * .3}))`;
+  }
+
+  // phone in/out
+  const pIn = eo5(P(t, 6.0, 7.0)), pOut = eio(P(t, 23.8, 24.5));
+  const wrap = $('#phoneWrap');
+  wrap.style.display = t > 5.95 && t < 24.6 ? '' : 'none';
+  const tilt = Math.sin(t * .7) * 3;
+  $('#phone').style.transform = `translateY(${(1 - pIn) * 900 + pOut * 260}px) scale(${1 - pOut * .18}) rotateX(${(1 - pIn) * 18 + 2}deg) rotateY(${tilt}deg)`;
+  wrap.style.opacity = 1 - pOut;
+
+  // screens
+  const screens = [['#p1', 6.0, 11.4], ['#p2', 11.4, 15.5], ['#p3', 15.5, 19.8], ['#p4', 19.8, 24.6]];
+  screens.forEach(([id, a, b], i) => {
+    const el = $(id);
+    const kin = i === 0 ? 1 : eo5(P(t, a - .05, a + .45));
+    const kout = i === 3 ? 0 : eo(P(t, b - .05, b + .3));
+    const on = t >= a - .06 && t <= b + .3;
+    el.style.display = on ? '' : 'none';
+    el.style.opacity = Math.min(kin, 1 - kout);
+    el.style.transform = `translateX(${(1 - kin) * 120 - kout * 120}px)`;
+  });
+  // tabbar: hidden during scan
+  const scanVis = t > 11.45 && t < 15.45;
+  $('#tabbar').style.transform = `translateY(${scanVis ? 140 : 0}px)`;
+  $('#tabbar').style.transition = 'none';
+  const tabIdx = t < 15.5 ? 0 : t < 19.8 ? 2 : 0;
+  const tabMove = t >= 15.5 && t < 16 ? lerp(0, 2, eo(P(t, 15.5, 15.9))) : t >= 19.8 && t < 20.3 ? lerp(2, 0, eo(P(t, 19.8, 20.2))) : tabIdx;
+  $$('.tab').forEach(el => el.classList.toggle('on', +el.dataset.i === tabIdx));
+  $('#tabInd').style.left = `${(632 / 5) * tabMove + (632 / 5 - 60) / 2 - 12}px`;
+
+  // P1 today
+  if (t < 11.8) {
+    const k = eio(P(t, 6.6, 8.6));
+    $('#ring').style.strokeDashoffset = 615.75 * (1 - k * (1840 / 2300));
+    $('#ringNum').textContent = nl(1840 * k);
+    $('#leftNum').textContent = nl(2300 - 1840 * k + 380 * eio(P(t, 7.2, 9))); // burned adds back
+    $('#burnNum').textContent = nl(380 * eio(P(t, 7.2, 9))) + ' kcal';
+    [[1, 182, 260], [2, 128, 150], [3, 54, 72]].forEach(([i, v, max], j) => {
+      const m = eo(P(t, 7.0 + j * .2, 8.6 + j * .2));
+      $('#m' + i).style.width = (v / max * 100 * m) + '%';
+      $('#m' + i + 't').textContent = `${Math.round(v * m)} / ${max} g`;
+    });
+    [1, 2, 3].forEach((i, j) => {
+      const m = back(P(t, 8.5 + j * .25, 9.1 + j * .25));
+      const el = $('#meal' + i); el.style.opacity = P(t, 8.5 + j * .25, 8.8 + j * .25);
+      el.style.transform = `translateX(${(1 - m) * 60}px)`;
+    });
+  }
+  // P2 scan
+  if (t > 11.2 && t < 15.9) {
+    const det = 13.1;
+    const potIn = eo(P(t, 11.5, 12.4));
+    $('#pot').style.transform = `translateY(${(1 - potIn) * 80 + Math.sin(t * 2.2) * 6}px) rotate(${Math.sin(t * 1.4) * 1.5 - (1 - potIn) * 6}deg) scale(${lerp(.92, 1, potIn)})`;
+    $('#pot').style.opacity = potIn;
+    const ly = t < det ? 148 + Math.sin((t - 11.4) * 4.2) * 120 : 148;
+    $('#laser').setAttribute('y', ly);
+    $('#laser').setAttribute('opacity', t < det ? .95 : 1 - P(t, det, det + .2));
+    const hit = P(t, det, det + .35);
+    $('#corners').setAttribute('stroke', t < det ? '#fff' : '#c9f27a');
+    $('#finder').style.transform = `scale(${1 + Math.sin(hit * Math.PI) * .06 - (t > det ? .06 * eo(P(t, det, det + .3)) : 0)})`;
+    $('#flash').style.opacity = t > det ? .35 * (1 - P(t, det, det + .35)) : 0;
+    $('#scanHint').textContent = t < det ? 'Richt op de barcode' : 'Gevonden ✓';
+    $('#scanHint').style.color = t < det ? '#cfd8d3' : '#c9f27a';
+    const sh = eo5(P(t, det + .25, det + .9));
+    $('#sheet').style.transform = `translateY(${(1 - sh) * 600}px)`;
+    const press = P(t, 14.45, 14.6) - P(t, 14.6, 14.8);
+    const done = t > 14.6;
+    $('#addBtn').style.transform = `scale(${1 - press * .05})`;
+    $('#addBtn').textContent = done ? '✓  Toegevoegd · 86 kcal' : 'Toevoegen aan ontbijt';
+    $('#addBtn').style.background = done ? '#c9f27a' : '';
+    $('#okBadge').style.transform = `scale(${back(P(t, det + .6, det + 1.1))})`;
+  }
+  // P3 training
+  if (t > 15.3 && t < 20.2) {
+    const sets = [16.3, 16.8, 17.3, 17.8];
+    let done = 0;
+    sets.forEach((s, i) => {
+      const el = $('#set' + (i + 1)); const k = P(t, s, s + .25);
+      if (t >= s) done++;
+      el.style.background = t >= s ? '#c9f27a' : 'transparent';
+      el.style.borderColor = t >= s ? '#c9f27a' : '#253b31';
+      el.style.color = t >= s ? '#06100c' : '#6c8478';
+      el.textContent = t >= s ? '✓' : String(i + 1);
+      el.style.transform = `scale(${t >= s ? 1 + Math.sin(k * Math.PI) * .25 : 1})`;
+    });
+    const pct = eo(P(t, 16.3, 18.1)) * 25;
+    $('#sessPct').textContent = Math.round(pct) + '%';
+    $('#sessBar').style.width = pct + '%';
+    const rk = eo5(P(t, 18.0, 18.5));
+    $('#rest').style.transform = `translateY(${(1 - rk) * 200}px)`;
+    $('#rest').style.opacity = rk;
+    const remain = 90 - Math.max(0, (t - 18.3)) * 12; // sped-up timer
+    const sec = Math.max(0, Math.ceil(remain));
+    $('#restNum').textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    $('#restRing').style.strokeDashoffset = 182.2 * (1 - remain / 90);
+  }
+  // P4 coach
+  if (t > 19.6) {
+    const taps = [20.5, 21.1];
+    let level = .43;
+    taps.forEach(s => level += .107 * eo(P(t, s + .05, s + .7)));
+    const wobble = 2 + 10 * Math.max(...taps.map(s => Math.exp(-Math.max(0, t - s) * 2) * (t > s ? 1 : 0)));
+    $('#wave').setAttribute('d', wavePath(level, t, 0, wobble));
+    $('#wave2').setAttribute('d', wavePath(level + .02, t, 2, wobble * 1.2));
+    $('#waterNum').textContent = (level * 2.8).toFixed(1).replace('.', ',');
+    const press = Math.max(...taps.map(s => P(t, s - .1, s) - P(t, s, s + .15)));
+    $('#plusBtn').style.transform = `scale(${1 - press * .06})`;
+    [['#b1', 21.6], ['#b2', 22.5]].forEach(([id, s]) => {
+      const k = back(P(t, s, s + .5));
+      const el = $(id); el.style.opacity = P(t, s, s + .2);
+      el.style.transform = `translateY(${(1 - k) * 40}px) scale(${lerp(.85, 1, k)})`; el.style.transformOrigin = '0 100%';
+    });
+    // confetti
+    const c = $('#confetti'), ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    const dt = t - 22.6;
+    if (dt > 0 && dt < 2.2) {
+      conf.forEach(p => {
+        const x = 300 + Math.cos(p.a) * p.v * dt * .55;
+        const y = 1000 + Math.sin(p.a) * p.v * dt + 900 * dt * dt;
+        ctx.save(); ctx.globalAlpha = cl(1.6 - dt * .8); ctx.translate(x, y); ctx.rotate(p.rot + p.spin * dt);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      });
+    }
+  }
+
+  // S7 stats
+  if (t > 24.2 && t < 27.3) {
+    $('#st1').textContent = Math.round(500 * eo(P(t, 24.4, 25.4)));
+    $('#st2').textContent = Math.round(77 * eo(P(t, 24.8, 25.8)));
+    $('#st3').textContent = Math.round(1 * P(t, 25.2, 25.4));
+    ['#st1', '#st2', '#st3'].forEach((id, i) => {
+      const k = eo5(P(t, 24.4 + i * .4, 25 + i * .4));
+      const el = $(id).parentElement; el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * 60}px) scale(${lerp(.9, 1, k)})`;
+    });
+  }
+
+  // S8 CTA
+  if (t > 27) {
+    const k = back(P(t, 27.15, 27.9));
+    const beat = t > 28.2 ? Math.max(0, Math.sin((t - 28.2) * Math.PI / .65)) ** 10 : 0;
+    $('#ctaLogo').style.transform = `scale(${lerp(.3, 1, k) + beat * .04})`;
+    $('#ctaLogo').style.opacity = P(t, 27.15, 27.4);
+    $('#ctaLogo').style.filter = `drop-shadow(0 0 ${40 + beat * 50}px rgba(201,242,122,${.3 + beat * .35}))`;
+    $('#ctaPath').style.strokeDashoffset = logoLen * (1 - eio(P(t, 27.3, 28.1)));
+    const g = eo5(P(t, 28.25, 28.9));
+    const gr = $('#gratis');
+    gr.style.opacity = g;
+    gr.style.transform = `scale(${lerp(1.5, 1, g)})`;
+    gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + beat * 40}px rgba(201,242,122,${.35 + beat * .25})`;
+    const b = back(P(t, 29.5, 30.2));
+    const pulse = t > 30.2 ? (Math.sin((t - 30.2) * Math.PI * 1.4) * .5 + .5) : 0;
+    const cta = $('#cta');
+    cta.style.opacity = P(t, 29.5, 29.7);
+    cta.style.transform = `scale(${lerp(.6, 1, b) + pulse * .025})`;
+    cta.style.boxShadow = `0 0 ${40 + pulse * 70}px rgba(201,242,122,${.25 + pulse * .3}), 0 30px 60px -20px rgba(0,0,0,.8)`;
+    // shine sweep on button
+    const sx = ((t - 30.4) % 2.2) / 2.2;
+    cta.style.backgroundImage = t > 30.4 ? `linear-gradient(110deg, transparent ${sx * 140 - 30}%, rgba(255,255,255,.65) ${sx * 140 - 20}%, transparent ${sx * 140 - 10}%)` : 'none';
+    $('#ctaFoot').style.opacity = P(t, 30.3, 30.8);
+  }
+  $('#fade').style.opacity = 0;
+}
+window.render = render;
+window.VIDEO = { w: 1080, h: 1920, dur: 33, fps: 30, title: "Puls – overzicht" };
+window.ready = document.fonts.ready.then(() => true);
+</script>
+</body>
+</html>

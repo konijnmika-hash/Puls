@@ -1,3 +1,6 @@
 node_modules/
 dist/
 dist-single/
+promo/videos/*/audio.wav
+promo/videos/*/shots.png
+__pycache__/

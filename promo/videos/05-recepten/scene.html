@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>77 recepten</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+#stage{background:#edf3ea;color:#10261d}
+.label{color:#1d7a4c}
+.rc{position:absolute;left:160px;top:600px;width:760px;height:770px;border-radius:52px;background:#fff;box-shadow:0 50px 100px -40px rgba(16,38,29,.35),0 2px 0 rgba(16,38,29,.04);padding:40px;transform-origin:50% 120%}
+.rc .art{display:block;margin:0 auto 24px}
+.rc .nm{font-family:Brico;font-weight:700;font-size:56px;letter-spacing:-.03em;line-height:1.02;margin-bottom:22px}
+.lchip{display:inline-block;padding:12px 22px;border-radius:999px;font-size:28px;font-weight:700;margin:0 10px 12px 0}
+.k{background:#fff2e0;color:#b4651a}.e{background:#fde8ee;color:#c23b62}.m{background:#e7f1e9;color:#1d7a4c}
+.seg{display:flex;background:#eef3ec;border-radius:999px;padding:8px;margin:26px 0}
+.seg div{flex:1;text-align:center;font-size:32px;font-weight:700;padding:16px 0;border-radius:999px;color:#46604f}
+.wcard{position:absolute;left:80px;right:80px;border-radius:48px;background:#fff;box-shadow:0 50px 100px -40px rgba(16,38,29,.35);padding:40px}
+.mrow{display:flex;align-items:center;gap:22px;padding:18px 0;border-top:1px solid #e3ebe0;font-size:30px}
+.mrow:first-of-type{border-top:0}
+.ck{width:46px;height:46px;border-radius:14px;border:3px solid #c8d6c4;display:grid;place-items:center;font-size:26px;color:#fff;flex:none}
+.aisle{font-family:'DejaVu Sans Mono',monospace;font-size:20px;letter-spacing:.18em;color:#46604f;text-transform:uppercase;margin:18px 0 4px}
+</style></head>
+<body><div id="stage">
+  <div class="glow" id="g1" style="width:1300px;height:1300px;background:radial-gradient(circle,rgba(201,242,122,.55),rgba(201,242,122,0) 62%)"></div>
+  <div class="glow" id="g2" style="width:1100px;height:1100px;background:radial-gradient(circle,rgba(240,160,58,.22),rgba(240,160,58,0) 62%)"></div>
+
+  <div class="scene" data-in="0" data-out="2.65" data-fo=".3">
+    <div id="floaters"></div>
+    <div class="abs center h rv" data-a="0.05" data-s=".16" style="top:760px;font-size:140px">Wat eet ik<br>vandaag<span id="qm" style="display:inline-block;color:#1d7a4c">?</span></div>
+  </div>
+
+  <div class="scene" data-in="2.6" data-out="7.85" data-fo=".3">
+    <div class="abs center label rv" data-a="2.65" style="top:220px">Recepten</div>
+    <div class="abs center h rv" data-a="2.7" data-s=".1" style="top:280px;font-size:104px">77 recepten.</div>
+    <div class="abs center h rv" data-a="5.25" data-s=".1" style="top:400px;font-size:64px;color:#1d7a4c">Allemaal op jouw doel.</div>
+    <div id="deck"></div>
+  </div>
+
+  <div class="scene" data-in="7.8" data-out="13.1" data-fo=".3">
+    <div class="abs center label rv" data-a="7.85" style="top:220px">Porties op maat</div>
+    <div class="abs center h rv" data-a="7.9" style="top:280px;font-size:78px">Geschaald naar wat<br>jij nog nodig hebt.</div>
+    <div class="rc" id="pcard" style="top:560px;height:880px">
+      <svg class="art" id="partArt" width="420" height="420" viewBox="0 0 220 220"></svg>
+      <div class="nm">Shakshuka met feta</div>
+      <div><span class="lchip k"><span id="pk">412</span> kcal</span><span class="lchip e"><span id="pe">24</span> g eiwit</span><span class="lchip m">20 min</span></div>
+      <div class="seg" id="seg"><div>½×</div><div>1×</div><div>1½×</div><div>2×</div></div>
+      <div id="fit" style="font-size:30px;font-weight:700;color:#1d7a4c;text-align:center">✓ Past precies in je avondeten</div>
+    </div>
+  </div>
+
+  <div class="scene" data-in="13.0" data-out="15.7" data-fo=".25">
+    <div class="abs center label rv" data-a="13.05" style="top:220px">Dagmenu</div>
+    <div class="abs center h rv" data-a="13.1" style="top:280px;font-size:84px">Je hele dag<br>in één tik.</div>
+    <div class="wcard" style="top:560px">
+      <div class="row"><b style="font-size:40px;font-family:Brico">Dagmenu</b><span id="shuf" style="font-size:44px;display:inline-block">🔀</span></div>
+      <div id="menu" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:22px;font-size:30px"><b>Totaal</b><b><span id="dk">0</span> / 2.300 kcal</b></div>
+      <div class="bar" style="height:20px;margin-top:14px;background:#e3ebe0"><i id="dbar" style="background:linear-gradient(90deg,#1d7a4c,#7bc96f)"></i></div>
+      <div id="dok" style="margin-top:24px;font-size:30px;font-weight:700;color:#1d7a4c">✓ Calorie- én eiwitdoel gehaald</div>
+    </div>
+  </div>
+
+  <div class="scene" data-in="15.65" data-out="18.3" data-fo=".25">
+    <div class="abs center label rv" data-a="15.7" style="top:220px">Boodschappenlijst</div>
+    <div class="abs center h rv" data-a="15.75" style="top:280px;font-size:84px">Per afdeling.<br>Afvinken. Klaar.</div>
+    <div class="wcard" style="top:560px" id="list"></div>
+  </div>
+
+  <div class="scene" data-in="18.25" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:450px;top:380px;width:180px;height:180px"></div>
+    <div class="abs center h rv" data-a="18.4" data-s=".1" style="top:640px;font-size:96px">77 recepten.</div>
+    <div class="abs center xh rv" data-a="19.6" data-s=".16" data-fx="slam" style="top:790px;font-size:190px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:980px;font-size:190px;color:#1d7a4c">gratis.</div>
+    <div class="abs" id="swoosh" style="left:290px;top:1150px;width:500px;height:26px;border-radius:13px;background:#c9f27a;transform-origin:0 50%"></div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1290px;background:#1d7a4c;color:#fff">Download Puls nu →</div>
+  </div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 25, fps: 30, bpm: 92, title: '77 recepten' };
+$('#ctaLogo').innerHTML = logoSVG(180);
+// ---- getekende gerechten (bovenaanzicht)
+const ART = {
+  shakshuka: () => `<circle cx="110" cy="110" r="106" fill="#2b2b2b"/><circle cx="110" cy="110" r="94" fill="#c0392b"/><circle cx="110" cy="110" r="94" fill="url(#sauce)" opacity=".5"/>
+    ${[[78, 84], [140, 92], [104, 146]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="26" ry="23" fill="#fffdf6"/><circle cx="${x + 2}" cy="${y}" r="11" fill="#f4b223"/>`).join('')}
+    ${[[120, 60], [60, 130], [150, 140], [96, 108], [165, 70]].map(([x, y]) => `<rect x="${x}" y="${y}" width="13" height="13" rx="3" fill="#f7f3e8" transform="rotate(20 ${x} ${y})"/>`).join('')}
+    ${[[70, 60], [130, 120], [90, 170], [160, 110], [50, 100]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="6" ry="3" fill="#3c8d2f" transform="rotate(40 ${x} ${y})"/>`).join('')}
+    <rect x="200" y="98" width="40" height="24" rx="10" fill="#2b2b2b"/>`,
+  poke: () => `<circle cx="110" cy="110" r="106" fill="#e9e2d6"/><circle cx="110" cy="110" r="92" fill="#fbfaf6"/>
+    <path d="M110 110 L110 22 A88 88 0 0 1 186 66 Z" fill="#f08a5d"/><path d="M110 110 L186 66 A88 88 0 0 1 176 168 Z" fill="#7cb342"/>
+    <path d="M110 110 L176 168 A88 88 0 0 1 68 186 Z" fill="#9ccc65"/><path d="M110 110 L68 186 A88 88 0 0 1 26 90 Z" fill="#f4d35e"/>
+    <path d="M110 110 L26 90 A88 88 0 0 1 110 22 Z" fill="#3d5a3c"/><circle cx="110" cy="110" r="26" fill="#f7f3e8"/>
+    ${[[140, 120], [150, 140], [130, 150], [160, 125]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="8" ry="6" fill="#8bc34a"/>`).join('')}`,
+  oats: () => `<circle cx="110" cy="110" r="100" fill="#d6e4ec"/><circle cx="110" cy="110" r="86" fill="#efe2c6"/>
+    ${Array.from({ length: 16 }, (_, i) => { const a = i * 2.4, r = 20 + (i * 13) % 55; return `<circle cx="${110 + Math.cos(a) * r}" cy="${110 + Math.sin(a) * r}" r="9" fill="#3f51b5"/><circle cx="${108 + Math.cos(a) * r}" cy="${107 + Math.sin(a) * r}" r="2.5" fill="#9fa8da"/>`; }).join('')}
+    <ellipse cx="80" cy="140" rx="18" ry="8" fill="#f6f1e3" transform="rotate(-30 80 140)"/>`,
+  curry: () => `<circle cx="110" cy="110" r="106" fill="#f1ebe0"/><circle cx="110" cy="110" r="88" fill="#e9a23b"/>
+    <path d="M40 100 Q110 60 180 110 Q140 190 60 160 Z" fill="#fff9ee" opacity=".9"/>
+    ${[[80, 80], [140, 90], [120, 140], [70, 130], [150, 150]].map(([x, y]) => `<rect x="${x}" y="${y}" width="22" height="16" rx="6" fill="#f3e0c0"/>`).join('')}
+    ${[[100, 70], [60, 110], [160, 120], [110, 170]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="14" ry="7" fill="#2e7d32" transform="rotate(30 ${x} ${y})"/>`).join('')}`,
+  chili: () => `<circle cx="110" cy="110" r="106" fill="#efe6da"/><circle cx="110" cy="110" r="88" fill="#8e3b2a"/>
+    ${Array.from({ length: 14 }, (_, i) => { const a = i * 2.1, r = 15 + (i * 17) % 60; return `<ellipse cx="${110 + Math.cos(a) * r}" cy="${110 + Math.sin(a) * r}" rx="8" ry="5" fill="${i % 3 ? '#4e1f14' : '#f4c542'}" transform="rotate(${i * 40} ${110 + Math.cos(a) * r} ${110 + Math.sin(a) * r})"/>`; }).join('')}
+    <circle cx="140" cy="80" r="16" fill="#fffdf6"/><ellipse cx="86" cy="150" rx="12" ry="5" fill="#4caf50" transform="rotate(-20 86 150)"/>`,
+  skyr: () => `<circle cx="110" cy="110" r="100" fill="#e6e0f2"/><circle cx="110" cy="110" r="86" fill="#fbfbfd"/>
+    ${[[90, 90], [130, 96], [110, 130], [80, 135], [140, 140]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="13" fill="#e53950"/><circle cx="${x - 3}" cy="${y - 3}" r="3" fill="#ff8a9b"/>`).join('')}
+    ${Array.from({ length: 12 }, (_, i) => `<ellipse cx="${70 + (i * 37) % 90}" cy="${70 + (i * 53) % 90}" rx="4" ry="2.5" fill="#6d4c41"/>`).join('')}`,
+};
+const artSVG = (k, size) => `<svg width="${size}" height="${size}" viewBox="-4 -4 228 228"><defs><radialGradient id="sauce"><stop offset="0" stop-color="#e74c3c"/><stop offset="1" stop-color="#7b1f14"/></radialGradient></defs>${ART[k]()}</svg>`;
+const RECIPES = [
+  ['shakshuka', 'Shakshuka met feta', 412, 24, '20 min'],
+  ['poke', 'Pokébowl met zalm en edamame', 620, 38, '15 min'],
+  ['oats', 'Overnight oats met blauwe bessen', 380, 18, '5 min'],
+  ['curry', 'Kip-kokoscurry met spinazie', 560, 42, '30 min'],
+  ['chili', 'Chili sin carne', 520, 24, '35 min'],
+];
+$('#deck').innerHTML = RECIPES.map(([k, n, kc, e, tm], i) => `<div class="rc" id="d${i}"><div style="text-align:center">${artSVG(k, 460)}</div>
+  <div class="nm" style="margin-top:18px">${n}</div><div><span class="lchip k">${kc} kcal</span><span class="lchip e">${e} g eiwit</span><span class="lchip m">${tm}</span></div></div>`).join('');
+$('#partArt').outerHTML = artSVG('shakshuka', 420).replace('<svg', '<svg class="art" id="partArt"');
+$('#floaters').innerHTML = ['poke', 'oats', 'chili', 'skyr'].map((k, i) => `<div class="abs fl" style="left:${[90, 760, 120, 730][i]}px;top:${[330, 380, 1250, 1300][i]}px">${artSVG(k, 230)}</div>`).join('');
+const MENU = [['oats', 'Ontbijt', 'Overnight oats met blauwe bessen', '1×', 380], ['poke', 'Lunch', 'Pokébowl met zalm en edamame', '1×', 620], ['curry', 'Avondeten', 'Kip-kokoscurry met spinazie', '1½×', 840], ['skyr', 'Snack', 'Skyr met frambozen en pitten', '2×', 460]];
+$('#menu').innerHTML = MENU.map(([k, m, n, x, kc], i) => `<div class="mrow" id="mr${i}"><div style="flex:none">${artSVG(k, 84)}</div><div style="flex:1"><div style="font-size:22px;color:#46604f;font-weight:700">${m} · ${x}</div><b>${n}</b></div><b>${kc}</b></div>`).join('');
+const LIST = [['Groente & fruit', [['Blauwe bessen', '125 g'], ['Spinazie', '200 g'], ['Frambozen', '150 g']]], ['Vlees & vis', [['Kipfilet', '300 g'], ['Zalm', '125 g']]], ['Zuivel', [['Skyr', '400 g']]], ['Houdbaar', [['Kokosmelk light', '1 blik'], ['Havermout', '50 g']]]];
+let li = 0;
+$('#list').innerHTML = `<div class="row"><b style="font-size:40px;font-family:Brico">Boodschappen</b><span style="font-size:28px;color:#46604f"><span id="lc">0</span>/8</span></div>` +
+  LIST.map(([a, items]) => `<div class="aisle">${a}</div>` + items.map(([n, q]) => `<div class="mrow" style="padding:12px 0"><div class="ck" id="ck${li++}"></div><div style="flex:1" class="lt">${n}</div><span style="color:#46604f">${q}</span></div>`).join('')).join('');
+
+const SP = 60 / 92;
+function render(t) {
+  $('#g1').style.transform = `translate(${-200 + Math.sin(t * .3) * 120}px, ${-300 + Math.cos(t * .25) * 140}px)`;
+  $('#g2').style.transform = `translate(${400 + Math.cos(t * .3) * 140}px, ${1000 + Math.sin(t * .35) * 160}px)`;
+  scenes(t); reveal(t);
+  // vraagteken springt op de tel
+  $('#qm').style.transform = `translateY(${-Math.abs(Math.sin(t * Math.PI / SP)) * 30 * (t > 1.2 ? 1 : 0)}px) rotate(${Math.sin(t * 3) * 8}deg)`;
+  $$('.fl').forEach((e, i) => { const k = back(P(t, .2 + i * SP / 2, .7 + i * SP / 2)); e.style.opacity = cl(k); e.style.transform = `scale(${k}) translateY(${Math.sin(t * 1.5 + i) * 14}px) rotate(${t * 6 * (i % 2 ? 1 : -1)}deg)`; });
+  // kaarten vliegen binnen op de tel
+  RECIPES.forEach((r, i) => {
+    const a = b(4 + i), el = $('#d' + i), k = eo5(P(t, a, a + .4));
+    const after = RECIPES.length - 1 - i, stackK = Math.min(after, Math.max(0, (t - a) / SP));
+    const depth = Math.max(0, Math.floor((t - a) / SP));
+    const d = Math.min(depth, 3) - 0 * stackK;
+    el.style.opacity = t < a ? 0 : 1 - P(t, a + 4.2 * SP, a + 4.6 * SP) * (i < 4 ? 1 : 0) * 0;
+    el.style.transform = `translateX(${(1 - k) * 900 - d * 26}px) translateY(${-d * 22}px) rotate(${(1 - k) * 25 + (i % 2 ? -2 : 3) + d * -1.5}deg) scale(${1 - d * .05})`;
+    el.style.zIndex = 10 + i;
+    el.style.filter = d > 0 ? `brightness(${1 - d * .06})` : '';
+  });
+  // portie-schaal
+  if (t > 7.6 && t < 13.3) {
+    const steps = [[b(13), 0, 206, 12], [b(14), 1, 412, 24], [b(15), 2, 618, 36], [b(16), 3, 824, 48], [b(17), 2, 618, 36]];
+    let cur = [0, 1, 412, 24], prev = cur;
+    steps.forEach(st => { if (t >= st[0]) { prev = cur; cur = st; } });
+    const k = eo(P(t, cur[0], cur[0] + .3));
+    $('#pk').textContent = nl(lerp(prev[2], cur[2], k)); $('#pe').textContent = nl(lerp(prev[3], cur[3], k));
+    $$('#seg div').forEach((d, i) => { const on = i === cur[1]; d.style.background = on ? '#1d7a4c' : 'transparent'; d.style.color = on ? '#fff' : '#46604f'; d.style.transform = `scale(${on ? 1 + Math.exp(-(t - cur[0]) * 8) * .12 : 1})`; });
+    $('#partArt').style.transform = `scale(${lerp(.85, 1.15, (cur[1]) / 3)})`;
+    $('#partArt').style.transition = 'none';
+    show('#fit', back(P(t, b(18), b(18) + .4)), { y: 20, s: .7, blur: 0 });
+    show('#pcard', eo5(P(t, 7.8, 8.3)), { y: 160, blur: 0 });
+  }
+  // dagmenu
+  if (t > 12.8 && t < 15.9) {
+    $('#shuf').style.transform = `rotate(${eio(P(t, b(20), b(20) + .4)) * 360}deg)`;
+    let tot = 0;
+    MENU.forEach((m, i) => { const s = b(20.5 + i * .5), k = back(P(t, s, s + .35)); const r = $('#mr' + i); r.style.opacity = P(t, s, s + .1); r.style.transform = `translateX(${(1 - k) * 80}px)`; tot += m[4] * eo(P(t, s, s + .3)); });
+    $('#dk').textContent = nl(tot); $('#dbar').style.width = (tot / 2300 * 100) + '%';
+    show('#dok', back(P(t, b(23), b(23) + .35)), { y: 20, s: .7, blur: 0 });
+  }
+  // boodschappenlijst
+  if (t > 15.4 && t < 18.5) {
+    let n = 0;
+    for (let i = 0; i < 8; i++) { const s = b(24.5 + i * .5), on = t >= s, e = $('#ck' + i); if (on) n++;
+      e.style.background = on ? '#1d7a4c' : 'transparent'; e.style.borderColor = on ? '#1d7a4c' : '#c8d6c4'; e.textContent = on ? '✓' : '';
+      e.style.transform = `scale(${on ? 1 + Math.sin(P(t, s, s + .2) * Math.PI) * .3 : 1})`;
+      e.parentElement.querySelector('.lt').style.textDecoration = on ? 'line-through' : 'none'; e.parentElement.style.opacity = on ? .55 : 1; }
+    $('#lc').textContent = n;
+  }
+  // CTA
+  if (t > 18) {
+    const pulse = beatPulse(t, 19.5, 10), L = $('#ctaLogo'), k = back(P(t, 18.3, 18.8));
+    L.style.opacity = P(t, 18.3, 18.4); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    logoDraw(L, eio(P(t, 18.4, 19)));
+    const g = eo5(P(t, b(31), b(31) + .35)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    $('#swoosh').style.transform = `scaleX(${eo5(P(t, b(31.5), b(32)))}) rotate(-2deg)`;
+    const c = $('#cta'), bk = back(P(t, b(32), b(32) + .5)), pl = t > b(32) + .5 ? Math.sin((t - b(32)) * Math.PI / SP) * .5 + .5 : 0;
+    c.style.opacity = P(t, b(32), b(32) + .12); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 30px 60px -20px rgba(29,122,76,${.35 + pl * .3})`;
+  }
+}
+boot(render);
+</script></body></html>

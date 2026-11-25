@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Coach in je broekzak</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+#lock{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 30% 20%,#2f6d4a,transparent 70%),radial-gradient(ellipse 70% 50% at 80% 80%,#5a7a1f,transparent 70%),linear-gradient(160deg,#0f2a1e,#06100c)}
+#ldate{position:absolute;left:0;right:0;top:150px;text-align:center;font-size:30px;font-weight:600;color:rgba(255,255,255,.85)}
+#ltime{position:absolute;left:0;right:0;top:186px;text-align:center;font-family:Brico;font-weight:600;font-size:170px;letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums}
+.n{position:absolute;left:26px;right:26px;transform-origin:50% 0}
+.notif b{font-size:28px}
+.notif p{font-size:26px}
+</style></head>
+<body><div id="stage">
+  <div id="bgwrap"></div>
+  <div class="scene" data-in="0" data-out="11.85" data-fo=".3">
+    <div class="abs center label rv" data-a="0.1" style="top:150px">Je coach</div>
+    <div class="abs center h rv" data-a="0.2" style="top:205px;font-size:92px">Denkt de hele<br>dag met je mee.</div>
+  </div>
+  <div id="phoneHost"></div>
+  <div class="scene" data-in="11.78" data-out="14.0" data-fo=".3">
+    <div class="abs center xh rv" data-a="11.85" data-s=".14" data-fx="slam" style="top:700px;font-size:150px">Een coach</div>
+    <div class="abs center xh rv" data-a="12.85" data-s=".14" data-fx="slam" style="top:870px;font-size:150px;color:var(--lime)">in je broekzak.</div>
+  </div>
+  <div class="scene" data-in="13.93" data-out="99">
+    <div class="abs" id="ctaLogo" style="left:440px;top:360px;width:200px;height:200px"></div>
+    <div class="abs center label rv" data-a="14.3" style="top:630px;font-size:30px">Download Puls nu</div>
+    <div class="abs center xh rv" data-a="14.46" data-s=".13" data-fx="slam" style="top:710px;font-size:200px">14 dagen</div>
+    <div class="abs center xh" id="gratis" style="top:910px;font-size:200px;color:var(--lime)">gratis.</div>
+    <div class="abs center rv" data-a="15.6" style="top:1170px;font-size:42px;color:var(--ink2);line-height:1.4">Reminders voor water, eten en training.<br>Felicitaties als je een doel haalt.</div>
+    <div class="cta-btn" id="cta" style="left:190px;width:700px;top:1360px">Probeer 14 dagen gratis →</div>
+  </div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script>
+window.VIDEO = { w: 1080, h: 1920, dur: 20.5, fps: 30, bpm: 112, title: 'Coach in je broekzak' };
+$('#bgwrap').innerHTML = bgHTML();
+$('#ctaLogo').innerHTML = logoSVG(200);
+const NOTIFS = [
+  ['08:00', 'Goedemorgen, Sam', 'Vandaag op je schema: Push. Je doel: 2.300 kcal en 150 g eiwit.'],
+  ['10:30', 'Tijd voor een glas water', '1,2 van 2,8 liter. Je loopt iets achter op schema.'],
+  ['12:15', 'Lunch', 'Je hebt nog 1.420 kcal over. Bijvoorbeeld pokébowl met zalm: 620 kcal, 38 g eiwit.'],
+  ['15:30', 'Nog 2.400 stappen', 'Een wandeling van ongeveer 20 minuten is genoeg.'],
+  ['18:00', 'Push staat nog open', '4 oefeningen, ± 50 minuten.'],
+  ['21:00', 'Eiwitdoel gehaald 🎉', '152 g eiwit vandaag. 12 dagen op rij ingevuld!'],
+];
+const inner = `<div id="lock"></div><div id="ldate">woensdag 25 november</div><div id="ltime">07:41</div>
+  <div id="stack" class="abs" style="left:0;right:0;top:470px;bottom:0">${NOTIFS.map(([tm, tt, tx], i) => `
+    <div class="n" id="n${i}"><div class="notif"><div class="ic">${logoSVG(42, { noBg: true, sw: 50 })}</div>
+      <div style="flex:1"><div class="tt"><span>PULS</span><span>${tm}</span></div><b>${tt}</b><p>${tx}</p></div></div></div>`).join('')}</div>
+  <div class="abs" style="left:50%;bottom:22px;width:240px;height:9px;margin-left:-120px;border-radius:5px;background:rgba(255,255,255,.7)"></div>`;
+$('#phoneHost').innerHTML = phoneHTML('phone', inner, { x: 170, y: 520, w: 740, h: 1500, time: '' });
+const SP = 60 / 112;
+const AT = NOTIFS.map((_, i) => b(4 + i * 3));
+function render(t) {
+  bg(t, t > 13.9 ? .4 : 0);
+  scenes(t); reveal(t);
+  const ph = $('#phone');
+  const on = t < 12.1;
+  ph.style.display = on ? '' : 'none';
+  if (on) {
+    const pin = eo5(P(t, 0, .9)), pout = eio(P(t, 11.5, 12.05));
+    ph.style.transform = `translateY(${(1 - pin) * 900 + pout * 400}px) scale(${1 - pout * .15}) rotate(${Math.sin(t * .7) * 1}deg)`;
+    ph.style.opacity = 1 - pout;
+    // klok volgt de laatste melding
+    let idx = -1; AT.forEach((a, i) => { if (t >= a) idx = i; });
+    $('#ltime').textContent = idx < 0 ? '07:41' : NOTIFS[idx][0];
+    $('#ltime').style.transform = `scale(${1 + (idx >= 0 ? Math.exp(-(t - AT[idx]) * 8) * .05 : 0)})`;
+    // stapel: nieuwste bovenaan, oudere schuiven omlaag en worden kleiner
+    let y = 0;
+    for (let i = NOTIFS.length - 1; i >= 0; i--) {
+      const e = $('#n' + i), a = AT[i];
+      if (t < a - .05) { e.style.display = 'none'; continue; }
+      e.style.display = '';
+      const k = back(P(t, a, a + .45), 1.2);
+      const age = AT.filter((x, j) => j > i && t >= x).length;       // hoeveel nieuwere er zijn
+      const ageK = AT.filter((x, j) => j > i).map(x => eo(P(t, x, x + .4))).reduce((s, v) => s + v, 0);
+      const sc = 1 - Math.min(ageK, 3) * .045;
+      e.style.transform = `translateY(${(1 - k) * -160 + ageK * 196 - Math.max(0, ageK - 3) * 150}px) scale(${lerp(.8, 1, cl(k)) * sc})`;
+      e.style.opacity = cl(P(t, a, a + .15)) * (1 - cl(ageK - 3.2));
+      e.style.zIndex = 10 + i;
+      e.querySelector('.notif').style.boxShadow = t - a < .6 && t >= a ? `0 0 ${60 * (1 - P(t, a, a + .6))}px rgba(201,242,122,.55), 0 20px 50px -20px rgba(0,0,0,.6)` : '';
+    }
+  }
+  if (t > 13.8) {
+    const pulse = beatPulse(t, 14.5, 10), L = $('#ctaLogo'), k = back(P(t, 13.93, 14.45));
+    L.style.opacity = P(t, 13.93, 14.03); L.style.transform = `scale(${lerp(.3, 1, k) + pulse * .05})`;
+    L.style.filter = `drop-shadow(0 0 ${40 + pulse * 50}px rgba(201,242,122,${.3 + pulse * .3}))`;
+    logoDraw(L, eio(P(t, 14, 14.6)));
+    const g = eo5(P(t, b(28), b(28) + .35)), gr = $('#gratis');
+    gr.style.opacity = g; gr.style.transform = `scale(${lerp(1.6, 1, g) + pulse * .02})`; gr.style.filter = g < 1 ? `blur(${(1 - g) * 20}px)` : '';
+    gr.style.textShadow = `0 0 ${60 + pulse * 40}px rgba(201,242,122,${.35 + pulse * .25})`;
+    const c = $('#cta'), bk = back(P(t, b(30), b(30) + .5)), pl = t > b(30) + .5 ? Math.sin((t - b(30)) * Math.PI / SP) * .5 + .5 : 0;
+    c.style.opacity = P(t, b(30), b(30) + .12); c.style.transform = `scale(${lerp(.6, 1, bk) + pl * .025})`;
+    c.style.boxShadow = `0 0 ${40 + pl * 70}px rgba(201,242,122,${.25 + pl * .3})`;
+  }
+}
+boot(render);
+</script></body></html>
