@@ -10,6 +10,10 @@ export type Focus = 'afvallen' | 'spiermassa' | 'kracht' | 'fit';
 export type Experience = 'nieuw' | 'beginner' | 'gemiddeld' | 'ervaren';
 export type Place = 'gym' | 'thuis';
 export type MealKey = 'ontbijt' | 'lunch' | 'diner' | 'snacks';
+/** Hoe je je calorieën over de dag verdeelt */
+export type EatPattern = 'standaard' | 'groot-ontbijt' | 'geen-ontbijt' | 'tussendoor';
+/** Verdeling van vet en koolhydraten (eiwit blijft gelijk) */
+export type MacroStyle = 'gebalanceerd' | 'koolhydraatarm' | 'sportief';
 
 export const MEALS: MealKey[] = ['ontbijt', 'lunch', 'diner', 'snacks'];
 
@@ -42,6 +46,12 @@ export interface Profile {
   muscle: number;
   /** Handmatig overschreven doelen (Premium) */
   custom?: { kcal?: number; waterMl?: number; steps?: number };
+  /** eetpatroon: hoe de calorieën over de maaltijden verdeeld worden */
+  pattern?: EatPattern;
+  /** verdeling van vet en koolhydraten */
+  macroStyle?: MacroStyle;
+  /** calorie-doel bijsturen op basis van je gemeten verbruik (eten + gewichtstrend) */
+  adaptive?: boolean;
   createdAt: string;
 }
 
@@ -50,10 +60,30 @@ export interface Targets {
   p: number;
   c: number;
   f: number;
+  /** vezels in gram */
+  fib: number;
   waterMl: number;
   steps: number;
+  /** rustverbranding */
   bmr: number;
+  /** totaal verbruik per dag (dagelijks leven + training) */
   tdee: number;
+  /** verbruik door dagelijks leven, zonder training */
+  neat: number;
+  /** gemiddeld per dag verbruikt door je trainingen */
+  sport: number;
+  /** kcal per dag t.o.v. je verbruik: negatief = tekort, positief = overschot */
+  delta: number;
+  /** verwachte gewichtsverandering per week (negatief = afvallen) */
+  kgPerWeek: number;
+  /** geschat vetpercentage */
+  bodyFat: number;
+  /** vetvrije massa in kg */
+  lbm: number;
+  /** deel van de dag per maaltijd [min, max] */
+  split: Record<MealKey, [number, number]>;
+  /** het verbruik is bijgestuurd met je eigen gegevens */
+  adaptive: boolean;
 }
 
 export interface FoodEntry {

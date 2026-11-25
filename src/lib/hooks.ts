@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { calcTargets, sumNutrients, TRAINING_WATER_BONUS } from './calc';
-import { weekday } from './date';
+import { calcTargets, NO_NUTRIENTS, sumNutrients, TRAINING_WATER_BONUS } from './calc';
+import { dateKey, weekday } from './date';
+import { cachedInsight } from './insights';
 import { emptyDay, useStore } from './store';
 import { MEALS, type DayLog, type MealKey } from './types';
 import { roomFor } from './recipes';
@@ -12,9 +13,25 @@ export function useDay(date: string): DayLog {
   return useStore((s) => s.days[date]) ?? EMPTY;
 }
 
+/** Je gemeten verbruik uit de laatste 4 weken (eten + gewichtstrend), of null als er te weinig gegevens zijn. */
+export function useEnergyInsight() {
+  const days = useStore((s) => s.days);
+  const weights = useStore((s) => s.weights);
+  return cachedInsight(days, weights, dateKey());
+}
+
 export function useTargets() {
   const profile = useStore((s) => s.profile);
-  return useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
+  // alleen opnieuw rekenen als slimme bijsturing aan staat
+  const days = useStore((s) => (s.profile?.adaptive ? s.days : null));
+  const weights = useStore((s) => s.weights);
+  const measured = days ? cachedInsight(days, weights, dateKey()) : null;
+  const mt = measured?.tdee;
+  const mc = measured?.confidence;
+  return useMemo(
+    () => (profile ? calcTargets(profile, mt !== undefined && mc !== undefined ? { tdee: mt, confidence: mc } : null) : null),
+    [profile, mt, mc],
+  );
 }
 
 export function usePlan() {
@@ -45,5 +62,5 @@ export function useWaterTarget(date: string) {
 export function useMealRoom(meal: MealKey, date: string) {
   const t = useTargets();
   const day = useStore((s) => s.days[date]);
-  return useMemo(() => (t ? roomFor(meal, t, day, day ? dayTotals(day).eaten : { kcal: 0, p: 0, c: 0, f: 0 }) : null), [t, day, meal]);
+  return useMemo(() => (t ? roomFor(meal, t, day, day ? dayTotals(day).eaten : NO_NUTRIENTS) : null), [t, day, meal]);
 }

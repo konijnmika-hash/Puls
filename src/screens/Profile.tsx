@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { ACTIVITY, bmi, bodyFat, leanMass } from '../lib/calc';
-import { fmt, liters } from '../lib/date';
-import { useTargets } from '../lib/hooks';
+import { ACTIVITY, MACRO_STYLE, PATTERNS, bmi } from '../lib/calc';
+import { dateKey, fmt, liters } from '../lib/date';
+import { useEnergyInsight, useTargets } from '../lib/hooks';
+import { insightNeeds } from '../lib/insights';
 import { GOAL_OPTIONS } from '../lib/options';
 import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
+import type { EatPattern, MacroStyle } from '../lib/types';
 import { ReminderRows, SettingsRows } from '../components/Sheets';
-import { I } from '../components/ui';
+import { I, Switch, toast } from '../components/ui';
 
 export function ProfileScreen() {
   const profile = useStore((s) => s.profile)!;
@@ -34,8 +36,8 @@ export function ProfileScreen() {
           <div className="small muted">{goal.em} {goal.t} · {ACTIVITY[profile.activity].label.toLowerCase()}</div>
           <div className="profile-stats num">
             <span>BMI <b>{fmt(bmi(profile.weightKg, profile.heightCm), 1)}</b></span>
-            <span>Vet <b>± {fmt(bodyFat(profile))}%</b></span>
-            <span>Vetvrij <b>{fmt(leanMass(profile))} kg</b></span>
+            <span>Vet <b>± {fmt(t.bodyFat)}%</b></span>
+            <span>Vetvrij <b>{fmt(t.lbm)} kg</b></span>
           </div>
         </div>
         <button className="iconbtn" onClick={() => open({ type: 'profileEdit' })} aria-label="Gegevens bewerken"><I.pencil /></button>
@@ -61,16 +63,24 @@ export function ProfileScreen() {
           <Goal v={fmt(t.steps)} u="stappen" l="Stappendoel" c="var(--steps)" />
           <Goal v={`${profile.trainDays.length}×`} u="per week" l="Trainen" c="var(--fat)" />
         </div>
-        <div className="grid2" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          <Goal v={`${t.c}`} u="g" l="Koolhydraten" c="var(--carb)" small />
+        <div className="grid2" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
           <Goal v={`${t.p}`} u="g" l="Eiwit" c="var(--protein)" small />
+          <Goal v={`${t.c}`} u="g" l="Koolh." c="var(--carb)" small />
           <Goal v={`${t.f}`} u="g" l="Vet" c="var(--fat)" small />
+          <Goal v={`${t.fib}`} u="g" l="Vezels" c="var(--fiber)" small />
         </div>
-        <p className="tiny" style={{ margin: 0 }}>
-          Berekend uit je lengte, gewicht, leeftijd en vetpercentage (Mifflin-St Jeor en Katch-McArdle): je rustverbranding is {fmt(t.bmr)} kcal, met je dagelijkse activiteit verbruik je ongeveer {fmt(t.tdee)} kcal.
-          {profile.custom ? ' Je gebruikt eigen doelen.' : ''}
-        </p>
+        <button className="explain-btn" onClick={() => open({ type: 'explain' })}>
+          <span className="i20"><I.calc /></span>
+          <span className="grow">
+            <b>Zo rekent Puls</b>
+            <span className="tiny" style={{ display: 'block' }}>Verbruik {fmt(t.tdee)} kcal{t.delta ? ` · ${t.delta < 0 ? 'tekort' : 'overschot'} ${fmt(Math.abs(t.delta))} kcal` : ''}{Math.abs(t.kgPerWeek) >= 0.05 ? ` · ± ${fmt(Math.abs(t.kgPerWeek), 2)} kg per week` : ''}{profile.custom ? ' · eigen doelen' : ''}</span>
+          </span>
+          <I.right />
+        </button>
       </section>
+
+      <div className="section-title"><h2>Voeding</h2></div>
+      <NutritionPrefs />
 
       <div className="section-title"><h2>Coach &amp; reminders</h2></div>
       <section className="card" style={{ padding: '4px 14px' }}>
@@ -105,6 +115,53 @@ export function ProfileScreen() {
       </section>
       <p className="tiny" style={{ textAlign: 'center' }}>Puls 0.2 · Je gegevens blijven op dit apparaat.<br />Voedingswaarden: eigen basisdatabase + Open Food Facts (ODbL).</p>
     </div>
+  );
+}
+
+/** Eetpatroon, macroverdeling en slimme bijsturing. */
+function NutritionPrefs() {
+  const profile = useStore((s) => s.profile)!;
+  const days = useStore((s) => s.days);
+  const weights = useStore((s) => s.weights);
+  const insight = useEnergyInsight();
+  const t = useTargets()!;
+  const update = useStore((s) => s.updateProfile);
+  const pattern = profile.pattern ?? 'standaard';
+  const style = profile.macroStyle ?? 'gebalanceerd';
+  const need = insightNeeds(days, weights, dateKey());
+  const ready = !!insight && insight.confidence >= 0.3;
+  return (
+    <section className="card stack">
+      <div className="field">
+        <span className="lbl">Eetpatroon</span>
+        <div className="chips" role="radiogroup" aria-label="Eetpatroon">
+          {(Object.keys(PATTERNS) as EatPattern[]).map((k) => (
+            <button key={k} role="radio" aria-checked={pattern === k} className={'chip sm' + (pattern === k ? ' on' : '')} onClick={() => { update({ pattern: k }); toast(`Eetpatroon: ${PATTERNS[k].label.toLowerCase()}`); }}>{PATTERNS[k].label}</button>
+          ))}
+        </div>
+        <span className="tiny">{PATTERNS[pattern].hint}. Bepaalt hoeveel kcal Puls per maaltijd aanraadt en hoe groot je porties in recepten zijn.</span>
+      </div>
+      <div className="field">
+        <span className="lbl">Verdeling vet en koolhydraten</span>
+        <div className="chips" role="radiogroup" aria-label="Macroverdeling">
+          {(Object.keys(MACRO_STYLE) as MacroStyle[]).map((k) => (
+            <button key={k} role="radio" aria-checked={style === k} className={'chip sm' + (style === k ? ' on' : '')} onClick={() => update({ macroStyle: k })}>{MACRO_STYLE[k].label}</button>
+          ))}
+        </div>
+        <span className="tiny">{MACRO_STYLE[style].hint}. Je eiwit blijft gelijk.</span>
+      </div>
+      <div className="row" style={{ alignItems: 'flex-start' }}>
+        <div className="grow">
+          <b>Slimme bijsturing</b>
+          <div className="small muted">
+            {ready
+              ? `Gemeten verbruik ± ${fmt(insight!.tdee)} kcal per dag, uit ${insight!.loggedDays} gelogde dagen en ${insight!.weighIns} wegingen.${profile.adaptive ? ` Je doel is nu ${fmt(t.kcal)} kcal.` : ''}`
+              : `Puls leert je echte verbruik uit wat je eet en hoe je gewicht verandert. Nog nodig: ${need.days ? `${need.days} volledig gelogde ${need.days === 1 ? 'dag' : 'dagen'}` : ''}${need.days && need.weighIns ? ' en ' : ''}${need.weighIns ? `${need.weighIns}× wegen` : ''}${!need.days && !need.weighIns ? 'iets meer tijd' : ''}.`}
+          </div>
+        </div>
+        <Switch on={!!profile.adaptive} onChange={(v) => { update({ adaptive: v }); toast(v ? (ready ? 'Je doel wordt bijgestuurd op je gemeten verbruik' : 'Staat aan: Puls stuurt bij zodra er genoeg gegevens zijn') : 'Slimme bijsturing uit'); }} label="Slimme bijsturing" />
+      </div>
+    </section>
   );
 }
 

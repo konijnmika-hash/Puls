@@ -61,6 +61,8 @@ function scatter(rng: Rng, n: number, cx: number, cy: number, rx: number, ry: nu
 }
 
 /* ---------- ingrediënten (getekend in een kader met straal 10) ---------- */
+const PEAR = 'M0,-10 C3,-10 4,-6 4,-3 C8,0 9,6 5,9 C2,11 -2,11 -5,9 C-9,6 -8,0 -4,-3 C-4,-6 -3,-10 0,-10Z';
+const FIG = 'M0,-10 C4,-10 9,-2 9,3 C9,8 5,10 0,10 C-5,10 -9,8 -9,3 C-9,-2 -4,-10 0,-10Z';
 const SPRINKLE = new Set<Item>(['chia', 'sesam', 'pompoenpit', 'kokos', 'chilivlok', 'peper', 'kaas', 'parmezaan', 'mais', 'lente-ui', 'rozijn']);
 const DRIZZLE: Partial<Record<Item, [string, number]>> = { honing: ['#e9a524', 3], ahorn: ['#b8651c', 2.6], 'pesto-druppel': ['#5d8a2a', 2.4] };
 
@@ -254,6 +256,42 @@ function drawItem(k: Item, rng: Rng, id: string): ReactNode {
       return <ellipse rx={4} ry={3} fill={pick(rng, ['#4a2618', '#5a2f1c', '#3f2014'])} />;
     case 'pinda':
       return <><ellipse rx={6} ry={4.5} fill="#d9a45e" /><path d="M0,-4 L0,4" stroke="#b9823f" strokeWidth={0.9} /><ellipse cx={-2} cy={-1.5} rx={2} ry={1.2} fill="#ecc68b" opacity={0.7} /></>;
+    case 'peer':
+      return <><path d={PEAR} fill="#bfc94e" /><path d={PEAR} fill="#f4ecc6" transform="scale(0.84) translate(0 0.8)" /><ellipse cy={3} rx={2.4} ry={3.2} fill="#e8dca4" /><ellipse cx={-0.9} cy={3} rx={0.6} ry={1.2} fill="#5e3f1c" /><ellipse cx={0.9} cy={3} rx={0.6} ry={1.2} fill="#5e3f1c" /><path d="M0,-9.5 L0.8,-12.5" stroke="#6b4a22" strokeWidth={1.3} strokeLinecap="round" /></>;
+    case 'vijg':
+      return <><path d={FIG} fill="#5a2a4a" /><path d={FIG} fill="#efb3a6" transform="scale(0.82) translate(0 0.6)" /><path d={FIG} fill="#c4414f" transform="scale(0.52) translate(0 1.6)" />{Array.from({ length: 12 }, (_, i) => <ellipse key={i} cx={Math.cos(i * 0.52) * 3.4} cy={2 + Math.sin(i * 0.52) * 3.4} rx={0.45} ry={0.7} fill="#f8dca2" transform={`rotate(${i * 30} ${Math.cos(i * 0.52) * 3.4} ${2 + Math.sin(i * 0.52) * 3.4})`} />)}</>;
+    case 'ananas':
+      return <><rect x={-8} y={-7} width={16} height={14} rx={3} fill="#f1bf2e" /><rect x={-8} y={-7} width={16} height={5.5} rx={2.4} fill="#fbe287" /><path d="M-5,0 L5,0 M-5,3.6 L5,3.6" stroke="#dea21b" strokeWidth={0.8} strokeLinecap="round" /></>;
+    case 'friet':
+      return <><rect x={-13} y={-2.3} width={26} height={4.6} rx={1.4} fill="#e6a43c" /><rect x={-13} y={-2.3} width={26} height={1.7} rx={0.8} fill="#f6d17a" /><rect x={9} y={-2.3} width={4} height={4.6} rx={1.2} fill="#c9822a" opacity={0.6} /></>;
+    case 'biefstuk':
+      return <><rect x={-12} y={-5.5} width={24} height={11} rx={4} fill="#4f281a" /><rect x={-10.4} y={-3.9} width={20.8} height={7.8} rx={3} fill="#b8504a" /><rect x={-7.6} y={-2.2} width={15.2} height={4.4} rx={2} fill="#d87b6e" /></>;
+    case 'burger':
+      return <><path d="M-10.5,1 Q-12,7 -6,8.5 L6,8.5 Q12,7 10.5,1Z" fill="#6aa83a" /><path d="M-9.5,4 L-6,9.2 L-2,4.5Z" fill="#f4c43f" /><circle r={10} fill="#b5662a" /><circle r={9} fill="#d99147" /><ellipse cx={-2.4} cy={-3} rx={5.4} ry={3.2} fill="#ecb46e" opacity={0.75} />{Array.from({ length: 11 }, (_, i) => <ellipse key={i} cx={jitter(rng, 6.5)} cy={jitter(rng, 6.5)} rx={0.9} ry={0.5} fill="#f8eed2" transform={`rotate(${rng() * 180})`} />)}</>;
+    case 'penne':
+      return <><path d="M-9,-3 L6,-3 L9,3 L-6,3Z" fill="#efc463" /><path d="M-6,-3 L-3,3 M-1.5,-3 L1.5,3 M3,-3 L6,3" stroke="#d6a443" strokeWidth={0.8} /><ellipse cx={7.5} cy={0} rx={1.4} ry={3} fill="#c4923a" /><ellipse cx={-7.5} cy={0} rx={1.4} ry={3} fill="#f6d690" /></>;
+    case 'taco':
+      return <><path d="M-12,2 A12,12 0 0,1 12,2 Z" fill="#d9a447" /><path d="M-10.4,2 A10.4,10 0 0,1 10.4,2 Z" fill="#efcb83" /><path d="M-12,2 Q0,-2.5 12,2 Q0,7.5 -12,2Z" fill="#79ad45" />{[[-6, 2, '#e2442f'], [-2, 3, '#f5f1e4'], [2, 2, '#f2c13a'], [6, 2.5, '#e2442f'], [0, 1, '#5c8f32']].map(([x, y, c], i) => <circle key={i} cx={x as number} cy={y as number} r={1.6} fill={c as string} />)}</>;
+    case 'beschuit':
+      return <><circle r={10} fill="#c98f45" /><circle r={9} fill="#e6bf78" />{Array.from({ length: 16 }, (_, i) => <circle key={i} cx={jitter(rng, 7)} cy={jitter(rng, 7)} r={0.6} fill="#cf9a4c" />)}</>;
+    case 'spekje':
+      return <><rect x={-4} y={-4} width={8} height={8} rx={1.6} fill="#b54a3a" /><rect x={-4} y={-1.2} width={8} height={2.2} fill="#f2d3c4" /><rect x={-4} y={-4} width={8} height={2} rx={1} fill="#8a3326" opacity={0.6} /></>;
+    case 'worst':
+      return <><circle r={10} fill="#6e321f" /><circle r={8.6} fill="#c06650" />{Array.from({ length: 9 }, (_, i) => <circle key={i} cx={jitter(rng, 5.5)} cy={jitter(rng, 5.5)} r={0.9} fill="#efc0ad" />)}</>;
+    case 'druif': {
+      const [a, b] = pick(rng, [['#7fae3e', '#b6d97a'], ['#5b2c5e', '#8d5a91']]);
+      return <><ellipse rx={8} ry={9} fill={a} /><ellipse cx={-2.6} cy={-3.2} rx={2.6} ry={2} fill={b} opacity={0.8} /><ellipse cx={-3} cy={-3.6} rx={1.2} ry={0.8} fill="#fff" opacity={0.45} /></>;
+    }
+    case 'eimuffin':
+      return <><circle r={10} fill="#d9a743" /><circle r={8.6} fill="#f4d470" />{Array.from({ length: 12 }, (_, i) => <circle key={i} cx={jitter(rng, 6)} cy={jitter(rng, 6)} r={0.9 + rng() * 0.6} fill={i % 3 === 0 ? '#d6261d' : i % 3 === 1 ? '#3f7d25' : '#f8f2df'} />)}</>;
+    case 'crepe':
+      return <><rect x={-13} y={-6} width={26} height={12} rx={6} fill="#dca55c" /><rect x={-13} y={-6} width={26} height={4.4} rx={2.2} fill="#f0cf93" />{Array.from({ length: 7 }, (_, i) => <circle key={i} cx={jitter(rng, 10)} cy={jitter(rng, 3)} r={0.6} fill="#b97a34" />)}</>;
+    case 'popcorn':
+      return <><path d={blob(rng, 8.5, 7, 0.34)} fill="#fbf4df" /><path d={blob(rng, 5, 6, 0.4)} fill="#ffffff" transform="translate(-2 -2)" /><circle cx={2.4} cy={2.6} r={1.6} fill="#eebd42" /></>;
+    case 'kaasblokje':
+      return <><rect x={-6} y={-6} width={12} height={12} rx={1.6} fill="#efc244" /><rect x={-6} y={-6} width={12} height={4} rx={1.2} fill="#f8dc80" /><circle cx={2} cy={2} r={1.3} fill="#dcab2e" /><circle cx={-2.5} cy={3} r={0.8} fill="#dcab2e" /></>;
+    case 'tauge':
+      return <><path d={`M-10,${jitter(rng, 2)} Q0,${-4 + jitter(rng, 2)} 9,${jitter(rng, 2)}`} stroke="#f4f1df" strokeWidth={2.2} fill="none" strokeLinecap="round" /><circle cx={9.5} cy={0} r={1.9} fill="#e8e2a8" /><circle cx={10.6} cy={-0.8} r={0.8} fill="#a9c35a" /></>;
     case 'honing':
     case 'ahorn':
     case 'pesto-druppel':
@@ -299,6 +337,25 @@ function drawBase(base: Base, r: number, rng: Rng, onPlate: boolean): ReactNode 
       return fill('#d9a54a', <><circle r={r} fill="url(#BROTH)" />{Array.from({ length: 16 }, (_, i) => <circle key={i} cx={jitter(rng, r * 0.8)} cy={jitter(rng, r * 0.8)} r={1 + rng() * 2.4} fill="#f7d98a" opacity={0.55} />)}</>);
     case 'stamppot':
       return <><path d={blob(rng, r * 0.8, 12, 0.1)} fill="#efe3c2" />{Array.from({ length: 70 }, (_, i) => <circle key={i} cx={jitter(rng, r * 0.6)} cy={jitter(rng, r * 0.6)} r={0.8 + rng() * 1.4} fill={i % 3 ? '#3f7d2a' : '#5c9a3a'} />)}<path d="M-12,-6 C-4,-14 8,-12 12,-2" stroke="#fffaf0" strokeWidth={3} fill="none" opacity={0.6} /></>;
+    case 'hutspot':
+      return <><path d={blob(rng, r * 0.86, 12, 0.08)} fill="#f0b464" />{Array.from({ length: 150 }, (_, i) => <circle key={i} cx={jitter(rng, r * 0.66)} cy={jitter(rng, r * 0.66)} r={1.2 + rng() * 2.2} fill={i % 3 === 0 ? '#f7d9a0' : i % 3 === 1 ? '#e7782a' : '#f29a3c'} />)}<path d="M-12,-6 C-4,-14 8,-12 12,-2" stroke="#fff6e6" strokeWidth={3} fill="none" opacity={0.6} /><path d={blob(rng, 9, 8, 0.2)} fill="#7a3d1e" opacity={0.85} transform={`translate(${-r * 0.25} ${r * 0.2})`} /></>;
+    case 'puree':
+      return <><circle r={r * 0.96} fill="#f3e2b6" />{[0.25, 0.5, 0.72].map((k, i) => <path key={i} d={`M${-r * k},${jitter(rng, 4)} C${-r * k * 0.3},${-r * k * 0.7} ${r * k * 0.5},${-r * k * 0.5} ${r * k},${jitter(rng, 4)}`} stroke="#e4cf98" strokeWidth={3} fill="none" />)}{Array.from({ length: 26 }, (_, i) => <path key={'c' + i} d={blob(rng, 2 + rng() * 4, 6, 0.4)} transform={`translate(${jitter(rng, r * 0.75)} ${jitter(rng, r * 0.75)})`} fill={i % 2 ? '#e3a64a' : '#d18f34'} opacity={0.75} />)}</>;
+    case 'zuurkool': {
+      const strands: ReactNode[] = [];
+      for (let i = 0; i < 50; i++) {
+        const y = jitter(rng, r * 0.8);
+        const x0 = -Math.sqrt(Math.max(0, r * r - y * y)) * 0.85;
+        strands.push(<path key={i} d={`M${x0},${y} C${x0 / 3},${y + jitter(rng, 16)} ${-x0 / 3},${y + jitter(rng, 16)} ${-x0},${y + jitter(rng, 10)}`} stroke={i % 3 ? '#e9dfa8' : '#f6efc8'} strokeWidth={1.8} fill="none" strokeLinecap="round" />);
+      }
+      return <><circle r={r * 0.92} fill="#d6c98a" />{strands}</>;
+    }
+    case 'erwtensoep':
+      return fill('#7b8d33', <>{Array.from({ length: 40 }, (_, i) => <circle key={i} cx={jitter(rng, r * 0.8)} cy={jitter(rng, r * 0.8)} r={1.5 + rng() * 3} fill={i % 2 ? '#8ea343' : '#6a7a2a'} opacity={0.7} />)}<ellipse cx={-r * 0.3} cy={-r * 0.35} rx={r * 0.35} ry={r * 0.15} fill="#fff" opacity={0.1} /></>);
+    case 'rodecurry':
+      return fill('#c4472b', <>{Array.from({ length: 22 }, (_, i) => <circle key={i} cx={jitter(rng, r * 0.8)} cy={jitter(rng, r * 0.8)} r={1 + rng() * 2.2} fill="#e0673a" opacity={0.7} />)}{[0.4, 0.7].map((k, i) => <path key={'s' + i} d={`M${-r * k},${jitter(rng, 6)} C${-r * k / 2},${-r * k / 2} ${r * k / 2},${r * k / 2} ${r * k},${jitter(rng, 6)}`} stroke="#f3e0c4" strokeWidth={2.4} fill="none" opacity={0.75} />)}</>);
+    case 'pizza':
+      return <><circle r={r * 0.97} fill="#c98b45" /><circle r={r * 0.9} fill="#e1ad62" /><circle r={r * 0.8} fill="#c23a22" />{Array.from({ length: 12 }, (_, i) => <path key={i} d={blob(rng, 7 + rng() * 8, 8, 0.3)} transform={`translate(${jitter(rng, r * 0.55)} ${jitter(rng, r * 0.55)})`} fill={i % 3 ? '#f6e3a4' : '#f9edc6'} />)}{Array.from({ length: 10 }, (_, i) => <circle key={'b' + i} cx={jitter(rng, r * 0.6)} cy={jitter(rng, r * 0.6)} r={1.2 + rng()} fill="#d88b3a" opacity={0.6} />)}</>;
     case 'courgetti': {
       const strands: ReactNode[] = [];
       for (let i = 0; i < 44; i++) {

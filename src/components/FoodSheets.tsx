@@ -1,48 +1,95 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CATEGORY_EMOJI, CATEGORY_LABEL, FOODS, searchFoods, type Food, type FoodCategory } from '../data/foods';
+import { CATEGORY_LABEL, CATEGORY_ORDER, FOODS, searchFoods, sortForCategory, type Food, type FoodCategory } from '../data/foods';
+import { energySplit, skipsMeal } from '../lib/calc';
 import { fmt } from '../lib/date';
+import { dayTotals, useDay, useTargets } from '../lib/hooks';
 import { lookupBarcode, searchOff } from '../lib/openfoodfacts';
 import { CAMERA_HELP, cameraAllowedHere, cameraProblem, decodeFile, getDecoder, inFrame, type CameraProblem } from '../lib/barcode';
 import { RECIPE_FOODS } from '../lib/recipes';
-import { newId, useStore } from '../lib/store';
+import { newId, useStore, type SavedMeal } from '../lib/store';
 import { useUI } from '../lib/ui';
 import { MEALS, type FoodEntry, type MealKey } from '../lib/types';
 import { MEAL_META } from '../screens/Today';
+import { FoodIcon } from './FoodIcon';
 import { I, NumField, Sheet, toast } from './ui';
 
 type View = { kind: 'search' } | { kind: 'detail'; food: Food } | { kind: 'quick' } | { kind: 'custom' } | { kind: 'scan' };
 
+interface Added {
+  id: string;
+  meal: MealKey;
+  name: string;
+  kcal: number;
+}
+
+/** Eerste portie van een product, of 100 g/ml als er geen portie is. */
+const firstPortion = (f: Food) => {
+  const p = f.portions[0];
+  return p ? { grams: p.g, label: `1 ${p.label}` } : { grams: 100, label: `100 ${f.unit}` };
+};
+
 export function AddFoodSheet({ meal: initialMeal }: { meal: MealKey }) {
   const close = useUI((s) => s.close);
+  const date = useUI((s) => s.date);
   const [meal, setMeal] = useState<MealKey>(initialMeal);
   const [view, setView] = useState<View>({ kind: 'search' });
+  // alles wat je in deze sessie toevoegt: zo kun je een hele maaltijd achter elkaar invullen
+  const [added, setAdded] = useState<Added[]>([]);
+
+  const add = (food: Food, grams: number, label: string) => {
+    const id = useStore.getState().addFood(date, meal, food, grams, label);
+    setAdded((a) => [...a, { id, meal, name: food.name, kcal: (food.kcal * grams) / 100 }]);
+    setView({ kind: 'search' });
+    toast(`${food.name} toegevoegd`);
+  };
+  const undo = () => {
+    const last = added[added.length - 1];
+    if (!last) return;
+    useStore.getState().removeEntry(date, last.meal, last.id);
+    setAdded((a) => a.slice(0, -1));
+    toast(`${last.name} weer weggehaald`);
+  };
 
   const title =
     view.kind === 'detail' ? 'Hoeveel?' : view.kind === 'quick' ? 'Snel toevoegen' : view.kind === 'custom' ? 'Nieuw product' : view.kind === 'scan' ? 'Barcode scannen' : 'Eten toevoegen';
   const back = view.kind !== 'search' ? (
     <button className="iconbtn" onClick={() => setView({ kind: 'search' })} aria-label="Terug"><I.left /></button>
   ) : null;
+  const total = added.reduce((s, a) => s + a.kcal, 0);
 
   return (
     <Sheet onClose={close} full title={<span className="row" style={{ gap: 10 }}>{back}{title}</span>}>
-      <div className="chips scroll" style={{ marginBottom: 14 }}>
+      <div className="chips scroll" style={{ marginBottom: 14 }} role="radiogroup" aria-label="Maaltijd">
         {MEALS.map((m) => (
-          <button key={m} className={'chip' + (m === meal ? ' on' : '')} onClick={() => setMeal(m)}>{MEAL_META[m].label}</button>
+          <button key={m} role="radio" aria-checked={m === meal} className={'chip' + (m === meal ? ' on' : '')} onClick={() => setMeal(m)}>{MEAL_META[m].label}</button>
         ))}
       </div>
-      {view.kind === 'search' && <SearchView meal={meal} onPick={(food) => setView({ kind: 'detail', food })} onView={setView} />}
-      {view.kind === 'detail' && <FoodDetail food={view.food} meal={meal} onDone={close} />}
-      {view.kind === 'quick' && <QuickAdd meal={meal} onDone={close} />}
+      {view.kind === 'search' && <SearchView meal={meal} onPick={(food) => setView({ kind: 'detail', food })} onQuick={(f) => { const p = firstPortion(f); add(f, p.grams, p.label); }} onView={setView} onMealLogged={(n, kcal) => { setAdded((a) => [...a, { id: '', meal, name: n, kcal }]); }} />}
+      {view.kind === 'detail' && <FoodDetail food={view.food} meal={meal} onAdd={add} />}
+      {view.kind === 'quick' && <QuickAdd meal={meal} onAdd={add} />}
       {view.kind === 'custom' && <CustomFood onSaved={(food) => setView({ kind: 'detail', food })} />}
       {view.kind === 'scan' && <Scanner onFound={(food) => setView({ kind: 'detail', food })} />}
+
+      {added.length > 0 && view.kind === 'search' && (
+        <div className="basket" role="status">
+          <div className="grow" style={{ minWidth: 0 }}>
+            <b className="num">{added.length} toegevoegd · {fmt(total)} kcal</b>
+            <div className="small ellipsis">{added.map((a) => a.name).join(', ')}</div>
+          </div>
+          {added[added.length - 1].id && <button className="btn sm ghost" onClick={undo}>Ongedaan</button>}
+          <button className="btn sm" onClick={close}>Klaar</button>
+        </div>
+      )}
     </Sheet>
   );
 }
 
-function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food) => void; onView: (v: View) => void }) {
+type Tab = 'recent' | 'fav' | 'meals' | 'cat';
+
+function SearchView({ meal, onPick, onQuick, onView, onMealLogged }: { meal: MealKey; onPick: (f: Food) => void; onQuick: (f: Food) => void; onView: (v: View) => void; onMealLogged: (name: string, kcal: number) => void }) {
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState<'recent' | 'fav' | 'cat'>('recent');
-  const [cat, setCat] = useState<FoodCategory | null>(null);
+  const [tab, setTab] = useState<Tab>('recent');
+  const [cat, setCat] = useState<FoodCategory | 'recept' | null>(null);
   const [online, setOnline] = useState<{ state: 'idle' | 'loading' | 'done' | 'error'; items: Food[] }>({ state: 'idle', items: [] });
   const recent = useStore((s) => s.recent);
   const favIds = useStore((s) => s.favorites);
@@ -50,11 +97,22 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
   const premium = useStore((s) => s.premium);
   const open = useUI((s) => s.open);
   const all = useMemo(() => [...custom, ...RECIPE_FOODS, ...FOODS], [custom]);
-  const local = useMemo(() => searchFoods(q, all), [q, all]);
+  // wat je vaak gebruikt en je favorieten komen eerder in de zoekresultaten
+  const boost = useMemo(() => {
+    const rank = new Map(recent.map((f, i) => [f.id, 40 - i]));
+    const fav = new Set(favIds);
+    return (f: Food) => (rank.get(f.id) ?? 0) + (fav.has(f.id) ? 30 : 0);
+  }, [recent, favIds]);
+  const local = useMemo(() => searchFoods(q, [...recent, ...all], 40, boost), [q, all, recent, boost]);
   const favs = useMemo(() => {
     const byId = new Map([...all, ...recent].map((f) => [f.id, f]));
     return favIds.map((id) => byId.get(id)).filter((f): f is Food => !!f);
   }, [favIds, all, recent]);
+  const counts = useMemo(() => {
+    const c = new Map<string, number>();
+    for (const f of all) c.set(f.cat, (c.get(f.cat) ?? 0) + 1);
+    return c;
+  }, [all]);
 
   useEffect(() => {
     if (q.trim().length < 3) {
@@ -74,58 +132,67 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
     };
   }, [q]);
 
-  const list = q ? local : tab === 'recent' ? recent : tab === 'fav' ? favs : cat ? all.filter((f) => f.cat === cat) : [];
+  const list = q ? local : tab === 'recent' ? recent : tab === 'fav' ? favs : tab === 'cat' && cat ? sortForCategory(all.filter((f) => f.cat === cat)) : [];
 
   return (
     <div className="stack">
       <div className="search">
         <I.search />
-        <input id="food-search" className="input" placeholder={`Zoek voor ${MEAL_META[meal].label.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" enterKeyHint="search" />
+        <input id="food-search" className="input" placeholder={`Zoek in ${fmt(FOODS.length)} producten en recepten…`} value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" enterKeyHint="search" aria-label={`Zoek eten voor ${MEAL_META[meal].label.toLowerCase()}`} />
+        {q && <button className="search-clear" onClick={() => setQ('')} aria-label="Zoekveld leegmaken"><I.close /></button>}
       </div>
-      <div className="grid2" style={{ gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <button className="btn ghost sm" onClick={() => (premium ? onView({ kind: 'scan' }) : open({ type: 'premium', reason: 'De barcodescanner zit in Puls Premium.' }))}>
-          <span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.barcode /></span>Scan
-        </button>
-        <button className="btn ghost sm" onClick={() => onView({ kind: 'quick' })}><span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.bolt /></span>Snel</button>
-        <button className="btn ghost sm" onClick={() => onView({ kind: 'custom' })}><span style={{ width: 18, height: 18, display: 'inline-flex' }}><I.pencil /></span>Eigen</button>
-      </div>
+      {!q && (
+        <div className="quickrow">
+          <button className="quickbtn" onClick={() => (premium ? onView({ kind: 'scan' }) : open({ type: 'premium', reason: 'De barcodescanner zit in Puls Premium.' }))}>
+            <span className="i20"><I.barcode /></span>Scannen
+          </button>
+          <button className="quickbtn" onClick={() => onView({ kind: 'quick' })}><span className="i20"><I.bolt /></span>Alleen kcal</button>
+          <button className="quickbtn" onClick={() => onView({ kind: 'custom' })}><span className="i20"><I.pencil /></span>Nieuw product</button>
+        </div>
+      )}
 
       {!q && (
-        <div className="seg" role="tablist">
-          <button className={tab === 'recent' ? 'on' : ''} onClick={() => setTab('recent')}>Recent</button>
-          <button className={tab === 'fav' ? 'on' : ''} onClick={() => setTab('fav')}>Favorieten</button>
-          <button className={tab === 'cat' ? 'on' : ''} onClick={() => { setTab('cat'); setCat(null); }}>Categorieën</button>
+        <div className="seg seg-wide" role="tablist">
+          {([['recent', 'Recent'], ['fav', 'Favorieten'], ['meals', 'Maaltijden'], ['cat', 'Categorieën']] as [Tab, string][]).map(([k, l]) => (
+            <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); setCat(null); }}>{l}</button>
+          ))}
         </div>
       )}
 
       {!q && tab === 'cat' && !cat && (
-        <div className="grid2" style={{ gap: 8 }}>
-          {(Object.keys(CATEGORY_LABEL) as Food['cat'][])
-            .filter((c) => c !== 'online' && c !== 'eigen')
-            .map((c) => (
-              <button key={c} className="card flat row" style={{ padding: 12, borderRadius: 16 }} onClick={() => setCat(c as FoodCategory)}>
-                <span style={{ fontSize: 22 }}>{CATEGORY_EMOJI[c]}</span>
-                <span className="small" style={{ fontWeight: 600, textAlign: 'left' }}>{CATEGORY_LABEL[c]}</span>
-              </button>
-            ))}
+        <div className="catgrid">
+          {CATEGORY_ORDER.map((c) => (
+            <button key={c} className="cattile" onClick={() => setCat(c)}>
+              <FoodIcon cat={c} size={38} />
+              <span className="grow">
+                <span className="cattile-name">{CATEGORY_LABEL[c]}</span>
+                <span className="cattile-n num">{counts.get(c) ?? 0}</span>
+              </span>
+            </button>
+          ))}
+          <button className="cattile" onClick={() => setCat('recept')}>
+            <FoodIcon cat="recept" size={38} />
+            <span className="grow"><span className="cattile-name">Recepten van Puls</span><span className="cattile-n num">{counts.get('recept') ?? 0}</span></span>
+          </button>
         </div>
       )}
       {!q && tab === 'cat' && cat && (
-        <button className="tag" style={{ alignSelf: 'flex-start' }} onClick={() => setCat(null)}>← {CATEGORY_LABEL[cat]}</button>
+        <button className="tag" style={{ alignSelf: 'flex-start' }} onClick={() => setCat(null)}>← {cat === 'recept' ? 'Recepten van Puls' : CATEGORY_LABEL[cat]}</button>
       )}
 
+      {!q && tab === 'meals' && <SavedMeals meal={meal} onLogged={onMealLogged} />}
+
       {list.length > 0 && (
-        <div className="card" style={{ padding: '4px 14px' }}>
-          <FoodList foods={list} onPick={onPick} />
+        <div className="card" style={{ padding: '2px 12px' }}>
+          <FoodList foods={list} onPick={onPick} onQuick={onQuick} />
         </div>
       )}
 
-      {!q && list.length === 0 && tab !== 'cat' && (
+      {!q && list.length === 0 && (tab === 'recent' || tab === 'fav') && (
         <div className="empty">
-          
-          <p>{tab === 'fav' ? 'Tik op het hartje bij een product om het hier te bewaren.' : 'Zoek in meer dan 200 basisproducten en miljoenen merkproducten.'}</p>
+          <p>{tab === 'fav' ? 'Tik op het hartje bij een product om het hier te bewaren.' : `Zoek in ${fmt(FOODS.length)} basisproducten, ${RECIPE_FOODS.length} recepten en miljoenen merkproducten.`}</p>
           <div className="chips" style={{ justifyContent: 'center' }}>
-            {['Havermout', 'Banaan', 'Kipfilet', 'Skyr', 'Pindakaas'].map((s) => (
+            {['Havermout', 'Banaan', 'Kipfilet', 'Skyr', 'Pindakaas', 'Broodje'].map((s) => (
               <button key={s} className="chip" onClick={() => setQ(s)}>{s}</button>
             ))}
           </div>
@@ -149,8 +216,8 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
           {online.state === 'error' && <div className="small muted">Online zoeken lukt nu niet. Controleer je verbinding; de basisdatabase werkt gewoon offline.</div>}
           {online.state === 'done' && online.items.length === 0 && <div className="small muted">Geen merkproducten gevonden.</div>}
           {online.items.length > 0 && (
-            <div className="card" style={{ padding: '4px 14px' }}>
-              <FoodList foods={online.items} onPick={onPick} />
+            <div className="card" style={{ padding: '2px 12px' }}>
+              <FoodList foods={online.items} onPick={onPick} onQuick={onQuick} />
             </div>
           )}
         </>
@@ -159,30 +226,87 @@ function SearchView({ meal, onPick, onView }: { meal: MealKey; onPick: (f: Food)
   );
 }
 
-function FoodList({ foods, onPick }: { foods: Food[]; onPick: (f: Food) => void }) {
+function FoodList({ foods, onPick, onQuick }: { foods: Food[]; onPick: (f: Food) => void; onQuick: (f: Food) => void }) {
   return (
     <div className="list">
       {foods.map((f) => {
-        const p = f.portions[0];
+        const p = firstPortion(f);
+        const k = p.grams / 100;
         return (
-          <button key={f.id} className="item" onClick={() => onPick(f)}>
-            <div className="ico">{CATEGORY_EMOJI[f.cat]}</div>
-            <div className="grow">
-              <div className="t ellipsis">{f.name}</div>
-              <div className="s ellipsis num">
-                {f.brand ? `${f.brand} · ` : ''}
-                {p ? `1 ${p.label} (${p.g} ${f.unit}) · ${fmt((f.kcal * p.g) / 100)} kcal` : `100 ${f.unit} · ${fmt(f.kcal)} kcal`}
-              </div>
-            </div>
-            <span className="addbtn" style={{ width: 34, height: 34 }}><I.plus /></span>
-          </button>
+          <div key={f.id} className="frow">
+            <button className="frow-main" onClick={() => onPick(f)}>
+              <FoodIcon cat={f.cat} />
+              <span className="grow" style={{ minWidth: 0 }}>
+                <span className="t ellipsis">{f.name}</span>
+                <span className="s ellipsis num">
+                  {f.brand ? `${f.brand} · ` : ''}
+                  {f.portions[0] ? `${p.label} (${f.portions[0].g} ${f.unit})` : p.label} · {fmt(f.kcal * k)} kcal{f.p * k >= 1 ? ` · ${fmt(f.p * k)} g eiwit` : ''}
+                </span>
+              </span>
+            </button>
+            <button className="frow-add" onClick={() => onQuick(f)} aria-label={`${f.name} toevoegen (${p.label})`}><I.plus /></button>
+          </div>
         );
       })}
     </div>
   );
 }
 
-/** Portion picker shared by "add" and "edit". */
+/* ---------- Eigen maaltijden ---------- */
+
+function SavedMeals({ meal, onLogged }: { meal: MealKey; onLogged: (name: string, kcal: number) => void }) {
+  const saved = useStore((s) => s.savedMeals);
+  const date = useUI((s) => s.date);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const sorted = useMemo(() => [...saved].sort((a, b) => Number(b.meal === meal) - Number(a.meal === meal) || b.used - a.used), [saved, meal]);
+  if (!saved.length) {
+    return (
+      <div className="empty card">
+        <b>Nog geen eigen maaltijden</b>
+        <p className="small" style={{ margin: '6px 0 0' }}>Eet je vaak hetzelfde? Vul het één keer in en tik in je dagboek bij die maaltijd op <b>Bewaren</b>. Daarna voeg je alles in één tik toe.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="card" style={{ padding: '2px 12px' }}>
+      <div className="list">
+        {sorted.map((m) => {
+          const n = savedTotals(m);
+          return (
+            <div key={m.id} className="frow">
+              <button
+                className="frow-main"
+                onClick={() => {
+                  useStore.getState().logSavedMeal(date, meal, m.id);
+                  onLogged(m.name, n.kcal);
+                  toast(`${m.name} toegevoegd aan ${MEAL_META[meal].label.toLowerCase()}`);
+                }}
+              >
+                <span className="foodicon" style={{ width: 40, height: 40, color: MEAL_META[m.meal].color, background: MEAL_META[m.meal].tint }}><span className="i20">{MEAL_META[m.meal].icon()}</span></span>
+                <span className="grow" style={{ minWidth: 0 }}>
+                  <span className="t ellipsis">{m.name}</span>
+                  <span className="s ellipsis num">{m.items.length} {m.items.length === 1 ? 'product' : 'producten'} · {fmt(n.kcal)} kcal · {fmt(n.p)} g eiwit</span>
+                </span>
+              </button>
+              {confirm === m.id ? (
+                <button className="btn sm danger" onClick={() => { useStore.getState().deleteSavedMeal(m.id); setConfirm(null); toast('Maaltijd verwijderd'); }}>Wis</button>
+              ) : (
+                <button className="iconbtn" onClick={() => setConfirm(m.id)} aria-label={`${m.name} verwijderen`}><I.trash /></button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export const savedTotals = (m: SavedMeal) =>
+  m.items.reduce((s, i) => ({ kcal: s.kcal + (i.food.kcal * i.grams) / 100, p: s.p + (i.food.p * i.grams) / 100 }), { kcal: 0, p: 0 });
+
+/* ---------- Hoeveelheid ---------- */
+
+/** Portiekeuze, gedeeld door "toevoegen" en "wijzigen". */
 function usePortion(food: Food, initialGrams?: number) {
   const units = [...food.portions, { label: food.unit === 'ml' ? 'ml' : 'gram', g: 1 }];
   const init = (() => {
@@ -200,55 +324,102 @@ function usePortion(food: Food, initialGrams?: number) {
 }
 
 function PortionEditor({ food, ps }: { food: Food; ps: ReturnType<typeof usePortion> }) {
-  const k = ps.grams / 100;
   const step = ps.isRaw ? (food.unit === 'ml' ? 50 : 10) : 0.5;
+  const quick = ps.isRaw ? (food.unit === 'ml' ? [100, 200, 250, 330, 500] : [25, 50, 100, 150, 200]) : [0.5, 1, 1.5, 2, 3];
   return (
-    <div className="stack">
+    <div className="stack" style={{ gap: 10 }}>
       <div className="chips">
         {ps.units.map((u, i) => (
           <button key={u.label} className={'chip' + (i === ps.unit ? ' on' : '')} onClick={() => ps.setUnit(i)}>
-            {u.g === 1 ? u.label : `${u.label} · ${u.g}${food.unit}`}
+            {u.g === 1 ? u.label : `${u.label} · ${u.g} ${food.unit}`}
           </button>
         ))}
       </div>
       <div className="stepper">
         <button onClick={() => ps.setAmount(Math.max(step, Math.round((ps.amount - step) * 100) / 100))} aria-label="Minder">−</button>
-        <NumField id="portion-amount" className="input num" value={ps.amount} onValue={ps.setAmount} />
+        <NumField id="portion-amount" className="input num" value={ps.amount} onValue={ps.setAmount} aria-label="Hoeveelheid" />
         <button onClick={() => ps.setAmount(Math.round((ps.amount + step) * 100) / 100)} aria-label="Meer">+</button>
       </div>
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 8, textAlign: 'center' }}>
-        <div><div className="kpi num">{fmt(food.kcal * k)}</div><div className="tiny">kcal</div></div>
-        <div><div className="kpi num" style={{ color: 'var(--carb)', fontSize: 18 }}>{fmt(food.c * k, 1)}</div><div className="tiny">koolh. g</div></div>
-        <div><div className="kpi num" style={{ color: 'var(--protein)', fontSize: 18 }}>{fmt(food.p * k, 1)}</div><div className="tiny">eiwit g</div></div>
-        <div><div className="kpi num" style={{ color: 'var(--fat)', fontSize: 18 }}>{fmt(food.f * k, 1)}</div><div className="tiny">vet g</div></div>
+      <div className="amounts" role="group" aria-label="Snel kiezen">
+        {quick.map((v) => (
+          <button key={v} className={ps.amount === v ? 'on' : ''} onClick={() => ps.setAmount(v)}>{ps.isRaw ? fmt(v) : v === 0.5 ? '½' : v === 1.5 ? '1½' : v}</button>
+        ))}
       </div>
-      <div className="tiny num">Per 100 {food.unit}: {fmt(food.kcal)} kcal · K {fmt(food.c, 1)} · E {fmt(food.p, 1)} · V {fmt(food.f, 1)}</div>
     </div>
   );
 }
 
-function FoodDetail({ food, meal, onDone }: { food: Food; meal: MealKey; onDone: () => void }) {
+/** Voedingswaarden van een hoeveelheid, met verdeling van de energie en wat het is van je dagdoel. */
+export function NutritionCard({ food, grams }: { food: Food; grams: number }) {
+  const t = useTargets();
+  const k = grams / 100;
+  const n = { kcal: food.kcal * k, p: food.p * k, c: food.c * k, f: food.f * k, fib: food.fib === undefined ? undefined : food.fib * k };
+  const split = energySplit(n);
+  const rows: { name: string; v: number | undefined; goal?: number; color: string }[] = [
+    { name: 'Eiwit', v: n.p, goal: t?.p, color: 'var(--protein)' },
+    { name: 'Koolhydraten', v: n.c, goal: t?.c, color: 'var(--carb)' },
+    { name: 'Vet', v: n.f, goal: t?.f, color: 'var(--fat)' },
+    { name: 'Vezels', v: n.fib, goal: t?.fib, color: 'var(--fiber)' },
+  ];
+  return (
+    <div className="card nut">
+      <div className="nut-top">
+        <div>
+          <div className="nut-kcal num">{fmt(n.kcal)}</div>
+          <div className="tiny">kcal{t ? ` · ${fmt((n.kcal / t.kcal) * 100)}% van je dag` : ''}</div>
+        </div>
+        {n.kcal > 0 && (
+          <div className="nut-split" aria-label="Energie uit eiwit, koolhydraten en vet">
+            <div className="splitbar">
+              <i style={{ width: `${split.p * 100}%`, background: 'var(--protein)' }} />
+              <i style={{ width: `${split.c * 100}%`, background: 'var(--carb)' }} />
+              <i style={{ width: `${split.f * 100}%`, background: 'var(--fat)' }} />
+            </div>
+            <div className="tiny num">E {fmt(split.p * 100)}% · K {fmt(split.c * 100)}% · V {fmt(split.f * 100)}%</div>
+          </div>
+        )}
+      </div>
+      <div className="nut-rows">
+        {rows.map((r) => (
+          <div key={r.name} className="nut-row">
+            <span className="nut-dot" style={{ background: r.color }} />
+            <span className="grow">{r.name}</span>
+            <b className="num">{r.v === undefined ? 'onbekend' : `${fmt(r.v, r.v < 10 ? 1 : 0)} g`}</b>
+            {r.goal && r.v !== undefined ? <span className="nut-pct num">{fmt((r.v / r.goal) * 100)}%</span> : <span className="nut-pct" />}
+          </div>
+        ))}
+      </div>
+      <div className="tiny num" style={{ marginTop: 8 }}>Per 100 {food.unit}: {fmt(food.kcal)} kcal · E {fmt(food.p, 1)} · K {fmt(food.c, 1)} · V {fmt(food.f, 1)}{food.fib !== undefined ? ` · vezels ${fmt(food.fib, 1)}` : ''} g</div>
+    </div>
+  );
+}
+
+function FoodDetail({ food, meal, onAdd }: { food: Food; meal: MealKey; onAdd: (food: Food, grams: number, label: string) => void }) {
   const date = useUI((s) => s.date);
-  const { addFood, toggleFavorite } = useStore.getState();
+  const { toggleFavorite } = useStore.getState();
   const fav = useStore((s) => s.favorites.includes(food.id));
+  const t = useTargets();
+  const day = useDay(date);
   const ps = usePortion(food);
+  const kcal = (food.kcal * ps.grams) / 100;
+  const left = t ? Math.round(t.kcal - dayTotals(day).eaten.kcal - kcal) : 0;
   return (
     <div className="stack">
-      <div className="row">
-        <div className="grow">
-          <h2 style={{ fontSize: 24 }}>{food.name}</h2>
+      <div className="fd-head">
+        <FoodIcon cat={food.cat} size={48} />
+        <div className="grow" style={{ minWidth: 0 }}>
+          <h2 className="fd-name">{food.name}</h2>
           <div className="small muted">{food.brand ?? CATEGORY_LABEL[food.cat]}</div>
         </div>
-        <button className="iconbtn" style={{ color: fav ? 'var(--protein)' : undefined }} onClick={() => toggleFavorite(food.id)} aria-label={fav ? 'Uit favorieten' : 'Aan favorieten toevoegen'}>
+        <button className="iconbtn" style={{ color: fav ? 'var(--protein)' : undefined }} onClick={() => toggleFavorite(food.id)} aria-label={fav ? 'Uit favorieten' : 'Aan favorieten toevoegen'} aria-pressed={fav}>
           <I.heart filled={fav} />
         </button>
       </div>
       <PortionEditor food={food} ps={ps} />
-      <button
-        className="btn block" disabled={ps.grams <= 0}
-        onClick={() => { addFood(date, meal, food, ps.grams, ps.label); toast(`${food.name} toegevoegd aan ${MEAL_META[meal].label.toLowerCase()}`); onDone(); }}
-      >
-        Toevoegen aan {MEAL_META[meal].label.toLowerCase()}
+      <NutritionCard food={food} grams={ps.grams} />
+      {t && <p className="small muted" style={{ margin: 0 }}>Hierna heb je vandaag nog <b className="num" style={{ color: left < 0 ? 'var(--protein)' : 'var(--ink)' }}>{left < 0 ? `${fmt(-left)} kcal te veel` : `${fmt(left)} kcal`}</b>{left >= 0 ? ' over' : ''}.</p>}
+      <button className="btn block" disabled={ps.grams <= 0} onClick={() => onAdd(food, ps.grams, ps.label)}>
+        Toevoegen aan {MEAL_META[meal].label.toLowerCase()} <span className="btn-sub num">{fmt(kcal)} kcal</span>
       </button>
     </div>
   );
@@ -269,10 +440,41 @@ function EditEntryInner({ meal, date, entry, close }: { meal: MealKey; date: str
       <div className="stack">
         <div className="small muted">{MEAL_META[meal].label}{entry.food.brand ? ` · ${entry.food.brand}` : ''}</div>
         <PortionEditor food={entry.food} ps={ps} />
+        <NutritionCard food={entry.food} grams={ps.grams} />
         <div className="row">
           <button className="btn danger" onClick={() => { removeEntry(date, meal, entry.id); toast('Verwijderd'); close(); }} aria-label="Verwijderen"><I.trash /></button>
           <button className="btn grow" onClick={() => { updateEntry(date, meal, entry.id, ps.grams, ps.label); toast('Opgeslagen'); close(); }}>Opslaan</button>
         </div>
+      </div>
+    </Sheet>
+  );
+}
+
+/** Een maaltijd bewaren als eigen maaltijd. */
+export function SaveMealSheet({ meal }: { meal: MealKey }) {
+  const { date, close } = useUI();
+  const day = useDay(date);
+  const entries = day.meals[meal];
+  const [name, setName] = useState(() => entries.slice(0, 2).map((e) => e.food.name.replace(/ \(.*\)$/, '')).join(' met ').toLowerCase().replace(/^./, (c) => c.toUpperCase()));
+  const n = savedTotals({ id: '', name: '', meal, used: 0, items: entries });
+  return (
+    <Sheet onClose={close} title="Bewaren als maaltijd">
+      <div className="stack">
+        <p className="small muted" style={{ margin: 0 }}>Deze {entries.length} {entries.length === 1 ? 'product komt' : 'producten komen'} onder <b>Eten toevoegen → Maaltijden</b>. Daarna log je ze in één tik.</p>
+        <div className="field"><label htmlFor="sm-name">Naam</label><input id="sm-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bijv. mijn vaste ontbijt" autoFocus /></div>
+        <div className="card" style={{ padding: '4px 14px' }}>
+          <div className="list">
+            {entries.map((e) => (
+              <div key={e.id} className="item">
+                <FoodIcon cat={e.food.cat} size={34} />
+                <div className="grow" style={{ minWidth: 0 }}><div className="t ellipsis">{e.food.name}</div><div className="s ellipsis">{e.label}</div></div>
+                <b className="num small">{fmt((e.food.kcal * e.grams) / 100)}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="small muted num">Samen {fmt(n.kcal)} kcal · {fmt(n.p)} g eiwit</div>
+        <button className="btn block" disabled={!name.trim() || !entries.length} onClick={() => { useStore.getState().saveMeal(name.trim(), meal, entries); toast(`“${name.trim()}” bewaard`); close(); }}>Bewaren</button>
       </div>
     </Sheet>
   );
@@ -283,16 +485,17 @@ const numIn = (v: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-function QuickAdd({ meal, onDone }: { meal: MealKey; onDone: () => void }) {
-  const date = useUI((s) => s.date);
+function QuickAdd({ meal, onAdd }: { meal: MealKey; onAdd: (food: Food, grams: number, label: string) => void }) {
   const [name, setName] = useState('');
   const [v, setV] = useState({ kcal: '', p: '', c: '', f: '' });
   const kcal = numIn(v.kcal) || numIn(v.p) * 4 + numIn(v.c) * 4 + numIn(v.f) * 9;
+  const t = useTargets();
   return (
     <div className="stack">
       <p className="small muted" style={{ margin: 0 }}>Weet je alleen de calorieën, bijvoorbeeld van een restaurant of een etiket? Vul ze hier direct in.</p>
       <div className="field"><label htmlFor="qa-name">Omschrijving (optioneel)</label><input id="qa-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bijv. lunch op werk" /></div>
       <div className="field"><label htmlFor="qa-kcal">Calorieën (kcal)</label><input id="qa-kcal" className="input num" inputMode="decimal" value={v.kcal} onChange={(e) => setV({ ...v, kcal: e.target.value })} placeholder={kcal ? fmt(kcal) : '0'} /></div>
+      {t && !skipsMeal(meal, t.split) && <div className="chips">{[100, 250, 400, 600].map((k) => <button key={k} className="chip sm" onClick={() => setV({ ...v, kcal: String(k) })}>{k} kcal</button>)}</div>}
       <div className="grid2" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
         {(['c', 'p', 'f'] as const).map((k) => (
           <div key={k} className="field">
@@ -305,9 +508,7 @@ function QuickAdd({ meal, onDone }: { meal: MealKey; onDone: () => void }) {
         className="btn block" disabled={kcal <= 0}
         onClick={() => {
           const food: Food = { id: 'quick-' + newId(), name: name.trim() || 'Snel toegevoegd', cat: 'eigen', kcal: Math.round(kcal), p: numIn(v.p), c: numIn(v.c), f: numIn(v.f), unit: 'g', portions: [{ label: 'portie', g: 100 }], source: 'custom' };
-          useStore.getState().addFood(date, meal, food, 100, '1 portie');
-          toast(`${fmt(kcal)} kcal toegevoegd`);
-          onDone();
+          onAdd(food, 100, '1 portie');
         }}
       >
         Toevoegen
@@ -320,21 +521,27 @@ function CustomFood({ onSaved }: { onSaved: (f: Food) => void }) {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [portion, setPortion] = useState('');
-  const [v, setV] = useState({ kcal: '', p: '', c: '', f: '' });
+  const [unit, setUnit] = useState<'g' | 'ml'>('g');
+  const [v, setV] = useState({ kcal: '', p: '', c: '', f: '', fib: '' });
   const ok = name.trim() && numIn(v.kcal) > 0;
+  const labels = { kcal: `kcal per 100 ${unit}`, c: 'Koolhydraten (g)', p: 'Eiwit (g)', f: 'Vet (g)', fib: 'Vezels (g)' } as const;
   return (
     <div className="stack">
-      <p className="small muted" style={{ margin: 0 }}>Neem de waarden per 100 gram over van het etiket. Daarna staat het product altijd in je zoekresultaten.</p>
+      <p className="small muted" style={{ margin: 0 }}>Neem de waarden per 100 gram of 100 ml over van het etiket. Daarna staat het product altijd in je zoekresultaten.</p>
       <div className="field"><label htmlFor="cf-name">Productnaam</label><input id="cf-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bijv. eiwitpannenkoek" /></div>
       <div className="grid2">
         <div className="field"><label htmlFor="cf-brand">Merk (optioneel)</label><input id="cf-brand" className="input" value={brand} onChange={(e) => setBrand(e.target.value)} /></div>
-        <div className="field"><label htmlFor="cf-portion">Portie in gram</label><input id="cf-portion" className="input num" inputMode="decimal" value={portion} onChange={(e) => setPortion(e.target.value)} placeholder="bijv. 30" /></div>
+        <div className="field"><label htmlFor="cf-portion">Portie in {unit === 'g' ? 'gram' : 'ml'}</label><input id="cf-portion" className="input num" inputMode="decimal" value={portion} onChange={(e) => setPortion(e.target.value)} placeholder="bijv. 30" /></div>
+      </div>
+      <div className="seg" role="radiogroup" aria-label="Eenheid" style={{ alignSelf: 'flex-start' }}>
+        <button role="radio" aria-checked={unit === 'g'} className={unit === 'g' ? 'on' : ''} onClick={() => setUnit('g')}>Vast (gram)</button>
+        <button role="radio" aria-checked={unit === 'ml'} className={unit === 'ml' ? 'on' : ''} onClick={() => setUnit('ml')}>Drinken (ml)</button>
       </div>
       <div className="grid2">
-        {(['kcal', 'c', 'p', 'f'] as const).map((k) => (
+        {(['kcal', 'c', 'p', 'f', 'fib'] as const).map((k) => (
           <div key={k} className="field">
-            <label htmlFor={`cf-${k}`}>{k === 'kcal' ? 'kcal per 100 g' : k === 'c' ? 'Koolhydraten' : k === 'p' ? 'Eiwit' : 'Vet'}{k === 'kcal' ? '' : ' (g)'}</label>
-            <input id={`cf-${k}`} className="input num" inputMode="decimal" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} placeholder="0" />
+            <label htmlFor={`cf-${k}`}>{labels[k]}</label>
+            <input id={`cf-${k}`} className="input num" inputMode="decimal" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} placeholder={k === 'fib' ? 'optioneel' : '0'} />
           </div>
         ))}
       </div>
@@ -342,7 +549,10 @@ function CustomFood({ onSaved }: { onSaved: (f: Food) => void }) {
         className="btn block" disabled={!ok}
         onClick={() => {
           const g = numIn(portion);
-          const food: Food = { id: 'custom-' + newId(), name: name.trim(), brand: brand.trim() || undefined, cat: 'eigen', kcal: Math.round(numIn(v.kcal)), p: numIn(v.p), c: numIn(v.c), f: numIn(v.f), unit: 'g', portions: g > 0 ? [{ label: 'portie', g }] : [], source: 'custom' };
+          const food: Food = {
+            id: 'custom-' + newId(), name: name.trim(), brand: brand.trim() || undefined, cat: 'eigen', kcal: Math.round(numIn(v.kcal)), p: numIn(v.p), c: numIn(v.c), f: numIn(v.f),
+            fib: v.fib.trim() ? numIn(v.fib) : undefined, unit, portions: g > 0 ? [{ label: 'portie', g }] : [], source: 'custom',
+          };
           useStore.getState().addCustomFood(food);
           toast('Product opgeslagen');
           onSaved(food);

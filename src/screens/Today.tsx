@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { mealRange, entryNutrients, stepsToKm, sumNutrients } from '../lib/calc';
-import { addDays, dateKey, dayTitle, fmt, greeting, liters, weekday } from '../lib/date';
+import { mealRange, entryNutrients, skipsMeal, stepsToKm, sumNutrients } from '../lib/calc';
+import { addDays, DAY_SHORT, dateKey, dayTitle, fmt, greeting, liters, parseKey, weekday } from '../lib/date';
 import { dayTotals, useDay, useMealRoom, usePlan, useTargets, useWaterTarget } from '../lib/hooks';
 import { useStore } from '../lib/store';
 import { useUI } from '../lib/ui';
@@ -9,6 +9,7 @@ import { AvatarButton, Bar, I, Logo, Ring, toast } from '../components/ui';
 import { CoachCard, useCoachCtx } from '../components/Coach';
 import { coachFeed } from '../lib/coach';
 import { MealIdea } from '../components/RecipeSheets';
+import { FoodIcon } from '../components/FoodIcon';
 import { recentlyEaten, suggest } from '../lib/recipes';
 
 const NONE: never[] = [];
@@ -49,11 +50,7 @@ export function Today() {
         </div>
       </header>
 
-      <nav className="datenav" aria-label="Dag kiezen">
-        <button className="arrow" onClick={() => setDate(addDays(date, -1))} aria-label="Vorige dag"><I.left /></button>
-        <button className="label" onClick={() => setDate(today)}>{dayTitle(date, today)}</button>
-        <button className="arrow" onClick={() => setDate(addDays(date, 1))} aria-label="Volgende dag"><I.right /></button>
-      </nav>
+      <WeekStrip date={date} today={today} onPick={setDate} target={t.kcal} />
 
       <section className="daycard" aria-label="Calorieën vandaag">
         <div className="ringwrap">
@@ -74,9 +71,10 @@ export function Today() {
           </div>
         </div>
         <div className="macros">
-          <Macro name="Koolhydraten" v={eaten.c} t={t.c} color="var(--carb)" />
           <Macro name="Eiwit" v={eaten.p} t={t.p} color="var(--protein)" />
+          <Macro name="Koolh." v={eaten.c} t={t.c} color="var(--carb)" />
           <Macro name="Vet" v={eaten.f} t={t.f} color="var(--fat)" />
+          <Macro name="Vezels" v={eaten.fib} t={t.fib} color="var(--fiber)" />
         </div>
       </section>
 
@@ -85,7 +83,7 @@ export function Today() {
         <span className="small muted num">{fmt(eaten.kcal)} kcal</span>
       </div>
       {MEALS.map((m) => (
-        <MealCard key={m} meal={m} date={date} kcal={t.kcal} />
+        <MealCard key={m} meal={m} date={date} kcal={t.kcal} split={t.split} />
       ))}
 
       <div className="section-title">
@@ -153,9 +151,53 @@ function Macro({ name, v, t, color }: { name: string; v: number; t: number; colo
   return (
     <div className="macro">
       <div className="name">{name}</div>
-      <div className="val num">{fmt(v)}<span> / {fmt(t)} g</span></div>
+      <div className="val num">{fmt(v)}<span>/{fmt(t)} g</span></div>
       <Bar value={v / t} color={color} />
     </div>
+  );
+}
+
+/** Week met per dag een ringetje: hoe dicht je bij je calorie-doel zat. */
+function WeekStrip({ date, today, onPick, target }: { date: string; today: string; onPick: (d: string) => void; target: number }) {
+  const days = useStore((s) => s.days);
+  const monday = addDays(date, -weekday(date));
+  const keys = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const thisWeek = keys.includes(today);
+  const month = parseKey(date).toLocaleDateString('nl-NL', { month: 'long' });
+  return (
+    <nav className="weekstrip" aria-label="Dag kiezen">
+      <div className="ws-head">
+        <button className="arrow" onClick={() => onPick(addDays(date, -7))} aria-label="Vorige week"><I.left /></button>
+        <button className="ws-title" onClick={() => onPick(today)} aria-label="Naar vandaag">
+          {dayTitle(date, today)}
+          {date !== today && <span className="ws-today">{thisWeek ? 'Terug naar vandaag' : `${month} · naar vandaag`}</span>}
+        </button>
+        <button className="arrow" onClick={() => onPick(addDays(date, 7))} aria-label="Volgende week"><I.right /></button>
+      </div>
+      <div className="ws-days">
+        {keys.map((k, i) => {
+          const d = days[k];
+          const kcal = d ? dayTotals(d).eaten.kcal : 0;
+          const pct = kcal / target;
+          const state = kcal === 0 ? 'leeg' : pct > 1.1 ? 'over' : pct >= 0.85 ? 'goed' : 'onder';
+          const color = state === 'over' ? 'var(--protein)' : state === 'goed' ? 'var(--brand)' : 'var(--carb)';
+          return (
+            <button
+              key={k}
+              className={'ws-day' + (k === date ? ' sel' : '') + (k === today ? ' today' : '') + (k > today ? ' future' : '')}
+              onClick={() => onPick(k)}
+              aria-label={`${dayTitle(k, today)}${kcal ? `, ${fmt(kcal)} kcal` : ''}`}
+              aria-current={k === date ? 'date' : undefined}
+            >
+              <span className="ws-d">{DAY_SHORT[i]}</span>
+              <Ring size={36} stroke={3.5} value={Math.min(1, pct)} color={color}>
+                <span className="ws-n num">{parseKey(k).getDate()}</span>
+              </Ring>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -284,35 +326,46 @@ function TrainingTeaser({ date }: { date: string }) {
   );
 }
 
-function MealCard({ meal, date, kcal }: { meal: MealKey; date: string; kcal: number }) {
+function MealCard({ meal, date, kcal, split }: { meal: MealKey; date: string; kcal: number; split: Record<MealKey, [number, number]> }) {
   const day = useDay(date);
   const open = useUI((s) => s.open);
   const entries = day.meals[meal];
   const sum = sumNutrients(entries);
-  const [lo, hi] = mealRange(meal, kcal);
+  const [lo, hi] = mealRange(meal, kcal, split);
+  const skipped = skipsMeal(meal, split);
   const meta = MEAL_META[meal];
   const Icon = meta.icon;
   const yesterday = useStore((s) => s.days[addDays(date, -1)]?.meals[meal]) ?? NONE;
-  const idea = useMealIdea(meal, date, entries.length === 0 && date >= dateKey());
+  const idea = useMealIdea(meal, date, entries.length === 0 && date >= dateKey() && !skipped);
+  const fill = hi ? sum.kcal / hi : 0;
 
   return (
-    <div className="card meal">
+    <div className={'card meal' + (skipped && !entries.length ? ' skipped' : '')}>
       <div className="meal-head">
         <div className="meal-icon" style={{ background: meta.tint, color: meta.color }}><Icon /></div>
         <div className="grow">
           <h3>{meta.label}</h3>
           <div className="small muted num">
-            {entries.length ? `${fmt(sum.kcal)} kcal · ${fmt(sum.p)} g eiwit` : `Aanbevolen ${fmt(lo)}–${fmt(hi)} kcal`}
+            {entries.length
+              ? `${fmt(sum.kcal)} kcal · ${fmt(sum.p)} g eiwit`
+              : skipped ? 'Sla je over in je eetpatroon (16:8)' : `Aanbevolen ${fmt(lo)}–${fmt(hi)} kcal`}
           </div>
         </div>
-        <button className={'addbtn' + (entries.length ? '' : ' solid')} onClick={() => open({ type: 'addFood', meal })} aria-label={`Toevoegen aan ${meta.label}`}>
+        <button className={'addbtn' + (entries.length || skipped ? '' : ' solid')} onClick={() => open({ type: 'addFood', meal })} aria-label={`Toevoegen aan ${meta.label}`}>
           <I.plus />
         </button>
       </div>
+      {entries.length > 0 && !skipped && (
+        <div className="meal-fill" title={`Aanbevolen ${fmt(lo)}–${fmt(hi)} kcal`}>
+          <i style={{ width: `${Math.min(100, fill * 100)}%`, background: fill > 1.15 ? 'var(--protein)' : meta.color }} />
+          <span className="meal-fill-lo" style={{ left: `${(lo / hi) * 100}%` }} />
+        </div>
+      )}
       {entries.length > 0 && (
         <div className="entries">
           {entries.map((e) => (
             <button key={e.id} className="entry" onClick={() => open({ type: 'editEntry', meal, entryId: e.id })}>
+              <FoodIcon cat={e.food.cat} size={34} />
               <div className="grow">
                 <div className="name ellipsis">{e.food.name}</div>
                 <div className="sub ellipsis">{e.label}{e.food.brand ? ` · ${e.food.brand}` : ''}</div>
@@ -323,14 +376,19 @@ function MealCard({ meal, date, kcal }: { meal: MealKey; date: string; kcal: num
         </div>
       )}
       {idea && <MealIdea meal={meal} recipe={idea.recipe} factor={idea.factor} kcal={idea.n.kcal} protein={idea.n.p} />}
-      {entries.length === 0 && yesterday.length > 0 && (
-        <button
-          className="tag"
-          style={{ marginTop: 10, marginLeft: 58 }}
-          onClick={() => { useStore.getState().copyMeal(addDays(date, -1), date, meal); toast(`${meta.label} van gisteren gekopieerd`); }}
-        >
-          <span style={{ width: 14, height: 14, display: 'inline-block' }}><I.copy /></span> Zelfde als gisteren
-        </button>
+      {(entries.length > 1 || (entries.length === 0 && yesterday.length > 0)) && (
+        <div className="meal-actions">
+          {entries.length === 0 && yesterday.length > 0 && (
+            <button className="tag" onClick={() => { useStore.getState().copyMeal(addDays(date, -1), date, meal); toast(`${meta.label} van gisteren gekopieerd`); }}>
+              <span className="i14"><I.copy /></span> Zelfde als gisteren
+            </button>
+          )}
+          {entries.length > 1 && (
+            <button className="tag" onClick={() => open({ type: 'saveMeal', meal })}>
+              <span className="i14"><I.bookmark /></span> Bewaren als maaltijd
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

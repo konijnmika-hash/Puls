@@ -196,11 +196,12 @@ export function Onboarding() {
           <div className="label-cap">Hoe snel?</div>
           <div className="stack">
             {(Object.keys(PACE) as Pace[]).map((k) => {
-              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / PACE[k].kgPerWeek;
+              const kgw = Math.abs(calcTargets({ ...p, pace: k, createdAt: '' }).kgPerWeek);
+              const weeks = Math.abs(p.weightKg - p.goalWeightKg) / Math.max(0.05, kgw);
               return (
                 <button key={k} className={'choice' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)} style={{ padding: 12 }}>
                   <div className="grow">
-                    <div className="t">{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg per week</div>
+                    <div className="t">{PACE[k].label} · ± {fmt(kgw, 2)} kg per week</div>
                     <div className="s">{weeks >= 1 ? `Doel bereikt in ± ${Math.round(weeks)} weken` : 'Je bent er bijna'}{k === 'normaal' ? ' · aanbevolen' : ''}</div>
                   </div>
                 </button>

@@ -19,7 +19,9 @@ export type SheetState =
   | { type: 'exercise'; id: string; slotKey?: string }
   | { type: 'inbox' }
   | { type: 'recipe'; id: string; meal?: MealKey; /** portie uit het dagmenu */ factor?: number }
-  | { type: 'shopping' };
+  | { type: 'shopping' }
+  | { type: 'saveMeal'; meal: MealKey }
+  | { type: 'explain' };
 
 interface UI {
   tab: Tab;

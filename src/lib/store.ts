@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ALL_EQUIP } from '../data/exercises';
-import type { Food } from '../data/foods';
+import { FOOD_BY_ID, type Food } from '../data/foods';
 import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
 import { mergeShopping, portionNutrients, portionText, recipeFood, type Prefs, type ShopItem } from './recipes';
@@ -54,6 +54,17 @@ try {
 
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
+/** Een eigen maaltijd: een vaste combinatie van producten die je in één tik logt. */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  items: { food: Food; grams: number; label: string }[];
+  /** bij welke maaltijd hij bewaard is (voor de volgorde) */
+  meal: MealKey;
+  /** hoe vaak gelogd */
+  used: number;
+}
+
 interface State {
   profile: Profile | null;
   days: Record<string, DayLog>;
@@ -82,10 +93,13 @@ interface State {
   cooked: Record<string, number>;
   shopping: ShopItem[];
   recipePrefs: Prefs;
+  /** eigen maaltijden */
+  savedMeals: SavedMeal[];
 
   setProfile: (p: Profile) => void;
   updateProfile: (p: Partial<Profile>) => void;
-  addFood: (date: string, meal: MealKey, food: Food, grams: number, label: string) => void;
+  /** geeft de id van de nieuwe regel terug (om ongedaan te maken) */
+  addFood: (date: string, meal: MealKey, food: Food, grams: number, label: string) => string;
   updateEntry: (date: string, meal: MealKey, id: string, grams: number, label: string) => void;
   removeEntry: (date: string, meal: MealKey, id: string) => void;
   copyMeal: (from: string, to: string, meal: MealKey) => void;
@@ -109,6 +123,10 @@ interface State {
   toggleShop: (key: string) => void;
   clearShopping: (onlyDone: boolean) => void;
   setRecipePrefs: (p: Partial<Prefs>) => void;
+  saveMeal: (name: string, meal: MealKey, entries: FoodEntry[]) => void;
+  deleteSavedMeal: (id: string) => void;
+  logSavedMeal: (date: string, meal: MealKey, id: string) => void;
+  clearMeal: (date: string, meal: MealKey) => void;
 }
 
 const initial = {
@@ -131,6 +149,7 @@ const initial = {
   cooked: {} as Record<string, number>,
   shopping: [] as ShopItem[],
   recipePrefs: { vega: false } as Prefs,
+  savedMeals: [] as SavedMeal[],
 };
 
 export const useStore = create<State>()(
@@ -153,6 +172,7 @@ export const useStore = create<State>()(
           const entry: FoodEntry = { id: uid(), food, grams, label };
           updateDay(date, (d) => ({ ...d, meals: { ...d.meals, [meal]: [...d.meals[meal], entry] } }));
           set((s) => ({ recent: [food, ...s.recent.filter((r) => r.id !== food.id)].slice(0, 30) }));
+          return entry.id;
         },
         updateEntry: (date, meal, id, grams, label) =>
           updateDay(date, (d) => ({
@@ -234,14 +254,42 @@ export const useStore = create<State>()(
         toggleShop: (key) => set((s) => ({ shopping: s.shopping.map((i) => (i.key === key ? { ...i, done: !i.done } : i)) })),
         clearShopping: (onlyDone) => set((s) => ({ shopping: onlyDone ? s.shopping.filter((i) => !i.done) : [] })),
         setRecipePrefs: (p) => set((s) => ({ recipePrefs: { ...s.recipePrefs, ...p } })),
+
+        saveMeal: (name, meal, entries) =>
+          set((s) => ({
+            savedMeals: [
+              { id: uid(), name, meal, used: 0, items: entries.map((e) => ({ food: e.food, grams: e.grams, label: e.label })) },
+              ...s.savedMeals,
+            ],
+          })),
+        deleteSavedMeal: (id) => set((s) => ({ savedMeals: s.savedMeals.filter((m) => m.id !== id) })),
+        logSavedMeal: (date, meal, id) => {
+          const saved = useStore.getState().savedMeals.find((m) => m.id === id);
+          if (!saved) return;
+          const entries: FoodEntry[] = saved.items.map((i) => ({ id: uid(), food: i.food, grams: i.grams, label: i.label }));
+          updateDay(date, (d) => ({ ...d, meals: { ...d.meals, [meal]: [...d.meals[meal], ...entries] } }));
+          set((s) => ({ savedMeals: s.savedMeals.map((m) => (m.id === id ? { ...m, used: m.used + 1 } : m)) }));
+        },
+        clearMeal: (date, meal) => updateDay(date, (d) => ({ ...d, meals: { ...d.meals, [meal]: [] } })),
       };
     },
     {
       name: 'puls-v1',
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         const s = persisted as State;
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null } as State;
+        // oudere dagboekregels: vezels en (nieuwe) categorie uit de database aanvullen
+        const fresh = (f: Food): Food => {
+          const db = f.source === 'db' ? FOOD_BY_ID.get(f.id) : undefined;
+          return db ? { ...f, cat: db.cat, fib: f.fib ?? db.fib } : f;
+        };
+        if (s.days) {
+          for (const d of Object.values(s.days)) {
+            for (const m of Object.keys(d.meals) as MealKey[]) d.meals[m] = d.meals[m].map((e) => ({ ...e, food: fresh(e.food) }));
+          }
+        }
+        if (s.recent) s.recent = s.recent.map(fresh);
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null, savedMeals: s.savedMeals ?? [] } as State;
       },
     },
   ),

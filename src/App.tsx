@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useEffect } from 'react';
-import { AddFoodSheet, EditEntrySheet } from './components/FoodSheets';
+import { AddFoodSheet, EditEntrySheet, SaveMealSheet } from './components/FoodSheets';
 import {
-  ActivitySheet, ConnectSheet, ExerciseSheet, GoalsSheet, PlanEditSheet, PremiumSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
+  ActivitySheet, ConnectSheet, ExerciseSheet, ExplainSheet, GoalsSheet, PlanEditSheet, PremiumSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
 } from './components/Sheets';
 import { I, toast, Toast } from './components/ui';
 import { controleerCode } from './lib/cadeau';
@@ -44,6 +44,8 @@ function SheetHost() {
     case 'inbox': return <InboxSheet />;
     case 'recipe': return <RecipeSheet key={sheet.id} id={sheet.id} meal={sheet.meal} planned={sheet.factor} />;
     case 'shopping': return <ShoppingSheet />;
+    case 'saveMeal': return <SaveMealSheet meal={sheet.meal} />;
+    case 'explain': return <ExplainSheet />;
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FOODS, searchFoods } from '../src/data/foods';
+import { ALCOHOL, FOODS, searchFoods } from '../src/data/foods';
 import { ALL_EQUIP, EXERCISES } from '../src/data/exercises';
 import { bmr, bodyFat, calcTargets, entryNutrients, mealRange } from '../src/lib/calc';
 import { coachFeed } from '../src/lib/coach';
@@ -20,12 +20,68 @@ describe('calories', () => {
     expect(bmr(base)).toBe(10 * 80 + 6.25 * 180 - 5 * 30 + 5); // 1780
     expect(bmr({ ...base, sex: 'vrouw' })).toBe(1780 - 166);
   });
-  it('blends Mifflin-St Jeor with lean mass and applies a 0.5 kg/week deficit', () => {
+  it('blends Mifflin-St Jeor with lean mass, adds training and takes 20% off for a normal pace', () => {
     const t = calcTargets(base);
     const lbm = 80 * (1 - bodyFat(base) / 100);
     const b = (1780 + 370 + 21.6 * lbm) / 2;
     expect(t.bmr).toBe(Math.round(b));
-    expect(t.kcal).toBe(Math.round((b * 1.55 - 550) / 10) * 10);
+    // dagelijks leven (gemiddeld actief) + 3 trainingen van ± 60 min, netto 3,5 MET
+    const sport = (3 * 3.5 * 80 * (b / 24 / 80)) / 7;
+    expect(t.neat).toBe(Math.round(b * 1.5));
+    expect(t.sport).toBe(Math.round(sport));
+    expect(t.tdee).toBe(Math.round(b * 1.5 + sport));
+    expect(t.kcal).toBe(Math.round(((b * 1.5 + sport) * 0.8) / 10) * 10);
+    expect(t.kgPerWeek).toBeCloseTo((t.kcal - (b * 1.5 + sport)) * 7 / 7700, 5);
+    expect(t.kgPerWeek).toBeLessThan(-0.4);
+    expect(t.kgPerWeek).toBeGreaterThan(-0.7);
+  });
+  it('counts more training days as more energy', () => {
+    const none = calcTargets({ ...base, trainDays: [] });
+    const five = calcTargets({ ...base, trainDays: [0, 1, 2, 3, 4] });
+    expect(none.sport).toBe(0);
+    expect(five.tdee - none.tdee).toBeGreaterThan(150);
+    expect(five.kcal).toBeGreaterThan(none.kcal);
+  });
+  it('scales the pace to your body', () => {
+    const slow = calcTargets({ ...base, pace: 'rustig' });
+    const fast = calcTargets({ ...base, pace: 'snel' });
+    expect(slow.delta).toBeGreaterThan(fast.delta);
+    expect(Math.abs(fast.delta)).toBeLessThanOrEqual(fast.tdee * 0.26);
+    const heavy = calcTargets({ ...base, weightKg: 120, fat: 9 });
+    expect(Math.abs(heavy.kgPerWeek)).toBeGreaterThan(Math.abs(calcTargets(base).kgPerWeek));
+    const gain = calcTargets({ ...base, goal: 'aankomen' });
+    expect(gain.delta).toBeGreaterThan(0);
+    expect(gain.kgPerWeek).toBeGreaterThan(0);
+  });
+  it('sets fibre, water and fat sensibly', () => {
+    const t = calcTargets(base);
+    expect(t.fib).toBe(Math.round(Math.min(40, Math.max(20, t.kcal * 0.014))));
+    expect(t.waterMl).toBe(Math.round((80 * 30 + 250) / 250) * 250);
+    expect(t.f).toBeGreaterThanOrEqual(80 * 0.6 - 1);
+    const low = calcTargets({ ...base, macroStyle: 'koolhydraatarm' });
+    expect(low.c).toBeLessThan(t.c);
+    expect(low.f).toBeGreaterThan(t.f);
+    expect(low.p).toBe(t.p);
+  });
+  it('steers towards the measured energy use when asked, within 20%', () => {
+    const t = calcTargets(base);
+    expect(calcTargets(base, { tdee: t.tdee + 400, confidence: 1 }).kcal).toBe(t.kcal);
+    const smart = calcTargets({ ...base, adaptive: true }, { tdee: t.tdee + 400, confidence: 1 });
+    expect(smart.adaptive).toBe(true);
+    expect(smart.tdee).toBeGreaterThan(t.tdee + 300);
+    const wild = calcTargets({ ...base, adaptive: true }, { tdee: t.tdee * 2, confidence: 1 });
+    expect(wild.tdee).toBeLessThanOrEqual(Math.round(t.tdee * 1.2) + 1);
+    const unsure = calcTargets({ ...base, adaptive: true }, { tdee: t.tdee + 400, confidence: 0.1 });
+    expect(unsure.tdee).toBe(t.tdee);
+  });
+  it('uses the BMI formula less for muscular people', () => {
+    const avg = { sex: 'man' as const, fat: 3, muscle: 5, weightKg: 95, heightCm: 180, age: 30 };
+    const strong = { ...avg, muscle: 9 };
+    // hoge BMI trekt het vetpercentage omhoog, maar bij veel spieren nauwelijks
+    const avgShift = bodyFat(avg) - bodyFat({ sex: 'man', fat: 3, muscle: 5 });
+    const strongShift = bodyFat(strong) - bodyFat({ sex: 'man', fat: 3, muscle: 9 });
+    expect(avgShift).toBeGreaterThan(2);
+    expect(strongShift).toBeLessThan(avgShift / 2);
   });
   it('uses the fat and muscle scales', () => {
     expect(bodyFat({ sex: 'man', fat: 1, muscle: 5 })).toBe(7);
@@ -54,30 +110,50 @@ describe('calories', () => {
   });
   it('splits meals sensibly', () => {
     expect(mealRange('ontbijt', 2000)).toEqual([400, 600]);
+    const fasting = calcTargets({ ...base, pattern: 'geen-ontbijt' });
+    expect(mealRange('ontbijt', 2000, fasting.split)).toEqual([0, 0]);
+    for (const p of ['standaard', 'groot-ontbijt', 'geen-ontbijt', 'tussendoor'] as const) {
+      const split = calcTargets({ ...base, pattern: p }).split;
+      const mid = Object.values(split).reduce((s, [lo, hi]) => s + (lo + hi) / 2, 0);
+      expect(mid, p).toBeCloseTo(1, 5);
+    }
   });
 });
 
 describe('food database', () => {
-  it('has many foods with unique ids and consistent energy', () => {
-    expect(FOODS.length).toBeGreaterThan(200);
+  it('has many foods with unique ids, fibre and consistent energy', () => {
+    expect(FOODS.length).toBeGreaterThan(1000);
     expect(new Set(FOODS.map((f) => f.id)).size).toBe(FOODS.length);
     for (const f of FOODS) {
-      const est = f.p * 4 + f.c * 4 + f.f * 9;
-      // Alcohol en vezels geven wat afwijking; grote fouten vangen we wel
-      if (!/bier|wijn/i.test(f.name)) expect(Math.abs(est - f.kcal), f.name).toBeLessThan(Math.max(25, f.kcal * 0.2));
+      expect(f.fib, f.name).toBeGreaterThanOrEqual(0);
+      // vezels leveren ± 2 kcal per gram; alcohol (7 kcal/g) zit niet in de macro's
+      const est = f.p * 4 + f.c * 4 + f.f * 9 + (f.fib ?? 0) * 2;
+      if (!ALCOHOL.has(f.name)) expect(Math.abs(est - f.kcal), f.name).toBeLessThan(Math.max(25, f.kcal * 0.2));
     }
+    for (const n of ALCOHOL) expect(FOODS.some((f) => f.name === n), n).toBe(true);
+    const cats = new Set(FOODS.map((f) => f.cat));
+    for (const c of ['zoet', 'afhaal', 'gerecht', 'snack']) expect(cats.has(c as never), c).toBe(true);
   });
   it('finds foods forgivingly', () => {
-    expect(searchFoods('kip', FOODS)[0].name).toMatch(/^Kip/);
+    expect(searchFoods('kip', FOODS)[0].name).toMatch(/^Kipfilet/);
     expect(searchFoods('huttenkase', FOODS)[0].name).toBe('Hüttenkäse');
+    expect(searchFoods('bananen', FOODS)[0].name).toBe('Banaan');
+    expect(searchFoods('druiven', FOODS).map((f) => f.name)).toContain('Druiven');
+    expect(searchFoods('friet', FOODS)[0].name).toBe('Patat');
+    expect(searchFoods('eieren', FOODS)[0].name).toMatch(/^Ei/);
+    expect(searchFoods('spaghetti', FOODS).some((f) => f.name === 'Pasta (gekookt)')).toBe(true);
+    // wat je vaak gebruikt komt eerder
+    const fav = FOODS.find((f) => f.name === 'Kippendij (gebakken)')!;
+    expect(searchFoods('kip', FOODS, 40, (f) => (f.id === fav.id ? 100 : 0))[0].name).toBe('Kippendij (gebakken)');
   });
   it('calculates portion nutrients', () => {
     const oats = FOODS.find((f) => f.name === 'Havermout')!;
     expect(entryNutrients({ id: 'x', food: oats, grams: 40, label: '' }).kcal).toBeCloseTo(148);
   });
   it('parses Open Food Facts products', () => {
-    const f = fromOff({ code: '1', product_name: 'Skyr', brands: 'Arla, Foo', nutriments: { 'energy-kcal_100g': 63, proteins_100g: 11, carbohydrates_100g: 4, fat_100g: '0.2' }, serving_quantity: 150, quantity: '450 g' });
-    expect(f).toMatchObject({ name: 'Skyr', brand: 'Arla', kcal: 63, p: 11, f: 0.2 });
+    const f = fromOff({ code: '1', product_name: 'Skyr', brands: 'Arla, Foo', nutriments: { 'energy-kcal_100g': 63, proteins_100g: 11, carbohydrates_100g: 4, fat_100g: '0.2', fiber_100g: '0,5' }, serving_quantity: 150, quantity: '450 g' });
+    expect(f).toMatchObject({ name: 'Skyr', brand: 'Arla', kcal: 63, p: 11, f: 0.2, fib: 0.5 });
+    expect(fromOff({ product_name: 'Zonder vezels', nutriments: { 'energy-kcal_100g': 50 } })!.fib).toBeUndefined();
     expect(f!.portions.map((p) => p.g)).toEqual([150, 450]);
     expect(fromOff({ product_name: 'Zonder waarden' })).toBeNull();
     expect(fromOff({ product_name: 'kJ only', nutriments: { energy_100g: 418.4 } })!.kcal).toBe(100);

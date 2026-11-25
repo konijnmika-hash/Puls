@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
-import { ACTIVITY, PACE, calcTargets, metKcal } from '../lib/calc';
+import { ACTIVITY, MACRO_STYLE, PACE, calcTargets, metKcal } from '../lib/calc';
 import { controleerCode } from '../lib/cadeau';
-import { dateKey, DAY_SHORT, fmt } from '../lib/date';
-import { useDay, usePlan, useTargets } from '../lib/hooks';
+import { dateKey, DAY_SHORT, fmt, liters } from '../lib/date';
+import { useDay, useEnergyInsight, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
 import { useStore, type Reminders } from '../lib/store';
 import { requestNotifications } from './Coach';
@@ -74,31 +74,108 @@ export function ConnectSheet() {
 export function ActivitySheet() {
   const { date, close } = useUI();
   const kg = useStore((s) => s.profile?.weightKg ?? 70);
+  const t = useTargets();
   const [act, setAct] = useState(ACTIVITIES[0]);
+  const [level, setLevel] = useState(() => mid(ACTIVITIES[0]));
   const [min, setMin] = useState(30);
-  const kcal = metKcal(act.met, kg, min);
+  const met = act.levels ? act.levels[Math.min(level, act.levels.length - 1)].met : act.met;
+  // gecorrigeerd voor jouw eigen rustverbranding: nauwkeuriger dan het standaardgetal
+  const kcal = metKcal(met, kg, min, t?.bmr);
+  const pick = (a: (typeof ACTIVITIES)[number]) => {
+    setAct(a);
+    setLevel(mid(a));
+  };
   return (
     <Sheet onClose={close} title="Activiteit">
       <div className="stack">
         <div className="act-grid" role="radiogroup" aria-label="Soort activiteit">
           {ACTIVITIES.map((a) => (
-            <button key={a.id} role="radio" aria-checked={a.id === act.id} className={'act' + (a.id === act.id ? ' on' : '')} onClick={() => setAct(a)}>
+            <button key={a.id} role="radio" aria-checked={a.id === act.id} className={'act' + (a.id === act.id ? ' on' : '')} onClick={() => pick(a)}>
               <span className="act-em">{a.emoji}</span>
               <span className="act-name">{a.name}</span>
             </button>
           ))}
         </div>
+        {act.levels && (
+          <div className="field">
+            <span className="lbl">Tempo of zwaarte</span>
+            <div className="chips" role="radiogroup" aria-label="Tempo">
+              {act.levels.map((l, i) => <button key={l.label} role="radio" aria-checked={i === level} className={'chip sm' + (i === level ? ' on' : '')} onClick={() => setLevel(i)}>{l.label}</button>)}
+            </div>
+          </div>
+        )}
         <div className="field">
           <span className="lbl">Duur in minuten</span>
           <Stepper id="act-min" value={min} onChange={setMin} step={5} min={1} max={600} />
+          <div className="chips">{[15, 30, 45, 60, 90].map((m) => <button key={m} className={'chip sm' + (min === m ? ' on' : '')} onClick={() => setMin(m)}>{m} min</button>)}</div>
         </div>
         <div className="card row between">
-          <span className="muted">Geschat verbrand</span>
-          <b className="kpi num" style={{ color: 'var(--steps)' }}>{fmt(kcal)} kcal</b>
+          <div>
+            <span className="muted">Geschat verbrand</span>
+            <div className="tiny num">{fmt(met, 1)} MET × {fmt(kg, 1)} kg × {fmt(min / 60, 2)} uur, afgestemd op jouw rustverbranding</div>
+          </div>
+          <b className="kpi num" style={{ color: 'var(--steps)', whiteSpace: 'nowrap' }}>{fmt(kcal)} kcal</b>
         </div>
-        <button className="btn block" disabled={min <= 0} onClick={() => { useStore.getState().addActivity(date, { name: act.name, emoji: act.emoji, minutes: min, kcal }); toast(`${act.name} toegevoegd: ${fmt(kcal)} kcal`); close(); }}>
+        <button className="btn block" disabled={min <= 0} onClick={() => { useStore.getState().addActivity(date, { name: act.levels ? `${act.name} · ${act.levels[level].label.toLowerCase()}` : act.name, emoji: act.emoji, minutes: min, kcal }); toast(`${act.name} toegevoegd: ${fmt(kcal)} kcal`); close(); }}>
           Toevoegen
         </button>
+      </div>
+    </Sheet>
+  );
+}
+
+const mid = (a: (typeof ACTIVITIES)[number]) => (a.levels ? Math.floor((a.levels.length - 1) / 2) : 0);
+
+/** Uitleg: hoe Puls je doelen berekent, met jouw eigen getallen. */
+export function ExplainSheet() {
+  const close = useUI((s) => s.close);
+  const profile = useStore((s) => s.profile)!;
+  const t = useTargets()!;
+  const insight = useEnergyInsight();
+  const goal = GOAL_OPTIONS.find((g) => g.v === profile.goal)!;
+  const pct = Math.round((Math.abs(t.delta) / t.tdee) * 100);
+  const perKg = (g: number) => fmt(g / profile.weightKg, 1);
+  const Row = ({ l, v, s: sub, strong }: { l: string; v: string; s?: string; strong?: boolean }) => (
+    <div className={'calc-row' + (strong ? ' strong' : '')}>
+      <div className="grow"><div>{l}</div>{sub && <div className="tiny">{sub}</div>}</div>
+      <b className="num">{v}</b>
+    </div>
+  );
+  return (
+    <Sheet onClose={close} title="Zo rekent Puls">
+      <div className="stack">
+        <p className="small muted" style={{ margin: 0 }}>Alle doelen komen uit jouw eigen gegevens. Dit is de hele berekening, stap voor stap.</p>
+        <section className="card calc">
+          <div className="label-cap">1 · Verbruik per dag</div>
+          <Row l="Rustverbranding" v={`${fmt(t.bmr)} kcal`} s={`Gemiddelde van Mifflin-St Jeor en Katch-McArdle, met ± ${fmt(t.bodyFat)}% vet en ${fmt(t.lbm)} kg vetvrije massa`} />
+          <Row l={`× ${fmt(ACTIVITY[profile.activity].factor, 2)} dagelijks leven`} v={`${fmt(t.neat)} kcal`} s={`${ACTIVITY[profile.activity].label}, inclusief verteren van eten`} />
+          <Row l={`+ training (${profile.trainDays.length}× per week)`} v={`${fmt(t.sport)} kcal`} s="Gemiddeld per dag, bovenop je rustverbranding" />
+          {t.adaptive && <Row l="Bijgestuurd met je eigen gegevens" v={insight ? `± ${fmt(insight.tdee)} kcal` : '–'} s="Uit wat je at en hoe je gewicht veranderde (max 20% verschil)" />}
+          <Row l="Verbruik" v={`${fmt(t.tdee)} kcal`} strong />
+        </section>
+        <section className="card calc">
+          <div className="label-cap">2 · Jouw doel: {goal.t.toLowerCase()}</div>
+          {profile.custom?.kcal ? (
+            <Row l="Eigen calorie-doel" v={`${fmt(t.kcal)} kcal`} s="Je hebt zelf een doel ingesteld" strong />
+          ) : (
+            <>
+              <Row l={t.delta < 0 ? `− ${pct}% tekort` : t.delta > 0 ? `+ ${pct}% overschot` : 'Geen tekort of overschot'} v={`${t.delta > 0 ? '+' : t.delta < 0 ? '−' : ''}${fmt(Math.abs(t.delta))} kcal`} s={profile.goal === 'recomp' ? 'Klein tekort: vet kwijt, ruimte om spieren op te bouwen' : profile.goal === 'onderhouden' ? 'Je eet wat je verbruikt' : `Tempo ${PACE[profile.pace].label.toLowerCase()}, afgestemd op jouw verbruik`} />
+              <Row l="Calorieën per dag" v={`${fmt(t.kcal)} kcal`} strong />
+            </>
+          )}
+          <p className="tiny" style={{ margin: '6px 0 0' }}>
+            {Math.abs(t.kgPerWeek) >= 0.05 ? `Verwacht: ± ${fmt(Math.abs(t.kgPerWeek), 2)} kg per week ${t.kgPerWeek < 0 ? 'eraf' : 'erbij'} (1 kg ≈ 7.700 kcal). ` : ''}Nooit minder dan {profile.sex === 'man' ? '1.500' : profile.sex === 'vrouw' ? '1.200' : '1.350'} kcal en niet ver onder je rustverbranding.
+          </p>
+        </section>
+        <section className="card calc">
+          <div className="label-cap">3 · Verdeling</div>
+          <Row l="Eiwit" v={`${t.p} g`} s={`${fmt(t.p / t.lbm, 1)} g per kg vetvrije massa (${perKg(t.p)} g per kg lichaamsgewicht)`} />
+          <Row l="Vet" v={`${t.f} g`} s={`${fmt((t.f * 9 * 100) / t.kcal)}% van je calorieën · ${MACRO_STYLE[profile.macroStyle ?? 'gebalanceerd'].label.toLowerCase()}`} />
+          <Row l="Koolhydraten" v={`${t.c} g`} s="De rest van je calorieën" />
+          <Row l="Vezels" v={`${t.fib} g`} s="14 g per 1.000 kcal (Gezondheidsraad)" />
+          <Row l="Water" v={`${liters(t.waterMl)} L`} s="30 ml per kg, meer bij een actief leven; +0,5 L op trainingsdagen" />
+        </section>
+        <p className="tiny" style={{ margin: 0 }}>Dit zijn schattingen. Weeg je een paar keer per week en log je eten: met <b>slimme bijsturing</b> (Profiel) past Puls je verbruik na een paar weken aan op wat er echt gebeurt.</p>
       </div>
     </Sheet>
   );
@@ -234,7 +311,8 @@ export function PremiumSheet({ reason }: { reason?: string }) {
 export function GoalsSheet() {
   const close = useUI((s) => s.close);
   const profile = useStore((s) => s.profile)!;
-  const auto = calcTargets({ ...profile, custom: undefined });
+  const insight = useEnergyInsight();
+  const auto = calcTargets({ ...profile, custom: undefined }, insight);
   const t = useTargets()!;
   const [kcal, setKcal] = useState(t.kcal);
   const [water, setWater] = useState(t.waterMl);
@@ -281,7 +359,7 @@ export function ProfileEditSheet() {
         </div>
         {p.goal !== 'onderhouden' && p.goal !== 'recomp' && (
           <div className="field"><span className="lbl">Tempo</span>
-            <div className="chips">{(Object.keys(PACE) as Pace[]).map((k) => <button key={k} className={'chip' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)}>{PACE[k].label} · {fmt(PACE[k].kgPerWeek, 2)} kg/week</button>)}</div>
+            <div className="chips">{(Object.keys(PACE) as Pace[]).map((k) => <button key={k} className={'chip' + (p.pace === k ? ' on' : '')} onClick={() => set('pace', k)}>{PACE[k].label} · {fmt(Math.abs(calcTargets({ ...p, pace: k }).kgPerWeek), 2)} kg/week</button>)}</div>
           </div>
         )}
         <div className="field"><span className="lbl">Dagelijkse activiteit</span>

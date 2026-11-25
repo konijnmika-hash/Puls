@@ -50,6 +50,11 @@ export const I = {
   camera: () => <S><path d="M4 8.5A1.5 1.5 0 015.5 7h2l1.6-2.2h5.8L16.5 7h2A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5v-9z" /><circle cx="12" cy="12.8" r="3.4" /></S>,
   sparkle: () => <S><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z" /></S>,
   apple: () => <S><path d="M12 7c-1.5-1-5-1.5-6.5 1.5S5 16 7 19c1.2 1.8 2.7 2 5 1 2.3 1 3.8.8 5-1 2-3 2.5-7.5 1.5-10.5S13.5 6 12 7z" /><path d="M12 7c0-2 1-3.5 3-4" /></S>,
+  bookmark: () => <S><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" /></S>,
+  calc: () => <S><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01" /></S>,
+  trend: () => <S><path d="M3 17l6-6 4 4 8-8M15 7h6v6" /></S>,
+  leaf: () => <S><path d="M4.5 19.5C4.5 10 10 4.5 19.5 4.5c0 9.5-5.5 15-15 15z" /><path d="M4.5 19.5 13.5 10.5" /></S>,
+  target: () => <S><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r=".6" /></S>,
 };
 
 /** Puls-logo: een hartslaglijn die eindigt in een opgaande pijl. */

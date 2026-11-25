@@ -216,8 +216,8 @@ function DayMenuCard() {
         <button className="iconbtn" onClick={() => setN(n + 1)} aria-label="Ander dagmenu"><I.shuffle /></button>
       </div>
       <div className="list" style={{ marginTop: 6 }}>
-        {MEALS.map((m) => {
-          const s = menu.items[m];
+        {menu.meals.map((m) => {
+          const s = menu.items[m]!;
           return (
             <button key={m} className="item menu-item" onClick={() => open({ type: 'recipe', id: s.recipe.id, meal: m, factor: s.factor })}>
               <div className="menu-thumb"><FoodArt recipe={s.recipe} /></div>
@@ -238,7 +238,7 @@ function DayMenuCard() {
         className="btn sm ghost block"
         onClick={() => {
           const s = useStore.getState();
-          for (const m of MEALS) s.addToShopping(menu.items[m].recipe, menu.items[m].factor);
+          for (const m of menu.meals) s.addToShopping(menu.items[m]!.recipe, menu.items[m]!.factor);
           toast('Dagmenu op je boodschappenlijst gezet');
         }}
       >

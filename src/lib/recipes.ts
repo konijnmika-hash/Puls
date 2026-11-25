@@ -1,6 +1,6 @@
 import { FOODS, type Food } from '../data/foods';
 import { RECIPES, type Recipe } from '../data/recipes';
-import { MEAL_SPLIT, mealRange, type Nutrients } from './calc';
+import { MEAL_SPLIT, mealRange, NO_NUTRIENTS, type Nutrients } from './calc';
 import { addDays } from './date';
 import { MEALS, type DayLog, type MealKey, type Targets } from './types';
 
@@ -34,13 +34,14 @@ const cache = new Map<string, Nutrients & { grams: number }>();
 export function recipeNutrients(r: Recipe) {
   let n = cache.get(r.id);
   if (!n) {
-    n = { kcal: 0, p: 0, c: 0, f: 0, grams: 0 };
+    n = { ...NO_NUTRIENTS, grams: 0 };
     for (const { food, grams } of ingredients(r).items) {
       const k = grams / 100;
       n.kcal += food.kcal * k;
       n.p += food.p * k;
       n.c += food.c * k;
       n.f += food.f * k;
+      n.fib += (food.fib ?? 0) * k;
       n.grams += grams;
     }
     cache.set(r.id, n);
@@ -48,15 +49,27 @@ export function recipeNutrients(r: Recipe) {
   return n;
 }
 
-export const scaleN = (n: Nutrients, factor: number): Nutrients => ({ kcal: n.kcal * factor, p: n.p * factor, c: n.c * factor, f: n.f * factor });
+export const scaleN = (n: Nutrients, factor: number): Nutrients => ({ kcal: n.kcal * factor, p: n.p * factor, c: n.c * factor, f: n.f * factor, fib: n.fib * factor });
 
-const MEAT = /kip|ham|rookvlees|salami|gehakt|biefstuk|varken|shoarma|bacon|worst|frikandel|kroket|nugget|zalm|tonijn|kabeljauw|pangasius|garnaal|haring|kibbeling|americain/i;
+/* ---------- Labels ---------- */
 
-export type RecipeTag = 'vega' | 'eiwitrijk' | 'snel' | 'mealprep' | 'budget' | 'zoet' | 'comfort';
+const PLANT = /soja|haver|amandel|kokos|rijstdrink|erwtendrink|cashewdrink|plantaardig|vega|vegetarisch/i;
+/** Vlees en vis, ook als beleg of in een salade. Alleen aan het begin van een woord, zodat "champignons" geen ham bevat. */
+const MEAT = /(^|[\s(-])(kip|kalkoen|ham|achterham|schouderham|beenham|parmaham|serranoham|rookvlees|salami|gehakt|biefstuk|varken|shoarma|bacon|ontbijtspek|spek|rookworst|worst|frikandel|kroket|nugget|zalm|tonijn|kabeljauw|pangasius|garnaal|garnalen|haring|kibbeling|filet americain|rosbief|chorizo|pastrami|fricandeau|leverworst|leverpastei|pate|makreel|krab|ansjovis|vis|rund|lams|eend|cervelaat|boterhamworst|spareribs|pulled|scampi|mosselen|forel|paling|sardines|surimi)/i;
+/** Zuivel, ei en honing: niet veganistisch. */
+const ANIMAL = /(^|[\s(-])(ei|eieren|honing|boter|roomboter|kaas|feta|mozzarella|burrata|parmezaan|pecorino|halloumi|ricotta|paneer|hüttenkäse|brie|camembert|cheddar|emmentaler|gruyère|roomkaas|smeerkaas|mascarpone|labneh|ghee|slagroom|kookroom|crème fraîche|zure room|yoghurt|griekse yoghurt|kwark|skyr|melk|halfvolle|volle|magere|karnemelk|kefir|vla|whey|caseïne|mayonaise|tzatziki|ayran|pesto|geitenkaas|geraspte kaas|jonge kaas|belegen kaas|oude kaas|kaas)/i;
+
+export const isMeat = (f: Food) => !PLANT.test(f.name) && (f.cat === 'vlees' || MEAT.test(f.name));
+export const isAnimal = (f: Food) => isMeat(f) || (!PLANT.test(f.name) && (ANIMAL.test(f.name) || (f.cat === 'zuivel' && !PLANT.test(f.name))));
+
+export type RecipeTag = 'vega' | 'vegan' | 'eiwitrijk' | 'vezelrijk' | 'koolhydraatarm' | 'snel' | 'mealprep' | 'budget' | 'zoet' | 'comfort';
 
 export const TAG_LABEL: Record<RecipeTag, string> = {
   vega: 'Vega',
+  vegan: 'Veganistisch',
   eiwitrijk: 'Eiwitrijk',
+  vezelrijk: 'Vezelrijk',
+  koolhydraatarm: 'Koolhydraatarm',
   snel: 'Snel',
   mealprep: 'Meal prep',
   budget: 'Budget',
@@ -64,13 +77,23 @@ export const TAG_LABEL: Record<RecipeTag, string> = {
   comfort: 'Comfortfood',
 };
 
+const tagCache = new Map<string, RecipeTag[]>();
+
 export function recipeTags(r: Recipe): RecipeTag[] {
+  let tags = tagCache.get(r.id);
+  if (tags) return tags;
   const n = recipeNutrients(r);
-  const tags: RecipeTag[] = [];
-  if (!ingredients(r).items.some((i) => i.food.cat === 'vlees' || MEAT.test(i.food.name))) tags.push('vega');
+  const foods = ingredients(r).items.map((i) => i.food);
+  tags = [];
+  if (!foods.some(isMeat)) tags.push('vega');
+  if (!foods.some(isAnimal)) tags.push('vegan');
   if (n.p >= 25 || (n.p >= 12 && (n.p * 4) / n.kcal >= 0.3)) tags.push('eiwitrijk');
+  if (n.fib >= (r.meal === 'snacks' ? 5 : 8)) tags.push('vezelrijk');
+  if (n.kcal > 0 && (n.c * 4) / n.kcal <= 0.2) tags.push('koolhydraatarm');
   if (r.minutes <= 15) tags.push('snel');
-  return [...tags, ...(r.tags ?? [])];
+  tags = [...new Set([...tags, ...(r.tags ?? [])])];
+  tagCache.set(r.id, tags);
+  return tags;
 }
 
 /* ---------- Porties en hoeveelheden ---------- */
@@ -156,13 +179,14 @@ export function portionNutrients(r: Recipe, factor: number) {
   const key = `${r.id}|${factor}`;
   let n = portionCache.get(key);
   if (!n) {
-    n = { kcal: 0, p: 0, c: 0, f: 0, grams: 0 };
+    n = { ...NO_NUTRIENTS, grams: 0 };
     for (const { food, grams } of scaledItems(r, factor)) {
       const k = grams / 100;
       n.kcal += food.kcal * k;
       n.p += food.p * k;
       n.c += food.c * k;
       n.f += food.f * k;
+      n.fib += (food.fib ?? 0) * k;
       n.grams += grams;
     }
     portionCache.set(key, n);
@@ -186,26 +210,31 @@ export function portionFor(r: Recipe, targetKcal: number) {
 
 export const portionText = (f: number) => `${fraction(f)} ${f > 1 ? 'porties' : 'portie'}`;
 
+type Split = Record<MealKey, [number, number]>;
+
 /** Gemiddeld doel voor een maaltijd. */
-export const mealTarget = (meal: MealKey, kcal: number) => {
-  const [lo, hi] = mealRange(meal, kcal);
+export const mealTarget = (meal: MealKey, kcal: number, split: Split = MEAL_SPLIT) => {
+  const [lo, hi] = mealRange(meal, kcal, split);
   return (lo + hi) / 2;
 };
 
-const mid = (m: MealKey) => (MEAL_SPLIT[m][0] + MEAL_SPLIT[m][1]) / 2;
+const mid = (m: MealKey, split: Split = MEAL_SPLIT) => (split[m][0] + split[m][1]) / 2;
 
 /**
  * Hoeveel kcal en eiwit er nog over is voor deze maaltijd: wat je vandaag nog over hebt, verdeeld
  * over de maaltijden die nog leeg zijn. Zo past een voorstel ook als je ontbijt groter was.
+ * Sla je een maaltijd over in je eetpatroon (16:8), dan krijgt die een kleine standaardportie als je hem toch opent.
  */
-export function roomFor(meal: MealKey, t: Targets, day: DayLog | undefined, eaten: Nutrients) {
-  const base = mealTarget(meal, t.kcal);
-  if (!day || eaten.kcal === 0) return { kcal: base, p: t.p * mid(meal) * 1.15, adjusted: false };
-  const open = MEALS.filter((m) => m === meal || day.meals[m].length === 0);
-  const share = mid(meal) / open.reduce((s, m) => s + mid(m), 0);
+export function roomFor(meal: MealKey, t: Pick<Targets, 'kcal' | 'p'> & { split?: Split }, day: DayLog | undefined, eaten: Pick<Nutrients, 'kcal' | 'p'>) {
+  const split = t.split ?? MEAL_SPLIT;
+  const share0 = mid(meal, split) || MEAL_SPLIT[meal][0];
+  const base = mid(meal, split) ? mealTarget(meal, t.kcal, split) : Math.round((t.kcal * share0) / 50) * 50;
+  if (!day || eaten.kcal === 0) return { kcal: base, p: t.p * share0 * 1.15, adjusted: false };
+  const open = MEALS.filter((m) => m === meal || (day.meals[m].length === 0 && mid(m, split) > 0));
+  const share = share0 / open.reduce((s, m) => s + (m === meal ? share0 : mid(m, split)), 0);
   const leftK = Math.max(0, t.kcal - eaten.kcal);
   const leftP = Math.max(0, t.p - eaten.p);
-  const hi = mealRange(meal, t.kcal)[1];
+  const hi = mid(meal, split) ? mealRange(meal, t.kcal, split)[1] : base * 1.5;
   const kcal = Math.max(base * 0.45, Math.min(hi, leftK * share));
   return { kcal, p: leftP * share, adjusted: Math.abs(kcal - base) > 60 };
 }
@@ -269,18 +298,22 @@ export function suggest(
 }
 
 export interface DayMenu {
-  items: Record<MealKey, Suggestion>;
+  /** één recept per maaltijd; maaltijden die je overslaat (16:8) ontbreken */
+  items: Partial<Record<MealKey, Suggestion>>;
+  meals: MealKey[];
   total: Nutrients;
 }
 
 /** Een dagmenu (één recept per maaltijd) dat zo dicht mogelijk bij je calorie- en eiwitdoel komt. */
-export function dayMenu(t: Targets, prefs: Prefs, seed: string, favorites: string[] = []): DayMenu | null {
-  const cands = MEALS.map((m) => suggest(m, { kcal: mealTarget(m, t.kcal), p: t.p * mid(m) }, { prefs, favorites, seed }).slice(0, 5));
+export function dayMenu(t: Pick<Targets, 'kcal' | 'p'> & { split?: Split }, prefs: Prefs, seed: string, favorites: string[] = []): DayMenu | null {
+  const split = t.split ?? MEAL_SPLIT;
+  const meals = MEALS.filter((m) => mid(m, split) > 0);
+  const cands = meals.map((m) => suggest(m, { kcal: mealTarget(m, t.kcal, split), p: t.p * mid(m, split) }, { prefs, favorites, seed }).slice(0, 5));
   if (cands.some((c) => c.length === 0)) return null;
   let best: { cost: number; pick: Suggestion[] } | null = null;
   const pick: Suggestion[] = [];
   const walk = (i: number) => {
-    if (i === MEALS.length) {
+    if (i === meals.length) {
       const tot = pick.reduce((s, x) => ({ kcal: s.kcal + x.n.kcal, p: s.p + x.n.p }), { kcal: 0, p: 0 });
       const cost = Math.abs(tot.kcal - t.kcal) / t.kcal + (Math.max(0, t.p - tot.p) / t.p) * 1.5 + (Math.max(0, tot.p - t.p * 1.25) / t.p) * 0.6 - pick.reduce((s, x) => s + x.score, 0) / 4000;
       if (!best || cost < best.cost) best = { cost, pick: [...pick] };
@@ -295,9 +328,9 @@ export function dayMenu(t: Targets, prefs: Prefs, seed: string, favorites: strin
   walk(0);
   const chosen = (best as { cost: number; pick: Suggestion[] } | null)?.pick;
   if (!chosen) return null;
-  const items = Object.fromEntries(MEALS.map((m, i) => [m, chosen[i]])) as Record<MealKey, Suggestion>;
-  const total = chosen.reduce((s, x) => ({ kcal: s.kcal + x.n.kcal, p: s.p + x.n.p, c: s.c + x.n.c, f: s.f + x.n.f }), { kcal: 0, p: 0, c: 0, f: 0 });
-  return { items, total };
+  const items = Object.fromEntries(meals.map((m, i) => [m, chosen[i]])) as Partial<Record<MealKey, Suggestion>>;
+  const total = chosen.reduce((s, x) => ({ kcal: s.kcal + x.n.kcal, p: s.p + x.n.p, c: s.c + x.n.c, f: s.f + x.n.f, fib: s.fib + x.n.fib }), NO_NUTRIENTS);
+  return { items, meals, total };
 }
 
 /* ---------- Loggen ---------- */
@@ -315,6 +348,7 @@ export function recipeFood(r: Recipe, factor = 1): Food {
     p: round1(n.p * per),
     c: round1(n.c * per),
     f: round1(n.f * per),
+    fib: round1(n.fib * per),
     unit: 'g',
     portions: [{ label: 'portie', g: Math.round(n.grams / factor) }],
     source: 'recipe',

@@ -2,6 +2,7 @@
 // zodat calorieën en macro's precies kloppen. Kruiden, zout en peper tellen niet mee.
 import type { MealKey } from '../lib/types';
 import { MORE_RECIPES } from './recipes-meer';
+import { EXTRA_RECIPES } from './recipes-extra';
 
 /** Ondergrond van de foto */
 export type Bg = 'hout' | 'eiken' | 'linnen' | 'marmer' | 'leisteen' | 'terrazzo';
@@ -11,7 +12,8 @@ export type Dish = 'kom' | 'bord' | 'pan' | 'plank' | 'pot' | 'glas';
 export type Base =
   | 'kwark' | 'pap' | 'smoothie' | 'soep' | 'curry' | 'dahl' | 'chili' | 'bolognese' | 'rijst' | 'quinoa'
   | 'couscous' | 'bulgur' | 'salade' | 'spinazie' | 'noedels' | 'omelet' | 'hummus' | 'linzen' | 'tomatensaus'
-  | 'pompoensoep' | 'bouillon' | 'stamppot' | 'courgetti' | 'risotto' | 'chocomousse' | 'nicecream';
+  | 'pompoensoep' | 'bouillon' | 'stamppot' | 'courgetti' | 'risotto' | 'chocomousse' | 'nicecream'
+  | 'hutspot' | 'erwtensoep' | 'rodecurry' | 'pizza' | 'zuurkool' | 'puree';
 
 export type Item =
   | 'blauwe-bes' | 'framboos' | 'aardbei' | 'banaan' | 'appel' | 'kiwi' | 'mango' | 'granola' | 'walnoot' | 'amandel'
@@ -24,7 +26,9 @@ export type Item =
   | 'toast' | 'toast-volkoren' | 'bagel' | 'cracker' | 'rijstwafel' | 'wrap' | 'pannenkoek' | 'energiebal'
   | 'chocola' | 'dadel' | 'paksoi' | 'lente-ui' | 'rijst' | 'quinoa' | 'hummus' | 'tzatziki' | 'croutons'
   | 'pompoen' | 'mozzarella-plak' | 'gnocchi' | 'pindakaas' | 'olijf' | 'pita' | 'halloumi' | 'quesadilla' | 'gehaktbal'
-  | 'tofu' | 'garnaal' | 'radijs' | 'rozijn' | 'pinda';
+  | 'tofu' | 'garnaal' | 'radijs' | 'rozijn' | 'pinda'
+  | 'peer' | 'vijg' | 'ananas' | 'friet' | 'biefstuk' | 'burger' | 'penne' | 'taco' | 'beschuit' | 'spekje' | 'worst'
+  | 'druif' | 'eimuffin' | 'crepe' | 'popcorn' | 'kaasblokje' | 'tauge';
 
 /** [item, aantal, x, y, straal van het gebied, grootte] - x/y van -1 tot 1 binnen de schaal of plank */
 export type Part = [Item, number, number, number, number, number?];
@@ -746,6 +750,6 @@ const BASE_RECIPES: Recipe[] = [
   },
 ];
 
-export const RECIPES: Recipe[] = [...BASE_RECIPES, ...MORE_RECIPES];
+export const RECIPES: Recipe[] = [...BASE_RECIPES, ...MORE_RECIPES, ...EXTRA_RECIPES];
 
 export const RECIPE_BY_ID = new Map(RECIPES.map((r) => [r.id, r]));

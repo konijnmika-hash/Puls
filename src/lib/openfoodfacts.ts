@@ -43,6 +43,7 @@ export function fromOff(p: OffProduct): Food | null {
     const g = num(pkg[1]);
     if (g && g < 3000 && g !== serving) portions.push({ label: `verpakking (${p.quantity})`, g: Math.round(g) });
   }
+  const fibre = num(n['fiber_100g']);
   return {
     id: 'off-' + (p.code ?? name),
     name,
@@ -52,6 +53,7 @@ export function fromOff(p: OffProduct): Food | null {
     p: r1(num(n['proteins_100g']) ?? 0),
     c: r1(num(n['carbohydrates_100g']) ?? 0),
     f: r1(num(n['fat_100g']) ?? 0),
+    fib: fibre === undefined ? undefined : r1(fibre),
     unit: isLiquid ? 'ml' : 'g',
     portions,
     source: 'off',
