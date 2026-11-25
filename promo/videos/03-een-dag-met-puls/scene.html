@@ -43,8 +43,8 @@
         <circle cx="76" cy="140" r="26" fill="#e76f51"/><circle cx="112" cy="112" r="16" fill="#f4f1de"/>
         <circle cx="92" cy="74" r="5" fill="#fff6"/><circle cx="150" cy="80" r="5" fill="#fff6"/><circle cx="70" cy="146" r="4" fill="#fff6"/>
       </svg>
-      <div style="flex:1"><div class="h" style="font-size:54px">Kip-quinoa bowl</div>
-        <div style="margin-top:14px"><span class="chip2" style="background:#fff2e0;color:#b4651a">610 kcal</span><span class="chip2" style="background:#fde8ee;color:#c23b62">45 g eiwit</span></div></div>
+      <div style="flex:1"><div class="h" style="font-size:48px">Pokébowl met zalm en edamame</div>
+        <div style="margin-top:14px"><span class="chip2" style="background:#fff2e0;color:#b4651a">620 kcal</span><span class="chip2" style="background:#fde8ee;color:#c23b62">38 g eiwit</span></div></div>
     </div>
     <div class="btn" id="addLunch" style="height:110px;line-height:110px;font-size:36px">+ Toevoegen aan lunch</div>
     <div class="row" style="margin-top:30px;font-size:30px"><span>Vandaag</span><b><span id="kc">420</span> / 2.300 kcal</b></div>
@@ -174,8 +174,8 @@ function render(t) {
   ab.textContent = added ? '✓ Toegevoegd' : '+ Toevoegen aan lunch';
   ab.style.background = added ? '#c9f27a' : '#1d7a4c'; ab.style.color = added ? '#10261d' : '#fff';
   const kk = eo(P(t, 8.05, 9));
-  $('#kc').textContent = nl(lerp(420, 1030, kk));
-  $('#kbar').style.width = (lerp(420, 1030, kk) / 2300 * 100) + '%';
+  $('#kc').textContent = nl(lerp(420, 1040, kk));
+  $('#kbar').style.width = (lerp(420, 1040, kk) / 2300 * 100) + '%';
   // 3 water
   const nk = back(P(t, 10.1, 10.6));
   $('#n1').style.transform = `translateY(${(1 - nk) * -200}px) scale(${lerp(.9, 1, nk)})`;
