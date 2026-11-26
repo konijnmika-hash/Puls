@@ -16,7 +16,8 @@ import { I, NumField, Sheet, toast } from './ui';
 type View = { kind: 'search' } | { kind: 'detail'; food: Food } | { kind: 'quick' } | { kind: 'custom' } | { kind: 'scan' };
 
 interface Added {
-  id: string;
+  /** regels in het dagboek (een eigen maaltijd zijn er meerdere) */
+  ids: string[];
   meal: MealKey;
   name: string;
   kcal: number;
@@ -38,14 +39,14 @@ export function AddFoodSheet({ meal: initialMeal }: { meal: MealKey }) {
 
   const add = (food: Food, grams: number, label: string) => {
     const id = useStore.getState().addFood(date, meal, food, grams, label);
-    setAdded((a) => [...a, { id, meal, name: food.name, kcal: (food.kcal * grams) / 100 }]);
+    setAdded((a) => [...a, { ids: [id], meal, name: food.name, kcal: (food.kcal * grams) / 100 }]);
     setView({ kind: 'search' });
     toast(`${food.name} toegevoegd`);
   };
   const undo = () => {
     const last = added[added.length - 1];
     if (!last) return;
-    useStore.getState().removeEntry(date, last.meal, last.id);
+    for (const id of last.ids) useStore.getState().removeEntry(date, last.meal, id);
     setAdded((a) => a.slice(0, -1));
     toast(`${last.name} weer weggehaald`);
   };
@@ -64,7 +65,7 @@ export function AddFoodSheet({ meal: initialMeal }: { meal: MealKey }) {
           <button key={m} role="radio" aria-checked={m === meal} className={'chip' + (m === meal ? ' on' : '')} onClick={() => setMeal(m)}>{MEAL_META[m].label}</button>
         ))}
       </div>
-      {view.kind === 'search' && <SearchView meal={meal} onPick={(food) => setView({ kind: 'detail', food })} onQuick={(f) => { const p = firstPortion(f); add(f, p.grams, p.label); }} onView={setView} onMealLogged={(n, kcal) => { setAdded((a) => [...a, { id: '', meal, name: n, kcal }]); }} />}
+      {view.kind === 'search' && <SearchView meal={meal} onPick={(food) => setView({ kind: 'detail', food })} onQuick={(f) => { const p = firstPortion(f); add(f, p.grams, p.label); }} onView={setView} onMealLogged={(n, kcal, ids) => { if (ids.length) setAdded((a) => [...a, { ids, meal, name: n, kcal }]); }} />}
       {view.kind === 'detail' && <FoodDetail food={view.food} meal={meal} onAdd={add} />}
       {view.kind === 'quick' && <QuickAdd meal={meal} onAdd={add} />}
       {view.kind === 'custom' && <CustomFood onSaved={(food) => setView({ kind: 'detail', food })} />}
@@ -76,7 +77,7 @@ export function AddFoodSheet({ meal: initialMeal }: { meal: MealKey }) {
             <b className="num">{added.length} toegevoegd · {fmt(total)} kcal</b>
             <div className="small ellipsis">{added.map((a) => a.name).join(', ')}</div>
           </div>
-          {added[added.length - 1].id && <button className="btn sm ghost" onClick={undo}>Ongedaan</button>}
+          <button className="btn sm ghost" onClick={undo}>Ongedaan</button>
           <button className="btn sm" onClick={close}>Klaar</button>
         </div>
       )}
@@ -86,7 +87,7 @@ export function AddFoodSheet({ meal: initialMeal }: { meal: MealKey }) {
 
 type Tab = 'recent' | 'fav' | 'meals' | 'cat';
 
-function SearchView({ meal, onPick, onQuick, onView, onMealLogged }: { meal: MealKey; onPick: (f: Food) => void; onQuick: (f: Food) => void; onView: (v: View) => void; onMealLogged: (name: string, kcal: number) => void }) {
+function SearchView({ meal, onPick, onQuick, onView, onMealLogged }: { meal: MealKey; onPick: (f: Food) => void; onQuick: (f: Food) => void; onView: (v: View) => void; onMealLogged: (name: string, kcal: number, ids: string[]) => void }) {
   const [q, setQ] = useState('');
   const [tab, setTab] = useState<Tab>('recent');
   const [cat, setCat] = useState<FoodCategory | 'recept' | null>(null);
@@ -255,20 +256,27 @@ function FoodList({ foods, onPick, onQuick }: { foods: Food[]; onPick: (f: Food)
 
 /* ---------- Eigen maaltijden ---------- */
 
-function SavedMeals({ meal, onLogged }: { meal: MealKey; onLogged: (name: string, kcal: number) => void }) {
+function SavedMeals({ meal, onLogged }: { meal: MealKey; onLogged: (name: string, kcal: number, ids: string[]) => void }) {
   const saved = useStore((s) => s.savedMeals);
   const date = useUI((s) => s.date);
+  const open = useUI((s) => s.open);
   const [confirm, setConfirm] = useState<string | null>(null);
   const sorted = useMemo(() => [...saved].sort((a, b) => Number(b.meal === meal) - Number(a.meal === meal) || b.used - a.used), [saved, meal]);
+  const newBtn = <button className="btn outline sm block" onClick={() => open({ type: 'mealBuilder' })}><span className="i18"><I.plus /></span> Nieuwe maaltijd samenstellen</button>;
   if (!saved.length) {
     return (
-      <div className="empty card">
-        <b>Nog geen eigen maaltijden</b>
-        <p className="small" style={{ margin: '6px 0 0' }}>Eet je vaak hetzelfde? Vul het één keer in en tik in je dagboek bij die maaltijd op <b>Bewaren</b>. Daarna voeg je alles in één tik toe.</p>
+      <div className="stack">
+        <div className="empty card">
+          <b>Nog geen eigen maaltijden</b>
+          <p className="small" style={{ margin: '6px 0 0' }}>Eet je vaak hetzelfde? Stel een maaltijd samen, of tik in je dagboek bij een maaltijd op <b>Bewaren</b>. Daarna voeg je alles in één tik toe.</p>
+        </div>
+        {newBtn}
       </div>
     );
   }
   return (
+    <div className="stack">
+    {newBtn}
     <div className="card" style={{ padding: '2px 12px' }}>
       <div className="list">
         {sorted.map((m) => {
@@ -278,9 +286,9 @@ function SavedMeals({ meal, onLogged }: { meal: MealKey; onLogged: (name: string
               <button
                 className="frow-main"
                 onClick={() => {
-                  useStore.getState().logSavedMeal(date, meal, m.id);
-                  onLogged(m.name, n.kcal);
-                  toast(`${m.name} toegevoegd aan ${MEAL_META[meal].label.toLowerCase()}`);
+                  const ids = useStore.getState().logSavedMeal(date, meal, m.id);
+                  onLogged(m.name, n.kcal, ids);
+                  if (ids.length) toast(`${m.name} toegevoegd aan ${MEAL_META[meal].label.toLowerCase()}`);
                 }}
               >
                 <span className="foodicon" style={{ width: 40, height: 40, color: MEAL_META[m.meal].color, background: MEAL_META[m.meal].tint }}><span className="i20">{MEAL_META[m.meal].icon()}</span></span>
@@ -292,12 +300,16 @@ function SavedMeals({ meal, onLogged }: { meal: MealKey; onLogged: (name: string
               {confirm === m.id ? (
                 <button className="btn sm danger" onClick={() => { useStore.getState().deleteSavedMeal(m.id); setConfirm(null); toast('Maaltijd verwijderd'); }}>Wis</button>
               ) : (
-                <button className="iconbtn" onClick={() => setConfirm(m.id)} aria-label={`${m.name} verwijderen`}><I.trash /></button>
+                <>
+                  <button className="iconbtn" onClick={() => open({ type: 'mealBuilder', id: m.id })} aria-label={`${m.name} bewerken`}><I.pencil /></button>
+                  <button className="iconbtn" onClick={() => setConfirm(m.id)} aria-label={`${m.name} verwijderen`}><I.trash /></button>
+                </>
               )}
             </div>
           );
         })}
       </div>
+    </div>
     </div>
   );
 }
@@ -418,6 +430,7 @@ function FoodDetail({ food, meal, onAdd }: { food: Food; meal: MealKey; onAdd: (
       </div>
       <PortionEditor food={food} ps={ps} />
       <NutritionCard food={food} grams={ps.grams} />
+      {food.source === 'custom' && !food.id.startsWith('quick-') && <DeleteCustom food={food} />}
       {t && <p className="small muted" style={{ margin: 0 }}>Hierna heb je vandaag nog <b className="num" style={{ color: left < 0 ? 'var(--protein)' : 'var(--ink)' }}>{left < 0 ? `${fmt(-left)} kcal te veel` : `${fmt(left)} kcal`}</b>{left >= 0 ? ' over' : ''}.</p>}
       <button className="btn block" disabled={ps.grams <= 0} onClick={() => onAdd(food, ps.grams, ps.label)}>
         Toevoegen aan {MEAL_META[meal].label.toLowerCase()} <span className="btn-sub num">{fmt(kcal)} kcal</span>
@@ -435,13 +448,23 @@ export function EditEntrySheet({ meal, entryId }: { meal: MealKey; entryId: stri
 
 function EditEntryInner({ meal, date, entry, close }: { meal: MealKey; date: string; entry: FoodEntry; close: () => void }) {
   const ps = usePortion(entry.food, entry.grams);
-  const { updateEntry, removeEntry } = useStore.getState();
+  const { updateEntry, removeEntry, moveEntry } = useStore.getState();
+  const open = useUI((s) => s.open);
   return (
     <Sheet onClose={close} title={entry.food.name}>
       <div className="stack">
         <div className="small muted">{MEAL_META[meal].label}{entry.food.brand ? ` · ${entry.food.brand}` : ''}</div>
         <PortionEditor food={entry.food} ps={ps} />
         <NutritionCard food={entry.food} grams={ps.grams} />
+        <div className="field">
+          <span className="lbl">Verplaatsen naar</span>
+          <div className="chips">
+            {MEALS.filter((m) => m !== meal).map((m) => (
+              <button key={m} className="chip sm" onClick={() => { updateEntry(date, meal, entry.id, ps.grams, ps.label); moveEntry(date, meal, entry.id, m); toast(`Verplaatst naar ${MEAL_META[m].label.toLowerCase()}`); close(); }}>{MEAL_META[m].label}</button>
+            ))}
+            <button className="chip sm" onClick={() => open({ type: 'copy', from: date, meal })}><span className="i14"><I.copy /></span> Maaltijd kopiëren…</button>
+          </div>
+        </div>
         <div className="row">
           <button className="btn danger" onClick={() => { removeEntry(date, meal, entry.id); toast('Verwijderd'); close(); }} aria-label="Verwijderen"><I.trash /></button>
           <button className="btn grow" onClick={() => { updateEntry(date, meal, entry.id, ps.grams, ps.label); toast('Opgeslagen'); close(); }}>Opslaan</button>
@@ -518,10 +541,13 @@ function QuickAdd({ meal, onAdd }: { meal: MealKey; onAdd: (food: Food, grams: n
   );
 }
 
+const PORTION_NAMES = ['portie', 'stuk', 'plak', 'snee', 'schaaltje', 'glas', 'blikje', 'flesje', 'reep', 'zakje'];
+
 function CustomFood({ onSaved }: { onSaved: (f: Food) => void }) {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [portion, setPortion] = useState('');
+  const [pname, setPname] = useState('portie');
   const [unit, setUnit] = useState<'g' | 'ml'>('g');
   const [v, setV] = useState({ kcal: '', p: '', c: '', f: '', fib: '' });
   const ok = name.trim() && numIn(v.kcal) > 0;
@@ -532,7 +558,11 @@ function CustomFood({ onSaved }: { onSaved: (f: Food) => void }) {
       <div className="field"><label htmlFor="cf-name">Productnaam</label><input id="cf-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bijv. eiwitpannenkoek" /></div>
       <div className="grid2">
         <div className="field"><label htmlFor="cf-brand">Merk (optioneel)</label><input id="cf-brand" className="input" value={brand} onChange={(e) => setBrand(e.target.value)} /></div>
-        <div className="field"><label htmlFor="cf-portion">Portie in {unit === 'g' ? 'gram' : 'ml'}</label><input id="cf-portion" className="input num" inputMode="decimal" value={portion} onChange={(e) => setPortion(e.target.value)} placeholder="bijv. 30" /></div>
+        <div className="field"><label htmlFor="cf-portion">1 {pname} = … {unit === 'g' ? 'gram' : 'ml'}</label><input id="cf-portion" className="input num" inputMode="decimal" value={portion} onChange={(e) => setPortion(e.target.value)} placeholder="bijv. 30" /></div>
+      </div>
+      <div className="field">
+        <span className="lbl">Portie heet (zo kun je in stuks of plakken invullen)</span>
+        <div className="chips scroll" style={{ margin: 0, padding: 0 }}>{PORTION_NAMES.map((n) => <button key={n} className={'chip sm' + (pname === n ? ' on' : '')} onClick={() => setPname(n)}>{n}</button>)}</div>
       </div>
       <div className="seg" role="radiogroup" aria-label="Eenheid" style={{ alignSelf: 'flex-start' }}>
         <button role="radio" aria-checked={unit === 'g'} className={unit === 'g' ? 'on' : ''} onClick={() => setUnit('g')}>Vast (gram)</button>
@@ -552,7 +582,7 @@ function CustomFood({ onSaved }: { onSaved: (f: Food) => void }) {
           const g = numIn(portion);
           const food: Food = {
             id: 'custom-' + newId(), name: name.trim(), brand: brand.trim() || undefined, cat: 'eigen', kcal: Math.round(numIn(v.kcal)), p: numIn(v.p), c: numIn(v.c), f: numIn(v.f),
-            fib: v.fib.trim() ? numIn(v.fib) : undefined, unit, portions: g > 0 ? [{ label: 'portie', g }] : [], source: 'custom',
+            fib: v.fib.trim() ? numIn(v.fib) : undefined, unit, portions: g > 0 ? [{ label: pname, g }] : [], source: 'custom',
           };
           useStore.getState().addCustomFood(food);
           toast('Product opgeslagen');
@@ -678,5 +708,93 @@ function Scanner({ onFound }: { onFound: (f: Food) => void }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Een eigen product weer weghalen (wat je al gelogd hebt blijft staan). */
+function DeleteCustom({ food }: { food: Food }) {
+  const [sure, setSure] = useState(false);
+  const exists = useStore((s) => s.customFoods.some((f) => f.id === food.id));
+  if (!exists) return null;
+  return sure ? (
+    <div className="row">
+      <button className="btn ghost sm grow" onClick={() => setSure(false)}>Annuleren</button>
+      <button className="btn danger sm grow" onClick={() => { useStore.getState().deleteCustomFood(food.id); toast(`${food.name} verwijderd uit je producten`); setSure(false); }}>Ja, verwijderen</button>
+    </div>
+  ) : (
+    <button className="link small" style={{ alignSelf: 'flex-start', color: 'var(--danger)', fontWeight: 600 }} onClick={() => setSure(true)}>Dit eigen product verwijderen</button>
+  );
+}
+
+/** Eigen maaltijd samenstellen of bewerken: producten zoeken, hoeveelheden aanpassen, bewaren. */
+export function MealBuilderSheet({ id }: { id?: string }) {
+  const { close, date, open } = useUI();
+  const existing = useStore((s) => (id ? s.savedMeals.find((m) => m.id === id) : undefined));
+  const custom = useStore((s) => s.customFoods);
+  const recent = useStore((s) => s.recent);
+  const light = useStore((s) => !!s.recipePrefs.light);
+  const [name, setName] = useState(existing?.name ?? '');
+  const [meal, setMeal] = useState<MealKey>(existing?.meal ?? 'ontbijt');
+  const [items, setItems] = useState<SavedMeal['items']>(existing?.items ?? []);
+  const [q, setQ] = useState('');
+  const all = useMemo(() => [...custom, ...recipeFoods(), ...FOODS], [custom, light]); // eslint-disable-line react-hooks/exhaustive-deps
+  const results = useMemo(() => (q.trim() ? searchFoods(q, [...recent, ...all], 12) : recent.slice(0, 8)), [q, all, recent]);
+  const total = savedTotals({ id: '', name: '', meal, used: 0, items });
+  const setGrams = (i: number, g: number) => setItems(items.map((x, j) => (j === i ? { ...x, grams: g, label: `${fmt(g)} ${x.food.unit}` } : x)));
+  const save = (log: boolean) => {
+    const s = useStore.getState();
+    const n = name.trim() || 'Mijn maaltijd';
+    if (existing) s.updateSavedMeal(existing.id, { name: n, meal, items });
+    else s.createMeal(n, meal, items);
+    if (log) {
+      for (const it of items) s.addFood(date, meal, it.food, it.grams, it.label);
+      toast(`${n} bewaard en toegevoegd aan ${MEAL_META[meal].label.toLowerCase()}`);
+    } else toast(existing ? 'Maaltijd bijgewerkt' : `${n} bewaard`);
+    close();
+  };
+  return (
+    <Sheet onClose={close} full title={existing ? 'Maaltijd bewerken' : 'Maaltijd samenstellen'}>
+      <div className="stack">
+        <div className="field"><label htmlFor="mb-name">Naam</label><input id="mb-name" className="input" value={name} maxLength={50} onChange={(e) => setName(e.target.value)} placeholder="Bijv. mijn vaste ontbijt" /></div>
+        <div className="chips">{MEALS.map((m) => <button key={m} className={'chip sm' + (meal === m ? ' on' : '')} onClick={() => setMeal(m)}>{MEAL_META[m].label}</button>)}</div>
+        {items.length > 0 && (
+          <div className="card" style={{ padding: '4px 14px' }}>
+            <div className="list">
+              {items.map((it, i) => (
+                <div key={it.food.id + i} className="item">
+                  <FoodIcon cat={it.food.cat} size={34} />
+                  <div className="grow" style={{ minWidth: 0 }}>
+                    <div className="t ellipsis">{it.food.name}</div>
+                    <div className="s num">{fmt((it.food.kcal * it.grams) / 100)} kcal · {fmt((it.food.p * it.grams) / 100)} g eiwit</div>
+                  </div>
+                  <div className="amount-in">
+                    <NumField className="input num" value={it.grams} onValue={(v) => setGrams(i, Math.max(0, Math.min(5000, v)))} aria-label={`Hoeveelheid ${it.food.name} in ${it.food.unit}`} />
+                    <span>{it.food.unit}</span>
+                  </div>
+                  <button className="iconbtn" onClick={() => setItems(items.filter((_, j) => j !== i))} aria-label={`${it.food.name} weghalen`}><I.trash /></button>
+                </div>
+              ))}
+            </div>
+            <div className="small num" style={{ padding: '8px 0', borderTop: '1px solid var(--line)' }}>Samen <b>{fmt(total.kcal)} kcal</b> · {fmt(total.p)} g eiwit</div>
+          </div>
+        )}
+        <div className="search">
+          <I.search />
+          <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Product toevoegen…" aria-label="Product zoeken om toe te voegen" />
+          {q && <button className="search-clear" onClick={() => setQ('')} aria-label="Zoekveld leegmaken"><I.close /></button>}
+        </div>
+        {!q && results.length > 0 && <div className="tiny">Recent gegeten</div>}
+        {results.length > 0 && (
+          <div className="card" style={{ padding: '2px 12px' }}>
+            <FoodList foods={results} onPick={(f) => { const p = firstPortion(f); setItems([...items, { food: f, grams: p.grams, label: p.label }]); setQ(''); }} onQuick={(f) => { const p = firstPortion(f); setItems([...items, { food: f, grams: p.grams, label: p.label }]); }} />
+          </div>
+        )}
+        {q && !results.length && <div className="small muted">Niets gevonden. <button className="link" style={{ color: 'var(--brand)', fontWeight: 700 }} onClick={() => open({ type: 'addFood', meal })}>Maak een eigen product</button></div>}
+        <div className="row sticky-foot">
+          <button className="btn ghost grow" disabled={!items.length} onClick={() => save(false)}>Bewaren</button>
+          <button className="btn grow" disabled={!items.length} onClick={() => save(true)}>Bewaren en loggen</button>
+        </div>
+      </div>
+    </Sheet>
   );
 }

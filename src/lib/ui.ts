@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import { dateKey } from './date';
 import type { MealKey } from './types';
 
-export type Tab = 'vandaag' | 'recepten' | 'training' | 'voortgang' | 'profiel';
+export type Tab = 'vandaag' | 'recepten' | 'training' | 'voortgang' | 'doelen' | 'kalender' | 'profiel';
+
+/** Tabbladen die op de telefoon onder "Voortgang" vallen. */
+export const PROGRESS_TABS: Tab[] = ['voortgang', 'doelen', 'kalender'];
 
 export type SheetState =
   | { type: 'addFood'; meal: MealKey }
@@ -21,7 +24,18 @@ export type SheetState =
   | { type: 'recipe'; id: string; meal?: MealKey; /** portie uit het dagmenu */ factor?: number }
   | { type: 'shopping' }
   | { type: 'saveMeal'; meal: MealKey }
-  | { type: 'explain' };
+  | { type: 'explain' }
+  | { type: 'water' }
+  | { type: 'copy'; from: string; meal?: MealKey }
+  | { type: 'mealBuilder'; id?: string }
+  | { type: 'goalEdit' }
+  | { type: 'templateEdit'; id?: string }
+  | { type: 'customExercise' }
+  | { type: 'workoutDetail'; index: number }
+  | { type: 'exerciseHistory'; id: string }
+  | { type: 'weightHistory' }
+  | { type: 'note'; date: string }
+  | { type: 'data' };
 
 interface UI {
   tab: Tab;

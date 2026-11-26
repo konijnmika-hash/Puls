@@ -12,7 +12,10 @@ import { dayMuscles, records, repRange, setVolume, suggestWeight, weekStreak, we
 import { beep } from '../lib/sound';
 import { EXERCISES } from '../data/exercises';
 import { Figure } from '../components/Figure';
-import { I, Ring, toast, AvatarButton } from '../components/ui';
+import { I, Ring, toast } from '../components/ui';
+import { PageHead } from '../components/Nav';
+import { exerciseName, templateDay, TEMPLATE_PREFIX } from '../lib/exlib';
+import { trainingsOn } from '../lib/stats';
 
 const NO_LOG: WorkoutLog[] = [];
 const restLabel = (s: number) => (s >= 120 ? `${fmt(s / 60, 1)} min` : `${s} sec`);
@@ -43,17 +46,14 @@ export function Training() {
   const doneEntry = wd && done ? [...log].reverse().find((l) => l.date === selDate && l.id === wd.id) : undefined;
   const doneActivity = wd && done ? days[selDate]?.activities.find((a) => a.workout === wd.id) : undefined;
   const nextUp = plan.find((p) => p.weekday > todayWd && !isDone(p)) ?? plan.find((p) => !isDone(p));
+  const goal = useStore((s) => s.goals.trainings);
+  const weekTrainings = Array.from({ length: todayWd + 1 }, (_, i) => trainingsOn(days[addDays(monday, i)])).reduce((a, b) => a + b, 0);
 
   return (
     <div className="page">
-      <header className="topbar">
-        <h1 className="page-title">Training</h1>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn sm ghost" onClick={() => open({ type: 'planEdit' })}>Schema</button>
-          <AvatarButton />
-        </div>
-      </header>
-
+      <PageHead title="Training" sub="Schema, eigen trainingen en je voortgang" right={<button className="btn sm ghost" onClick={() => open({ type: 'planEdit' })}>Schema</button>} />
+      <div className="cols">
+      <div className="col">
       {/* Week */}
       <section className="card tr-week" aria-label="Deze week">
         <div className="tr-week-head">
@@ -65,6 +65,7 @@ export function Training() {
             <div className="small muted">
               {streak >= 2 ? `${streak} weken op rij je schema gehaald` : streak === 1 ? 'Deze week helemaal gedaan' : log.length ? `${log.length} ${log.length === 1 ? 'training' : 'trainingen'} gelogd in totaal` : 'Je eerste training staat klaar.'}
             </div>
+            <div className="tiny num" style={{ marginTop: 2 }}>Weekdoel: <b style={{ color: weekTrainings >= goal ? 'var(--ok)' : 'var(--ink-2)' }}>{weekTrainings}/{goal} trainingen</b> (ook eigen trainingen en sport tellen mee)</div>
           </div>
         </div>
         <div className="tr-days">
@@ -162,9 +163,92 @@ export function Training() {
           </div>
         </>
       )}
-
-      <History log={log} />
+      </div>
+      <div className="col">
+        <MyWorkouts />
+        <div className="quickrow two">
+          <button className="quickbtn" onClick={() => open({ type: 'activity' })}><span className="i20"><I.shoe /></span>Cardio of sport loggen</button>
+          <button className="quickbtn" onClick={() => open({ type: 'customExercise' })}><span className="i20"><I.pencil /></span>Eigen oefeningen</button>
+        </div>
+        <History log={log} />
+        <ExerciseProgress log={log} />
+      </div>
+      </div>
     </div>
+  );
+}
+
+/** Je eigen trainingen: favorieten bovenaan, starten in één tik. */
+function MyWorkouts() {
+  const templates = useStore((s) => s.templates);
+  const { open, startSession } = useUI();
+  const sorted = [...templates].sort((a, b) => Number(b.fav) - Number(a.fav) || b.used - a.used);
+  return (
+    <>
+      <div className="section-title">
+        <h2>Mijn trainingen</h2>
+        <button className="link" onClick={() => open({ type: 'templateEdit' })}>+ Nieuw</button>
+      </div>
+      {sorted.length ? (
+        <div className="card" style={{ padding: '2px 14px' }}>
+          <div className="list">
+            {sorted.map((t) => {
+              const d = templateDay(t);
+              return (
+                <div key={t.id} className="item">
+                  <button className={'iconbtn star' + (t.fav ? ' fav-on' : '')} onClick={() => useStore.getState().toggleFavTemplate(t.id)} aria-pressed={t.fav} aria-label={t.fav ? `${t.name} uit favorieten` : `${t.name} als favoriet`}><I.star /></button>
+                  <button className="grow" style={{ textAlign: 'left' }} onClick={() => open({ type: 'templateEdit', id: t.id })}>
+                    <div className="t">{t.name}</div>
+                    <div className="s num">{d.exercises.length} oefeningen · ± {d.estMinutes} min{t.used ? ` · ${t.used}× gedaan` : ''}</div>
+                  </button>
+                  <button className="btn sm" onClick={() => startSession(TEMPLATE_PREFIX + t.id)} disabled={!d.exercises.length} aria-label={`${t.name} starten`}><span className="i18"><I.play /></span></button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <button className="card row" style={{ textAlign: 'left' }} onClick={() => open({ type: 'templateEdit' })}>
+          <div className="meal-icon" style={{ background: 'color-mix(in srgb, var(--carb) 18%, transparent)', color: 'var(--carb)' }}><I.star /></div>
+          <div className="grow"><b>Stel je eigen training samen</b><div className="small muted">Kies oefeningen, sets en rust. Bewaar hem als favoriet en start hem wanneer je wilt.</div></div>
+          <I.right />
+        </button>
+      )}
+    </>
+  );
+}
+
+/** Oefeningen die je deed, met je beste gewicht: tik voor je voortgang. */
+function ExerciseProgress({ log }: { log: WorkoutLog[] }) {
+  const open = useUI((s) => s.open);
+  const rows = useMemo(() => {
+    const m = new Map<string, { id: string; n: number; best: number; last: string }>();
+    for (const l of log) for (const x of l.ex) {
+      if (!x.sets.length) continue;
+      const r = m.get(x.id) ?? { id: x.id, n: 0, best: 0, last: l.date };
+      r.n++;
+      r.best = Math.max(r.best, ...x.sets.map((s) => s.kg));
+      r.last = l.date > r.last ? l.date : r.last;
+      m.set(x.id, r);
+    }
+    return [...m.values()].sort((a, b) => b.last.localeCompare(a.last) || b.n - a.n).slice(0, 8);
+  }, [log]);
+  if (!rows.length) return null;
+  return (
+    <>
+      <div className="section-title"><h2>Voortgang per oefening</h2></div>
+      <div className="card" style={{ padding: '2px 14px' }}>
+        <div className="list">
+          {rows.map((r) => (
+            <button key={r.id} className="item" onClick={() => open({ type: 'exerciseHistory', id: r.id })}>
+              <div className="grow"><div className="t">{exerciseName(r.id)}</div><div className="s num">{r.n}× gedaan · laatst {dayTitle(r.last).toLowerCase()}</div></div>
+              {r.best > 0 && <span className="small num" style={{ fontWeight: 700 }}>{fmt(r.best, 1)} kg</span>}
+              <span className="i18" style={{ color: 'var(--ink-3)' }}><I.right /></span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -206,31 +290,53 @@ function WorkoutList({ wd }: { wd: WorkoutDay }) {
   );
 }
 
+type HistFilter = 'alles' | 'kracht' | 'cardio';
+
+/** Alle trainingen en sport, nieuwste eerst; tik op een training om hem terug te kijken en te vergelijken. */
 function History({ log }: { log: WorkoutLog[] }) {
-  const recent = [...log].reverse().slice(0, 5);
+  const days = useStore((s) => s.days);
+  const open = useUI((s) => s.open);
+  const [filter, setFilter] = useState<HistFilter>('alles');
+  const [shown, setShown] = useState(6);
   const today = dateKey();
-  if (!recent.length) return null;
-  const month = log.filter((l) => l.date >= addDays(today, -30));
+  const rows = useMemo(() => {
+    const strength = log.map((l, index) => ({ kind: 'kracht' as const, date: l.date, name: l.name, sub: `${l.sets} sets${l.volume ? ` · ${fmt(l.volume)} kg volume` : ''}`, minutes: l.minutes, index, key: `w${index}` }));
+    const cardio = Object.entries(days).flatMap(([date, d]) => d.activities.filter((a) => !a.workout).map((a) => ({ kind: 'cardio' as const, date, name: a.name, sub: `${fmt(a.kcal)} kcal${a.km ? ` · ${fmt(a.km, 1)} km` : ''}`, minutes: a.minutes, index: -1, key: `a${a.id}`, emoji: a.emoji })));
+    return [...strength, ...cardio].filter((r) => filter === 'alles' || r.kind === filter).sort((a, b) => b.date.localeCompare(a.date) || b.index - a.index);
+  }, [log, days, filter]);
+  const month = rows.filter((r) => r.date >= addDays(today, -30)).length;
+  if (!log.length && !rows.length && filter === 'alles') return null;
   return (
     <>
       <div className="section-title">
-        <h2>Recente trainingen</h2>
-        <span className="small muted num">{month.length} in 30 dagen</span>
+        <h2>Geschiedenis</h2>
+        <span className="small muted num">{month} in 30 dagen</span>
+      </div>
+      <div className="seg seg-wide" role="tablist" aria-label="Soort training">
+        {(['alles', 'kracht', 'cardio'] as HistFilter[]).map((f) => <button key={f} role="tab" aria-selected={filter === f} className={filter === f ? 'on' : ''} onClick={() => { setFilter(f); setShown(6); }}>{f === 'alles' ? 'Alles' : f === 'kracht' ? 'Kracht' : 'Cardio en sport'}</button>)}
       </div>
       <div className="card" style={{ padding: '2px 14px' }}>
         <div className="list">
-          {recent.map((l, i) => (
-            <div key={l.date + l.id + i} className="item">
-              <div className="ico"><span className="i20"><I.dumbbell /></span></div>
-              <div className="grow">
-                <div className="t">{l.name}</div>
-                <div className="s num">{dayTitle(l.date, today)} · {l.sets} sets{l.volume ? ` · ${fmt(l.volume)} kg volume` : ''}</div>
-              </div>
-              <span className="small muted num">{l.minutes} min</span>
-            </div>
-          ))}
+          {rows.slice(0, shown).map((r) => {
+            const inner = (
+              <>
+                <div className="ico">{r.kind === 'kracht' ? <span className="i20" style={{ color: 'var(--brand)' }}><I.dumbbell /></span> : ('emoji' in r ? r.emoji : '🏃')}</div>
+                <div className="grow">
+                  <div className="t">{r.name}</div>
+                  <div className="s num">{dayTitle(r.date, today)} · {r.sub}</div>
+                </div>
+                <span className="small muted num">{r.minutes} min</span>
+                {r.kind === 'kracht' && <span className="i18" style={{ color: 'var(--ink-3)' }}><I.right /></span>}
+              </>
+            );
+            return r.kind === 'kracht'
+              ? <button key={r.key} className="item" onClick={() => open({ type: 'workoutDetail', index: r.index })}>{inner}</button>
+              : <div key={r.key} className="item">{inner}</div>;
+          })}
+          {!rows.length && <div className="item"><span className="small muted">Nog niets in deze categorie.</span></div>}
         </div>
       </div>
+      {rows.length > shown && <button className="btn ghost sm" onClick={() => setShown(shown + 10)}>Meer tonen ({rows.length - shown})</button>}
     </>
   );
 }
@@ -243,7 +349,9 @@ interface ExState {
 
 export function WorkoutSession({ id }: { id: string }) {
   const plan = usePlan();
-  const wd = plan.find((p) => p.id === id);
+  const template = useStore((s) => (id.startsWith(TEMPLATE_PREFIX) ? s.templates.find((t) => t.id === id.slice(TEMPLATE_PREFIX.length)) : undefined));
+  const [wd] = useState(() => (template ? templateDay(template) : plan.find((p) => p.id === id)));
+  const [saving, setSaving] = useState(false);
   const kg = useStore((s) => s.profile?.weightKg ?? 70);
   const lifts = useStore((s) => s.lifts);
   const log = useStore((s) => s.workoutLog) ?? NO_LOG;
@@ -346,6 +454,8 @@ export function WorkoutSession({ id }: { id: string }) {
   const kcal = Math.round(5 * kg * ((minutes - cardioMin) / 60) + 8 * kg * (cardioMin / 60));
 
   const save = () => {
+    if (saving) return;
+    setSaving(true);
     const newLifts: Record<string, number> = {};
     for (const x of doneList) {
       const top = Math.max(...x.sets.map((s) => s.kg));
@@ -373,7 +483,7 @@ export function WorkoutSession({ id }: { id: string }) {
           {prs.length > 0 && (
             <div className="card tr-prs">
               <b>Nieuwe records</b>
-              {prs.map((r) => <div key={r.id} className="row between small"><span>{EXERCISES[r.id]?.name}</span><b className="num">{kgText(r.kg)} <span className="muted" style={{ fontWeight: 500 }}>(was {kgText(r.prev)})</span></b></div>)}
+              {prs.map((r) => <div key={r.id} className="row between small"><span>{exerciseName(r.id)}</span><b className="num">{kgText(r.kg)} <span className="muted" style={{ fontWeight: 500 }}>(was {kgText(r.prev)})</span></b></div>)}
             </div>
           )}
           <div className="card" style={{ padding: '2px 14px' }}>
@@ -381,7 +491,7 @@ export function WorkoutSession({ id }: { id: string }) {
               {doneList.map((x) => (
                 <div key={x.id} className="item">
                   <div className="grow">
-                    <div className="t">{EXERCISES[x.id]?.name}</div>
+                    <div className="t">{exerciseName(x.id)}</div>
                     <div className="s num">{x.sets.map((s) => (s.kg ? `${fmt(s.kg, 1)}×${s.reps}` : `${s.reps}`)).join('  ·  ')}</div>
                   </div>
                 </div>
@@ -393,7 +503,7 @@ export function WorkoutSession({ id }: { id: string }) {
         <div className="session-foot">
           <div className="row" style={{ gap: 8 }}>
             <button className="btn ghost" onClick={() => setPhase('work')}>Terug</button>
-            <button className="btn grow" onClick={save} disabled={!doneSets && !cardioDone}>Opslaan</button>
+            <button className="btn grow" onClick={save} disabled={saving || (!doneSets && !cardioDone)}>Opslaan</button>
           </div>
         </div>
       </div>

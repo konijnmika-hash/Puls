@@ -4,6 +4,21 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 
 ## Wat zit erin
 
+### Nieuw in 0.4
+
+- **Werkt op elk scherm**: op de telefoon een onderbalk met grote plusknop, op de tablet bredere kaarten in twee kolommen, en op laptop en desktop een zijbalk met alle pagina's en een dashboard in kolommen. Vensters worden op een groot scherm een gecentreerde dialoog.
+- **Dashboard (Vandaag)**: calorieënring en macro's bovenaan, daaronder water, beweging en **verbrand, met apart wat jij registreerde (activiteiten en trainingen) en wat Puls schat uit je stappen**. Verder je doelen en gewoontes van vandaag, de uitdaging van de dag, activiteiten, een **notitie bij de dag** en **recente activiteit**.
+- **Voeding**: een maaltijd of hele dag **kopiëren naar elke andere dag**, een product **verplaatsen** naar een andere maaltijd, **eigen maaltijden samenstellen en bewerken**, een opgeslagen maaltijd in één tik **ongedaan maken**, eigen producten met een portie in **stuks, plakken of sneeën**, en eigen producten weer verwijderen.
+- **Watertracker**: kopje, glas, blikje, flesje of een eigen hoeveelheid; per keer met tijdstip (en weg te halen), een glas dat zich vult, de afgelopen week en je **waterdoel zelf instellen** (gratis).
+- **Statistieken**: wissel tussen **dag, week en maand** en blader terug in de tijd. Interactieve grafieken (tik of beweeg over een balk) voor calorieën, eiwit/koolhydraten/vet, water, stappen, actieve minuten, trainingsfrequentie en je gewichtstrend, plus vergelijking met de vorige periode.
+- **Doelen en motivatie**: persoonlijke weekdoelen (eten bijhouden, waterdoel, stappendoel, actieve minuten, trainingen), **gezonde gewoontes** om af te vinken (ook eigen gewoontes), een **uitdaging van de dag**, **badges**, **mijlpalen** en een overzicht van **actieve dagen**. Altijd positief: een dag overslaan kost je niets, en er zijn grenzen tegen extreme doelen (maximaal 6 trainingen per week, geen doelen of wedstrijdjes rond gewicht).
+- **Kalender**: maandoverzicht met per dag calorieën, waterdoel, training en notitie. Tik op een dag voor maaltijden, totalen, water, sport, gewoontes, notitie en dagvoortgang, of open die dag in je dagboek.
+- **Sport**: **eigen oefeningen** toevoegen, **eigen trainingen** samenstellen (sets, herhalingen, rust) en als **favoriet** bewaren, cardio met **afstand en tempo**, de volledige **trainingsgeschiedenis** (kracht en cardio), een training terugkijken en **vergelijken met de vorige keer**, en **voortgang per oefening** (record en geschat 1-herhalingsmaximum).
+- **Profiel en gegevens**: wegingen bekijken, aanpassen, verwijderen of een eerdere weging toevoegen; **exporteren naar Excel** (voedingsdagboek, dagoverzicht, trainingen) en een **back-up maken of terugzetten**.
+- **Betrouwbaarder**: een dubbele tik op opslaan registreert maar één keer (trainingen, activiteiten, recepten, maaltijden), bestaande gegevens worden automatisch overgezet naar de nieuwe opslagversie (6), en nieuwe rekenregels zijn getest.
+
+### Alles op een rij
+
 - **Intake bij de eerste start**: naam, geslacht, leeftijd, lengte, gewicht, **vet (schaal 1–10)** en **spieren (schaal 1–10)** met een silhouet dat meeverandert, doel, tempo en streefgewicht, dagelijkse activiteit, trainingsdagen, gym of thuis, **beschikbare apparatuur**, **gymervaring**, focus en coach-reminders.
 - **Persoonlijke doelen, opnieuw uitgerekend**:
   - **Verbruik** = rustverbranding (gemiddelde van Mifflin-St Jeor en Katch-McArdle; vetpercentage uit je eigen inschatting, gemengd met de BMI-formule van Deurenberg, die minder meetelt als je gespierd bent) × je dagelijkse activiteit **zonder** sport, plus je trainingen apart (sessieduur per ervaring, netto MET, afgestemd op jouw rustverbranding).
@@ -33,7 +48,7 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 - **Trainingsschema**: 1–2 dagen = full body; 3 dagen = push / pull / benen; 4 dagen = borst & triceps, rug & biceps, benen, schouders & armen; 5 dagen = één spiergroep per dag; 6 dagen = push/pull/benen 2×. Oefeningen worden gekozen op je apparatuur en ervaring (van machines en lichaamsgewicht voor starters tot halterstang-oefeningen voor gevorderden). Elke oefening heeft een **geanimeerd plaatje**, stapsgewijze uitleg en een tip. Je kunt een oefening **wisselen** of aangeven dat je hem **niet kunt doen**; dan kiest Puls een alternatief voor dezelfde spieren. Tijdens de training vink je sets af, houd je je gewichten bij en loopt er een rusttimer.
 - **Activiteiten**: 35 sporten en bezigheden, met tempo of zwaarte (bijv. hardlopen 8–14 km/u, fietsen rustig tot wielrennen). De kcal-schatting gebruikt MET, afgestemd op jouw rustverbranding.
 - **Voortgang**: **trendgewicht** (dagelijkse schommelingen eruit gefilterd), tempo per week en een **voorspelling** wanneer je je streefgewicht haalt; je **gemeten verbruik**; gemiddelde eiwit, koolhydraten, vet en vezels; calorieën, water en stappen per dag; streak en dagen op doel.
-- **Premium (€ 4,99/mnd of € 39,99/jaar)**: barcodescanner, eigen doelen en 30-dagen-grafieken. Nu een demo-schakelaar; echte betalingen gaan straks via App Store / Google Play.
+- **Premium (€ 4,99/mnd of € 39,99/jaar)**: barcodescanner en een eigen calorie-doel. Statistieken, water- en stappendoel en weekdoelen zijn gratis. Nu een demo-schakelaar; echte betalingen gaan straks via App Store / Google Play.
 - **Cadeaucodes**: een link `…/#cadeau=…` of een geplakte code geeft Premium voor altijd. Codes zijn ondertekend (ECDSA P-256); Puls controleert ze met de openbare sleutel in `src/lib/cadeau-sleutel.ts`, dus niemand kan zelf codes maken.
 - Licht en donker thema, werkt offline als PWA (installeerbaar op je beginscherm), gegevens blijven op het toestel.
 
@@ -43,7 +58,7 @@ Jouw persoonlijke coach voor eten, trainen en energie: calorieën en macro's tel
 npm install
 npm run dev        # http://localhost:5173, open op je telefoon via het netwerkadres
 npm run telefoon   # zelfde, maar via https: nodig voor de camera (barcodescanner) op je telefoon
-npm test           # rekenregels, database, schema-generator en recepten
+npm test           # rekenregels, database, schema-generator, recepten, statistieken, doelen, export en opslag
 npm run build      # productiebuild in dist/
 npm run build:single  # alles in één HTML-bestand (dist-single/) om te delen
 ```

@@ -41,8 +41,7 @@ export function useCoachAction() {
     const s = useStore.getState();
     switch (action.kind as CoachAction) {
       case 'water': {
-        const ml = (s.days[date]?.waterMl ?? 0) + s.glassMl;
-        s.setWater(date, ml);
+        s.addWater(date, s.glassMl);
         toast(`+${s.glassMl} ml water`);
         return;
       }

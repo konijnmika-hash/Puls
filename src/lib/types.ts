@@ -106,15 +106,57 @@ export interface ActivityEntry {
   kcal: number;
   /** id van de trainingsdag als dit een schema-training was */
   workout?: string;
+  /** afstand in km (cardio), optioneel */
+  km?: number;
+  /** soort activiteit uit de lijst, voor statistieken */
+  kind?: string;
+}
+
+/** Eén keer water drinken, met tijdstip (voor de daggeschiedenis). */
+export interface WaterSip {
+  /** tijdstip in ms */
+  t: number;
+  ml: number;
 }
 
 export interface DayLog {
   meals: Record<MealKey, FoodEntry[]>;
+  /** totaal gedronken (blijft de bron van waarheid, ook voor oudere dagen zonder sips) */
   waterMl: number;
+  /** wat je per keer dronk; ontbreekt bij dagen van vóór de watertracker */
+  sips?: WaterSip[];
   steps: number;
   activities: ActivityEntry[];
   /** id's van afgeronde trainingsdagen (bijv. "push") */
   workoutsDone: string[];
+  /** eigen notitie bij de dag */
+  note?: string;
+}
+
+/** Een gezonde gewoonte die je per dag afvinkt. */
+export interface Habit {
+  id: string;
+  name: string;
+  /** emoji als icoon */
+  em: string;
+  /** standaardgewoonte van Puls (niet te verwijderen, wel uit te zetten) */
+  builtin?: boolean;
+  on: boolean;
+}
+
+/** Persoonlijke doelen naast de dagdoelen voor eten en water. */
+export interface Goals {
+  /** op hoeveel dagen per week je je eten bijhoudt */
+  logDays: number;
+  /** actieve minuten per week (sport + activiteiten), WHO-advies 150 */
+  activeMin: number;
+  /** trainingen per week (schema of eigen training of sport van 20+ min) */
+  trainings: number;
+  /** op hoeveel dagen per week je je waterdoel haalt */
+  waterDays: number;
+  /** op hoeveel dagen per week je je stappendoel haalt */
+  stepDays: number;
+  habits: Habit[];
 }
 
 export interface WeightEntry {

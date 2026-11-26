@@ -56,6 +56,18 @@ export const I = {
   trend: () => <S><path d="M3 17l6-6 4 4 8-8M15 7h6v6" /></S>,
   leaf: () => <S><path d="M4.5 19.5C4.5 10 10 4.5 19.5 4.5c0 9.5-5.5 15-15 15z" /><path d="M4.5 19.5 13.5 10.5" /></S>,
   target: () => <S><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r=".6" /></S>,
+  calendar: () => <S><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" /></S>,
+  trophy: () => <S><path d="M8 4h8v5a4 4 0 01-8 0V4zM8 6H4.5v1.5A3.5 3.5 0 008 11M16 6h3.5v1.5A3.5 3.5 0 0116 11M12 13v4M8.5 20.5h7M9.5 17h5v3.5h-5z" /></S>,
+  gear: () => <S><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" /></S>,
+  download: () => <S><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" /></S>,
+  upload: () => <S><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19.5h14" /></S>,
+  note: () => <S><path d="M5 4.5h14v10l-5 5H5z" /><path d="M14 19.5v-5h5M8.5 9h7M8.5 12.5h4" /></S>,
+  glass: () => <S><path d="M6 3.5h12l-1.4 16a1.5 1.5 0 01-1.5 1.4H8.9a1.5 1.5 0 01-1.5-1.4L6 3.5z" /><path d="M6.6 10.5c2-1 3.6-1 5.4 0s3.4 1 5.4 0" /></S>,
+  activity: () => <S><path d="M3 12h4l2.5-6 5 12 2.5-6h4" /></S>,
+  history: () => <S><path d="M3.5 12a8.5 8.5 0 102.6-6.1M3.5 4v4h4" /><path d="M12 8v4.5l3 2" /></S>,
+  swap: () => <S><path d="M7 4L3.5 7.5 7 11M3.5 7.5H17M17 13l3.5 3.5L17 20M20.5 16.5H7" /></S>,
+  more: () => <S><circle cx="5.5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="18.5" cy="12" r="1.3" fill="currentColor" /></S>,
+  flag: () => <S><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></S>,
 };
 
 /** Puls-logo: een hartslaglijn die eindigt in een opgaande pijl. */
@@ -178,9 +190,11 @@ const showNum = (v: number) => (Number.isFinite(v) ? String(v).replace('.', ',')
 
 /** Numeric input that accepts a Dutch decimal comma while typing. */
 export function NumField({ value, onValue, ...rest }: { value: number; onValue: (v: number) => void } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
-  const [text, setText] = useState(showNum(value));
+  // met een placeholder laten we 0 leeg, zodat je de hint ziet
+  const shown = (v: number) => (v === 0 && rest.placeholder ? '' : showNum(v));
+  const [text, setText] = useState(shown(value));
   useEffect(() => {
-    if (parseNum(text) !== value && !(text === '' && value === 0)) setText(showNum(value));
+    if (parseNum(text) !== value && !(text === '' && value === 0)) setText(shown(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
   return (
@@ -300,7 +314,7 @@ export function LineChart({ points, goal, height = 160, trend, unit = 'kg' }: { 
 export function AvatarButton() {
   const name = useStore((s) => s.profile?.name);
   return (
-    <button className="avatar" onClick={() => useUI.getState().setTab('profiel')} aria-label="Profiel en instellingen">
+    <button className="avatar hide-desktop" onClick={() => useUI.getState().setTab('profiel')} aria-label="Profiel en instellingen">
       {(name || 'P').slice(0, 1).toUpperCase()}
     </button>
   );

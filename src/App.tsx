@@ -1,30 +1,29 @@
-import type { ReactElement } from 'react';
 import { useEffect } from 'react';
-import { AddFoodSheet, EditEntrySheet, SaveMealSheet } from './components/FoodSheets';
+import { AddFoodSheet, EditEntrySheet, MealBuilderSheet, SaveMealSheet } from './components/FoodSheets';
 import {
   ActivitySheet, ConnectSheet, ExerciseSheet, ExplainSheet, GoalsSheet, PlanEditSheet, PremiumSheet, ProfileEditSheet, QuickSheet, StepsSheet, WeightSheet,
 } from './components/Sheets';
-import { I, toast, Toast } from './components/ui';
+import { toast, Toast } from './components/ui';
 import { controleerCode } from './lib/cadeau';
 import { Celebrations, InboxSheet, useReminders } from './components/Coach';
 import { CookMode, RecipeSheet, ShoppingSheet } from './components/RecipeSheets';
+import { WaterSheet } from './components/WaterSheet';
+import { CopySheet, DataSheet, NoteSheet, WeightHistorySheet } from './components/DaySheets';
+import { GoalEditSheet } from './components/GoalSheets';
+import { CustomExerciseSheet, ExerciseHistorySheet, TemplateEditSheet, WorkoutDetailSheet } from './components/TrainingSheets';
+import { BottomNav, Sidebar } from './components/Nav';
 import { Recipes } from './screens/Recipes';
 import { dateKey } from './lib/date';
 import { useStore } from './lib/store';
 import { useBack } from './lib/back';
-import { useUI, type Tab } from './lib/ui';
+import { useUI } from './lib/ui';
 import { Onboarding } from './screens/Onboarding';
 import { Progress } from './screens/Progress';
 import { ProfileScreen } from './screens/Profile';
 import { Today } from './screens/Today';
 import { Training, WorkoutSession } from './screens/Training';
-
-const TABS: { id: Tab; label: string; icon: () => ReactElement }[] = [
-  { id: 'vandaag', label: 'Vandaag', icon: I.today },
-  { id: 'recepten', label: 'Recepten', icon: I.book },
-  { id: 'training', label: 'Training', icon: I.dumbbell },
-  { id: 'voortgang', label: 'Voortgang', icon: I.chart },
-];
+import { GoalsScreen } from './screens/Goals';
+import { CalendarScreen } from './screens/Calendar';
 
 function SheetHost() {
   const sheet = useUI((s) => s.sheet);
@@ -47,6 +46,17 @@ function SheetHost() {
     case 'shopping': return <ShoppingSheet />;
     case 'saveMeal': return <SaveMealSheet meal={sheet.meal} />;
     case 'explain': return <ExplainSheet />;
+    case 'water': return <WaterSheet />;
+    case 'copy': return <CopySheet from={sheet.from} meal={sheet.meal} />;
+    case 'mealBuilder': return <MealBuilderSheet id={sheet.id} />;
+    case 'goalEdit': return <GoalEditSheet />;
+    case 'templateEdit': return <TemplateEditSheet id={sheet.id} />;
+    case 'customExercise': return <CustomExerciseSheet />;
+    case 'workoutDetail': return <WorkoutDetailSheet index={sheet.index} />;
+    case 'exerciseHistory': return <ExerciseHistorySheet id={sheet.id} />;
+    case 'weightHistory': return <WeightHistorySheet />;
+    case 'note': return <NoteSheet date={sheet.date} />;
+    case 'data': return <DataSheet />;
   }
 }
 
@@ -84,26 +94,24 @@ export function App() {
 }
 
 function Main() {
-  const { tab, setTab, open, session, cook } = useUI();
+  const { tab, setTab, session, cook } = useUI();
   useReminders();
   // terugknop op een ander tabblad: eerst naar Vandaag
   useBack(() => (tab !== 'vandaag' ? (setTab('vandaag'), true) : false));
 
   return (
     <div className="app">
-      {tab === 'vandaag' && <Today />}
-      {tab === 'recepten' && <Recipes />}
-      {tab === 'training' && <Training />}
-      {tab === 'voortgang' && <Progress />}
-      {tab === 'profiel' && <ProfileScreen />}
-
-      <nav className="tabbar" aria-label="Hoofdmenu">
-        <div className="tabbar-inner">
-          {TABS.slice(0, 2).map((t) => <TabBtn key={t.id} t={t} on={tab === t.id} onClick={() => setTab(t.id)} />)}
-          <button className="fab" onClick={() => open({ type: 'quick' })} aria-label="Snel loggen"><I.plus /></button>
-          {TABS.slice(2).map((t) => <TabBtn key={t.id} t={t} on={tab === t.id} onClick={() => setTab(t.id)} />)}
-        </div>
-      </nav>
+      <Sidebar />
+      <main className="content" key={tab}>
+        {tab === 'vandaag' && <Today />}
+        {tab === 'recepten' && <Recipes />}
+        {tab === 'training' && <Training />}
+        {tab === 'voortgang' && <Progress />}
+        {tab === 'doelen' && <GoalsScreen />}
+        {tab === 'kalender' && <CalendarScreen />}
+        {tab === 'profiel' && <ProfileScreen />}
+      </main>
+      <BottomNav />
 
       {session && <WorkoutSession id={session} />}
       {cook && <CookMode key={cook.id} />}
@@ -111,15 +119,5 @@ function Main() {
       <Celebrations />
       <Toast />
     </div>
-  );
-}
-
-function TabBtn({ t, on, onClick }: { t: (typeof TABS)[number]; on: boolean; onClick: () => void }) {
-  const Icon = t.icon;
-  return (
-    <button className={'tab' + (on ? ' on' : '')} onClick={onClick} aria-current={on ? 'page' : undefined}>
-      <Icon />
-      {t.label}
-    </button>
   );
 }

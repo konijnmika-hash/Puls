@@ -24,11 +24,13 @@ export function ProfileScreen() {
     <div className="page">
       <header className="topbar">
         <div className="row" style={{ gap: 6 }}>
-          <button className="iconbtn" onClick={() => useUI.getState().setTab('vandaag')} aria-label="Terug naar vandaag"><I.left /></button>
+          <button className="iconbtn hide-desktop" onClick={() => useUI.getState().setTab('vandaag')} aria-label="Terug naar vandaag"><I.left /></button>
           <h1 className="page-title">Profiel</h1>
         </div>
         {premium && <span className="tag gold">Premium</span>}
       </header>
+      <div className="cols">
+      <div className="col">
 
       <section className="card row" style={{ alignItems: 'flex-start' }}>
         <div className="avatar" style={{ width: 56, height: 56, fontSize: 24, flex: 'none' }}>{(profile.name || 'P').slice(0, 1).toUpperCase()}</div>
@@ -47,16 +49,14 @@ export function ProfileScreen() {
 
       {!premium && (
         <button className="premium-banner" onClick={() => open({ type: 'premium' })}>
-          <div className="grow"><b>Puls Premium</b><div className="small muted">Barcodescanner, eigen doelen en meer · € 4,99 /mnd</div></div>
+          <div className="grow"><b>Puls Premium</b><div className="small muted">Barcodescanner en eigen calorie-doel · € 4,99 /mnd</div></div>
           <I.right />
         </button>
       )}
 
       <div className="section-title">
         <h2>Jouw dagdoelen</h2>
-        <button className="link" onClick={() => open(premium ? { type: 'goals' } : { type: 'premium', reason: 'Eigen doelen instellen zit in Puls Premium.' })}>
-          Aanpassen {!premium && <span className="lock" style={{ width: 14, height: 14, verticalAlign: '-2px' }}><I.lock /></span>}
-        </button>
+        <button className="link" onClick={() => open({ type: 'goalEdit' })}>Aanpassen</button>
       </div>
       <section className="card stack">
         <div className="grid2">
@@ -79,6 +79,14 @@ export function ProfileScreen() {
           </span>
           <I.right />
         </button>
+        <button className="explain-btn" onClick={() => open(premium ? { type: 'goals' } : { type: 'premium', reason: 'Zelf je calorie-doel instellen zit in Puls Premium. Water, stappen en je weekdoelen pas je gratis aan.' })}>
+          <span className="i20"><I.flame /></span>
+          <span className="grow">
+            <b>Eigen calorie-doel</b>
+            <span className="tiny" style={{ display: 'block' }}>{profile.custom?.kcal ? `Ingesteld op ${fmt(profile.custom.kcal)} kcal` : 'Standaard volgt je doel uit je gegevens'}</span>
+          </span>
+          {premium ? <I.right /> : <span className="lock" style={{ width: 18, height: 18 }}><I.lock /></span>}
+        </button>
         <HealthNotes notes={planNotes(profile, t)} />
         <p className="tiny" style={{ margin: 0 }}>
           Dit zijn schattingen, geen exacte waarden en geen regels die je moet volgen. Zie ze als richtlijn en luister naar je lichaam. Twijfel je, overleg dan met je huisarts of een diëtist.
@@ -87,6 +95,8 @@ export function ProfileScreen() {
 
       <div className="section-title"><h2>Voeding</h2></div>
       <NutritionPrefs />
+      </div>
+      <div className="col">
 
       <div className="section-title"><h2>Coach &amp; reminders</h2></div>
       <section className="card" style={{ padding: '4px 14px' }}>
@@ -105,11 +115,32 @@ export function ProfileScreen() {
         <SettingsRows />
       </section>
 
+      <div className="section-title"><h2>Account en gegevens</h2></div>
+      <section className="card" style={{ padding: '4px 14px' }}>
+        <div className="list">
+          <button className="item" onClick={() => open({ type: 'data' })}>
+            <div className="ico"><span className="i20"><I.download /></span></div>
+            <div className="grow"><div className="t">Exporteren en back-up</div><div className="s">CSV voor Excel, back-up maken of terugzetten</div></div>
+            <I.right />
+          </button>
+          <button className="item" onClick={() => open({ type: 'weightHistory' })}>
+            <div className="ico"><span className="i20"><I.scale /></span></div>
+            <div className="grow"><div className="t">Wegingen</div><div className="s">Bekijken, aanpassen of verwijderen</div></div>
+            <I.right />
+          </button>
+          <button className="item" onClick={() => open({ type: 'premium' })}>
+            <div className="ico"><span className="i20"><I.star /></span></div>
+            <div className="grow"><div className="t">Abonnement</div><div className="s">{premium ? 'Premium staat aan' : 'Gratis versie'}</div></div>
+            <I.right />
+          </button>
+        </div>
+      </section>
+
       <section className="card stack">
         {confirm ? (
           <>
             <b>Alles wissen?</b>
-            <p className="small muted" style={{ margin: 0 }}>Je profiel, dagboek, trainingen en gewichten worden van dit apparaat verwijderd. Dit kun je niet ongedaan maken.</p>
+            <p className="small muted" style={{ margin: 0 }}>Je profiel, dagboek, trainingen, doelen en gewichten worden van dit apparaat verwijderd. Dit kun je niet ongedaan maken. Maak eerst een back-up als je je gegevens wilt houden.</p>
             <div className="row">
               <button className="btn ghost sm grow" onClick={() => setConfirm(false)}>Annuleren</button>
               <button className="btn danger sm grow" onClick={() => { useStore.getState().reset(); useUI.getState().setTab('vandaag'); }}>Ja, alles wissen</button>
@@ -119,7 +150,9 @@ export function ProfileScreen() {
           <button className="btn danger block sm" onClick={() => setConfirm(true)}>Gegevens wissen en opnieuw beginnen</button>
         )}
       </section>
-      <p className="tiny" style={{ textAlign: 'center' }}>Puls 0.3 · Je gegevens blijven op dit apparaat.<br />Voedingswaarden: eigen basisdatabase + Open Food Facts (ODbL).</p>
+      <p className="tiny" style={{ textAlign: 'center' }}>Puls 0.4 · Je gegevens blijven op dit apparaat en blijven bewaard als je de app sluit.<br />Voedingswaarden: eigen basisdatabase + Open Food Facts (ODbL).</p>
+      </div>
+      </div>
     </div>
   );
 }

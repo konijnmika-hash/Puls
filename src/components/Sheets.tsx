@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { ACTIVITIES } from '../data/activities';
 import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises';
+import { getExercise, isCustomExercise } from '../lib/exlib';
 import { ACTIVITY, MACRO_STYLE, PACE, calcTargets, kcalFloor, kcalLow, metKcal } from '../lib/calc';
 import { controleerCode } from '../lib/cadeau';
-import { dateKey, DAY_SHORT, fmt, liters } from '../lib/date';
+import { addDays, dateKey, DAY_SHORT, dayTitle, fmt, liters } from '../lib/date';
 import { useDay, useEnergyInsight, usePlan, useTargets } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
 import { useStore, type Reminders, type Theme } from '../lib/store';
@@ -14,7 +15,7 @@ import { EXPERIENCE, SPLIT_NAME } from '../lib/workout';
 import { Figure } from './Figure';
 import { HealthNotes } from './HealthNotes';
 import { planNotes, trainingPlanNotes } from '../lib/health';
-import { I, Sheet, Stepper, Switch, toast } from './ui';
+import { I, NumField, Sheet, Stepper, Switch, toast } from './ui';
 
 export function StepsSheet() {
   const { date, close, open } = useUI();
@@ -80,7 +81,9 @@ export function ActivitySheet() {
   const [act, setAct] = useState(ACTIVITIES[0]);
   const [level, setLevel] = useState(() => mid(ACTIVITIES[0]));
   const [min, setMin] = useState(30);
+  const [km, setKm] = useState(0);
   const [all, setAll] = useState(false);
+  const distance = DISTANCE.includes(act.id);
   const shown = all ? ACTIVITIES : ACTIVITIES.filter((a) => POPULAR_ACT.includes(a.id) || a.id === act.id);
   const met = act.levels ? act.levels[Math.min(level, act.levels.length - 1)].met : act.met;
   // gecorrigeerd voor jouw eigen rustverbranding: nauwkeuriger dan het standaardgetal
@@ -119,6 +122,13 @@ export function ActivitySheet() {
           <Stepper id="act-min" value={min} onChange={setMin} step={5} min={1} max={600} />
           <div className="chips">{[15, 30, 45, 60, 90].map((m) => <button key={m} className={'chip sm' + (min === m ? ' on' : '')} onClick={() => setMin(m)}>{m} min</button>)}</div>
         </div>
+        {distance && (
+          <div className="field">
+            <span className="lbl">Afstand in km (optioneel)</span>
+            <NumField id="act-km" className="input num" value={km} onValue={(v) => setKm(Math.max(0, Math.min(500, v)))} placeholder="Bijv. 5,2" />
+            {km > 0 && min > 0 && <span className="tiny num">Gemiddeld {fmt((km / min) * 60, 1)} km/u{act.id === 'hardlopen' || act.id === 'wandelen' ? ` · ${Math.floor(min / km)}:${String(Math.round(((min / km) % 1) * 60)).padStart(2, '0')} min/km` : ''}</span>}
+          </div>
+        )}
         <div className="card row between">
           <div>
             <span className="muted">Geschat verbrand</span>
@@ -126,14 +136,16 @@ export function ActivitySheet() {
           </div>
           <b className="kpi num" style={{ color: 'var(--steps)', whiteSpace: 'nowrap' }}>{fmt(kcal)} kcal</b>
         </div>
-        <button className="btn block" disabled={min <= 0} onClick={() => { useStore.getState().addActivity(date, { name: act.levels ? `${act.name} · ${act.levels[level].label.toLowerCase()}` : act.name, emoji: act.emoji, minutes: min, kcal }); toast(`${act.name} toegevoegd: ${fmt(kcal)} kcal`); close(); }}>
-          Toevoegen
+        <button className="btn block" disabled={min <= 0} onClick={() => { useStore.getState().addActivity(date, { name: act.levels ? `${act.name} · ${act.levels[level].label.toLowerCase()}` : act.name, emoji: act.emoji, minutes: min, kcal, kind: act.id, km: distance && km > 0 ? Math.round(km * 100) / 100 : undefined }); toast(`${act.name} toegevoegd: ${fmt(kcal)} kcal`); close(); }}>
+          Toevoegen{date !== dateKey() ? ` aan ${dayTitle(date).toLowerCase()}` : ''}
         </button>
       </div>
     </Sheet>
   );
 }
 
+/** Sporten waarbij je een afstand kunt invullen. */
+const DISTANCE = ['wandelen', 'hardlopen', 'fietsen', 'zwemmen', 'roeien', 'mountainbiken', 'schaatsen', 'skaten', 'crosstrainer', 'suppen'];
 const mid = (a: (typeof ACTIVITIES)[number]) => (a.levels ? Math.floor((a.levels.length - 1) / 2) : 0);
 const POPULAR_ACT = ['wandelen', 'hardlopen', 'fietsen', 'krachttraining', 'hiit', 'spinning', 'zwemmen', 'padel', 'voetbal', 'yoga', 'dansen'];
 
@@ -193,15 +205,24 @@ export function ExplainSheet() {
 }
 
 export function WeightSheet() {
-  const close = useUI((s) => s.close);
+  const { close, open } = useUI();
   const current = useStore((s) => s.profile?.weightKg ?? 70);
   const [v, setV] = useState(current);
+  const today = dateKey();
+  const [date, setDate] = useState(today);
+  const existing = useStore((s) => s.weights.find((w) => w.date === date));
   return (
-    <Sheet onClose={close} title="Gewicht vandaag">
+    <Sheet onClose={close} title="Gewicht">
       <div className="stack">
         <Stepper id="weight-input" value={v} onChange={setV} step={0.1} min={30} max={300} />
+        <div className="chips">
+          {[today, addDays(today, -1)].map((d) => <button key={d} className={'chip sm' + (date === d ? ' on' : '')} onClick={() => setDate(d)}>{dayTitle(d).split(',')[0]}</button>)}
+          <input type="date" className="input date-sm" value={date} max={today} onChange={(e) => e.target.value && e.target.value <= today && setDate(e.target.value)} aria-label="Datum van de weging" />
+        </div>
+        {existing && <span className="tiny num">Er staat al {fmt(existing.kg, 1)} kg op deze dag; die wordt vervangen.</span>}
         <p className="small muted" style={{ margin: 0 }}>Tip: weeg jezelf ’s ochtends, na het plassen en vóór het ontbijt. Dan zijn de cijfers het best te vergelijken.</p>
-        <button className="btn block" onClick={() => { useStore.getState().logWeight(dateKey(), v); toast(`${fmt(v, 1)} kg opgeslagen`); close(); }}>Opslaan</button>
+        <button className="btn block" disabled={v < 30 || v > 300} onClick={() => { useStore.getState().logWeight(date, Math.round(v * 10) / 10); toast(`${fmt(v, 1)} kg opgeslagen`); close(); }}>Opslaan</button>
+        <button className="link small" style={{ alignSelf: 'center', color: 'var(--brand)', fontWeight: 700 }} onClick={() => open({ type: 'weightHistory' })}>Alle wegingen bekijken of aanpassen</button>
       </div>
     </Sheet>
   );
@@ -213,13 +234,16 @@ export function QuickSheet() {
   const items = [
     { t: 'Eten toevoegen', s: 'Zoek in de database of scan', ico: <I.apple />, c: 'var(--brand)', go: () => open({ type: 'addFood', meal: mealForNow() }) },
     { t: 'Recept loggen', s: 'Kies een gerecht, porties al op maat', ico: <I.book />, c: 'var(--carb)', go: () => { close(); useUI.getState().setTab('recepten'); } },
-    { t: `Glas water (${glass} ml)`, s: 'Direct toevoegen', ico: <I.drop />, c: 'var(--water)', go: () => { const d = useStore.getState().days[date]; useStore.getState().setWater(date, (d?.waterMl ?? 0) + glass); toast(`+${glass} ml water`); close(); } },
-    { t: 'Activiteit', s: 'Hardlopen, fietsen, padel…', ico: <I.flame />, c: 'var(--steps)', go: () => open({ type: 'activity' }) },
+    { t: `Glas water (${glass} ml)`, s: 'Direct toevoegen', ico: <I.drop />, c: 'var(--water)', go: () => { useStore.getState().addWater(date, glass); toast(`+${glass} ml water`); close(); } },
+    { t: 'Water, andere hoeveelheid', s: 'Kopje, flesje of eigen hoeveelheid', ico: <I.glass />, c: 'var(--water)', go: () => open({ type: 'water' }) },
+    { t: 'Activiteit of cardio', s: 'Hardlopen, fietsen, padel… met afstand', ico: <I.flame />, c: 'var(--steps)', go: () => open({ type: 'activity' }) },
+    { t: 'Eigen training starten', s: 'Een training die je zelf samenstelt', ico: <I.dumbbell />, c: 'var(--brand)', go: () => { close(); useUI.getState().setTab('training'); } },
     { t: 'Stappen', s: 'Stappen van vandaag invullen', ico: <I.shoe />, c: 'var(--steps)', go: () => open({ type: 'steps' }) },
     { t: 'Gewicht', s: 'Weeg je en houd je voortgang bij', ico: <I.scale />, c: 'var(--fat)', go: () => open({ type: 'weight' }) },
+    { t: 'Notitie bij de dag', s: 'Hoe voelde je je, hoe sliep je?', ico: <I.note />, c: 'var(--ink-2)', go: () => open({ type: 'note', date }) },
   ];
   return (
-    <Sheet onClose={close} title="Snel loggen">
+    <Sheet onClose={close} title={date === dateKey() ? 'Snel loggen' : `Loggen · ${dayTitle(date).toLowerCase()}`}>
       <div className="card" style={{ padding: '4px 14px' }}>
         <div className="list">
           {items.map((it) => (
@@ -237,8 +261,8 @@ export function QuickSheet() {
 
 const PREMIUM_FEATURES = [
   ['Barcodescanner', 'Scan een product en het staat er meteen in.'],
-  ['Eigen doelen', 'Stel je eigen calorie-, water- en stappendoel in.'],
-  ['Volledige voortgang', 'Grafieken over 30 dagen in plaats van 7.'],
+  ['Eigen calorie-doel', 'Stel zelf je calorie-doel in, met een veilige ondergrens.'],
+  ['Puls steunen', 'Je steunt de verdere ontwikkeling van Puls.'],
 ];
 
 function CadeauInvoer() {
@@ -455,7 +479,8 @@ export function ExerciseSheet({ id, slotKey }: { id: string; slotKey?: string })
   const close = useUI((s) => s.close);
   const lift = useStore((s) => s.lifts[id]);
   const plan = usePlan();
-  const e = EXERCISES[id];
+  const e = getExercise(id);
+  const custom = isCustomExercise(id);
   const [confirm, setConfirm] = useState(false);
   if (!e) return null;
   const planned = slotKey ? plan.flatMap((d) => d.exercises).find((x) => x.slotKey === slotKey) : undefined;
@@ -482,7 +507,8 @@ export function ExerciseSheet({ id, slotKey }: { id: string; slotKey?: string })
           {e.equip.length ? e.equip.map((q) => <span key={q} className="tag">{EQUIP_LABEL[q].t}</span>) : <span className="tag">Geen apparatuur</span>}
           <span className="tag">Niveau <span className="diff">{[1, 2, 3].map((n) => <i key={n} className={n <= e.diff ? 'on' : ''} />)}</span></span>
         </div>
-        <ol className="howto">{e.steps.map((s) => <li key={s}>{s}</li>)}</ol>
+        {custom && <span className="tag" style={{ alignSelf: 'flex-start' }}>Eigen oefening · plaatje ter illustratie</span>}
+        {e.steps.length > 0 && <ol className="howto">{e.steps.map((s) => <li key={s}>{s}</li>)}</ol>}
         <div className="card flat row" style={{ alignItems: 'flex-start' }}>
           <span style={{ width: 22, height: 22, flex: 'none', color: 'var(--brand)' }}><I.info /></span>
           <div className="small">{e.tip}</div>

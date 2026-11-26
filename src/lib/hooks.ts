@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { calcTargets, NO_NUTRIENTS, sumNutrients, TRAINING_WATER_BONUS } from './calc';
-import { dateKey, weekday } from './date';
+import { calcTargets, NO_NUTRIENTS, sumNutrients } from './calc';
+import { dateKey } from './date';
+import { waterTargetFor } from './stats';
 import { cachedInsight } from './insights';
 import { emptyDay, useStore } from './store';
 import { MEALS, type DayLog, type MealKey } from './types';
@@ -54,8 +55,7 @@ export function useWaterTarget(date: string) {
   const t = useTargets();
   const profile = useStore((s) => s.profile);
   if (!t || !profile) return 2000;
-  const trains = profile.trainDays.includes(weekday(date));
-  return t.waterMl + (trains && !profile.custom?.waterMl ? TRAINING_WATER_BONUS : 0);
+  return waterTargetFor(profile, t, date);
 }
 
 /** Hoeveel ruimte (kcal en eiwit) er nog is voor een maaltijd op een dag. */
