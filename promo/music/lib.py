@@ -549,15 +549,16 @@ class Song:
         self.n = ns(dur)
         self.tracks = {}
         self.kicks = []
+        self.vo_env = None      # omhullende van de voice-over (0..1), voor ducking
 
     def t(self, beat):
         return self.beat0 + beat * self.spb
 
     def track(self, name, gain_db=0.0, rev=0.0, room=0.0, dly=0.0, duck=0.0, duck_rel=None, hp=None, lp=None,
-              chain=None, width=1.0, eq=None):
+              chain=None, width=1.0, eq=None, vduck=0.0):
         tr = self.tracks.setdefault(name, {'buf': np.zeros((self.n, 2))})
         tr.update(dict(gain=gain_db, rev=rev, room=room, dly=dly, duck=duck, duck_rel=duck_rel, hp=hp, lp=lp,
-                       chain=chain or [], width=width, eq=eq or []))
+                       chain=chain or [], width=width, eq=eq or [], vduck=vduck))
         return name
 
     def put(self, name, sig, t, gain=1.0, pan=0.0):
@@ -608,6 +609,8 @@ class Song:
                 x = pb.Pedalboard(tr['chain'])(x.T.astype(np.float32), SR, reset=True).T.astype(float)
             if tr['duck'] > 0 and self.kicks:
                 x = x * self.duck_env(tr['duck'], tr['duck_rel'])[:, None]
+            if tr.get('vduck', 0) > 0 and self.vo_env is not None:
+                x = x * (1 - tr['vduck'] * self.vo_env[:len(x)])[:, None]
             if tr['width'] != 1.0:
                 mid = (x[:, 0] + x[:, 1]) / 2; side = (x[:, 0] - x[:, 1]) / 2 * tr['width']
                 x = np.stack([mid + side, mid - side], 1)
@@ -704,3 +707,20 @@ def mix(*xs):
         if st and x.ndim == 1: x = np.stack([x, x], 1)
         out[:len(x)] += x
     return out
+
+
+def voice_envelope(vo, look=0.05, release=0.35):
+    """0..1-omhullende van een stem (voor ducking): snel omlaag, rustig weer omhoog, iets vooruit"""
+    m = np.abs(vo if vo.ndim == 1 else vo.mean(1))
+    win = int(0.03 * SR)
+    rms = np.sqrt(np.convolve(m ** 2, np.ones(win) / win, 'same'))
+    ref = np.percentile(rms[rms > 1e-4], 90) if np.any(rms > 1e-4) else 1.0
+    e = np.clip(rms / (ref * 0.5), 0, 1)
+    # piek vasthouden + loslaten
+    a = np.exp(-1 / (release * SR))
+    out = signal.lfilter([1 - a], [1, -a], e)
+    out = np.maximum(out, e)
+    out = lp1(out, 8.0)
+    k = int(look * SR)
+    out = np.concatenate([out[k:], np.zeros(k)])
+    return np.clip(out / (out.max() + 1e-9), 0, 1)

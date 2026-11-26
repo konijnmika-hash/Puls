@@ -42,20 +42,21 @@ function TodayScreen(parent, o = {}) {
   return {
     el, update(lt) {
       lt *= sp;
-      const k = eio(P(lt, .2, 1.8));
+      const T = Object.assign({ ring: [.2, 1.8], burn: [.6, 2.0], macros: [.4, 1.8], meals: 1.2 }, o.times || {});
+      const k = eio(P(lt, T.ring[0], T.ring[1]));
       $('.ring', el).style.strokeDashoffset = 615.75 * (1 - k * (1840 / 2300));
       $('.ringNum', el).textContent = nl(1840 * k);
-      const burn = 380 * eio(P(lt, .6, 2.0));
+      const burn = 380 * eio(P(lt, T.burn[0], T.burn[1]));
       $('.leftNum', el).textContent = nl(2300 - 1840 * k + burn);
       $('.burnNum', el).textContent = nl(burn) + ' kcal';
       [[182, 260], [128, 150], [54, 72]].forEach(([v, max], j) => {
-        const m = eo(P(lt, .4 + j * .15, 1.8 + j * .15));
+        const m = eo(P(lt, T.macros[0] + j * .15, T.macros[1] + j * .15));
         $('.m' + j, el).style.width = (v / max * 100 * m) + '%';
         $('.mt' + j, el).textContent = `${Math.round(v * m)} / ${max} g`;
       });
       [0, 1, 2].forEach(i => {
-        const m = back(P(lt, 1.2 + i * .2, 1.7 + i * .2));
-        const e = $('.meal' + i, el); e.style.opacity = P(lt, 1.2 + i * .2, 1.4 + i * .2);
+        const m = back(P(lt, T.meals + i * .2, T.meals + .5 + i * .2));
+        const e = $('.meal' + i, el); e.style.opacity = P(lt, T.meals + i * .2, T.meals + .2 + i * .2);
         e.style.transform = `translateX(${(1 - m) * 60}px)`;
       });
     }
@@ -138,6 +139,17 @@ function TrainScreen(parent, o = {}) {
       <svg width="70" height="70" viewBox="0 0 70 70"><circle cx="35" cy="35" r="29" fill="none" stroke="#253b31" stroke-width="8"/><circle class="restRing" cx="35" cy="35" r="29" fill="none" stroke="#c9f27a" stroke-width="8" stroke-linecap="round" transform="rotate(-90 35 35)" stroke-dasharray="182.2"/></svg>
       <div style="flex:1"><div class="small">Rusttimer</div><b style="font-size:30px">Volgende oefening</b></div>
       <b class="h restNum tab-num" style="font-size:48px">1:30</b>
+    </div>
+    <div class="abs explain" style="left:24px;right:24px;bottom:-20px;height:820px;border-radius:44px 44px 0 0;background:#14241d;border:1px solid #2f4a3c;padding:30px 34px;z-index:16;display:none">
+      <div style="width:80px;height:8px;border-radius:4px;background:#2f4a3c;margin:0 auto 18px"></div>
+      <div class="small">Uitleg · Borst · Triceps · Schouders</div>
+      <div class="h" style="font-size:46px;margin:4px 0 6px">Bankdrukken</div>
+      <svg class="bigfig" width="100%" height="330" viewBox="0 -10 120 110"></svg>
+      <div style="font-size:24px;line-height:1.45;color:#cfe3d6">
+        <div class="st st0"><b style="color:var(--lime)">1</b>&nbsp; Lig op de bank met je ogen onder de stang, voeten plat op de grond.</div>
+        <div class="st st1" style="margin-top:10px"><b style="color:var(--lime)">2</b>&nbsp; Laat de stang gecontroleerd zakken naar je onderborst.</div>
+        <div class="st st2" style="margin-top:10px"><b style="color:var(--lime)">3</b>&nbsp; Druk hem recht omhoog tot je armen gestrekt zijn.</div>
+      </div>
     </div>`);
   return {
     el, update(lt) {
@@ -159,6 +171,13 @@ function TrainScreen(parent, o = {}) {
       const remain = 90 - Math.max(0, lt - restAt - .3) * speed, sec = Math.max(0, Math.ceil(remain));
       $('.restNum', el).textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
       $('.restRing', el).style.strokeDashoffset = 182.2 * (1 - remain / 90);
+      if (o.explain !== undefined) {
+        const ex = $('.explain', el), k = eo5(P(lt, o.explain, o.explain + .5));
+        ex.style.display = lt > o.explain - .05 ? '' : 'none';
+        ex.style.transform = `translateY(${(1 - k) * 860}px)`;
+        $('.bigfig', el).innerHTML = figureSVG('bench', repK(lt, 1.8, o.explain));
+        [0, 1, 2].forEach(i => { const q = eo(P(lt, o.explain + .45 + i * .3, o.explain + .75 + i * .3)); const st = $('.st' + i, el); st.style.opacity = q; st.style.transform = `translateX(${(1 - q) * 40}px)`; });
+      }
     }
   };
 }

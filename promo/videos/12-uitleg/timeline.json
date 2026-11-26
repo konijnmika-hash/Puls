@@ -1,0 +1,553 @@
+{
+ "bpm": 120,
+ "beat0": 0.85,
+ "dur": 46.05,
+ "voice": "nl_NL-pim-medium",
+ "lines": [
+  {
+   "text": "Gokken met je calorieën? Schema's van internet? En na twee weken weer gestopt?",
+   "spoken": "Gokken met je calorieën? Schema's van internet? En na twee weken weer gestopt?",
+   "rule": "start",
+   "dur": 6.031473922902494,
+   "words": [
+    {
+     "w": "Gokken",
+     "s": 0.25,
+     "e": 0.67
+    },
+    {
+     "w": "met",
+     "s": 0.67,
+     "e": 0.87
+    },
+    {
+     "w": "je",
+     "s": 0.87,
+     "e": 1.01
+    },
+    {
+     "w": "calorieën?",
+     "s": 1.01,
+     "e": 1.77
+    },
+    {
+     "w": "Schema's",
+     "s": 2.23,
+     "e": 2.91
+    },
+    {
+     "w": "van",
+     "s": 2.91,
+     "e": 3.07
+    },
+    {
+     "w": "internet?",
+     "s": 3.07,
+     "e": 3.61
+    },
+    {
+     "w": "En",
+     "s": 3.61,
+     "e": 4.55
+    },
+    {
+     "w": "na",
+     "s": 4.55,
+     "e": 4.77
+    },
+    {
+     "w": "twee",
+     "s": 4.77,
+     "e": 5.09
+    },
+    {
+     "w": "weken",
+     "s": 5.09,
+     "e": 5.47
+    },
+    {
+     "w": "weer",
+     "s": 5.47,
+     "e": 5.63
+    },
+    {
+     "w": "gestopt?",
+     "s": 5.63,
+     "e": 6.09
+    }
+   ],
+   "heard": "Gokken met je calorieën, schema's van internet en na twee weken weer gestopt.",
+   "start": 0.25
+  },
+  {
+   "text": "Stop met gokken. Met Puls heb je een persoonlijke coach, voor eten, trainen en energie.",
+   "spoken": "Stop met gokken. Met Puls heb je een persoonlijke coach, voor eten, trainen en energie.",
+   "rule": "bar",
+   "dur": 6.08875283446712,
+   "words": [
+    {
+     "w": "Stop",
+     "s": 6.85,
+     "e": 7.09
+    },
+    {
+     "w": "met",
+     "s": 7.09,
+     "e": 7.33
+    },
+    {
+     "w": "gokken.",
+     "s": 7.33,
+     "e": 7.79
+    },
+    {
+     "w": "Met",
+     "s": 8.35,
+     "e": 8.59
+    },
+    {
+     "w": "Puls",
+     "s": 8.59,
+     "e": 8.97
+    },
+    {
+     "w": "heb",
+     "s": 8.97,
+     "e": 9.15
+    },
+    {
+     "w": "je",
+     "s": 9.15,
+     "e": 9.25
+    },
+    {
+     "w": "een",
+     "s": 9.25,
+     "e": 9.43
+    },
+    {
+     "w": "persoonlijke",
+     "s": 9.43,
+     "e": 10.09
+    },
+    {
+     "w": "coach,",
+     "s": 10.09,
+     "e": 10.43
+    },
+    {
+     "w": "voor",
+     "s": 10.43,
+     "e": 10.87
+    },
+    {
+     "w": "eten,",
+     "s": 10.87,
+     "e": 11.39
+    },
+    {
+     "w": "trainen",
+     "s": 11.67,
+     "e": 12.07
+    },
+    {
+     "w": "en",
+     "s": 12.07,
+     "e": 12.25
+    },
+    {
+     "w": "energie.",
+     "s": 12.25,
+     "e": 12.81
+    }
+   ],
+   "heard": "Stop met gokken. Met Pulse heb je een persoonlijke coach voor eten, trainen en energie.",
+   "start": 6.85
+  },
+  {
+   "text": "Puls berekent precies wat jij per dag nodig hebt, en laat in één oogopslag zien hoe je ervoor staat.",
+   "spoken": "Puls berekent precies wat jij per dag nodig hebt, en laat in één oogopslag zien hoe je ervoor staat.",
+   "rule": "beat",
+   "dur": 6.0056235827664395,
+   "words": [
+    {
+     "w": "Puls",
+     "s": 13.35,
+     "e": 13.59
+    },
+    {
+     "w": "berekent",
+     "s": 13.59,
+     "e": 14.13
+    },
+    {
+     "w": "precies",
+     "s": 14.13,
+     "e": 14.59
+    },
+    {
+     "w": "wat",
+     "s": 14.59,
+     "e": 14.75
+    },
+    {
+     "w": "jij",
+     "s": 14.75,
+     "e": 14.95
+    },
+    {
+     "w": "per",
+     "s": 14.95,
+     "e": 15.17
+    },
+    {
+     "w": "dag",
+     "s": 15.17,
+     "e": 15.39
+    },
+    {
+     "w": "nodig",
+     "s": 15.39,
+     "e": 15.67
+    },
+    {
+     "w": "hebt,",
+     "s": 15.67,
+     "e": 16.05
+    },
+    {
+     "w": "en",
+     "s": 16.05,
+     "e": 16.53
+    },
+    {
+     "w": "laat",
+     "s": 16.53,
+     "e": 16.75
+    },
+    {
+     "w": "in",
+     "s": 16.75,
+     "e": 16.99
+    },
+    {
+     "w": "één",
+     "s": 16.99,
+     "e": 17.23
+    },
+    {
+     "w": "oogopslag",
+     "s": 17.23,
+     "e": 17.89
+    },
+    {
+     "w": "zien",
+     "s": 17.89,
+     "e": 18.11
+    },
+    {
+     "w": "hoe",
+     "s": 18.11,
+     "e": 18.33
+    },
+    {
+     "w": "je",
+     "s": 18.33,
+     "e": 18.43
+    },
+    {
+     "w": "ervoor",
+     "s": 18.43,
+     "e": 18.79
+    },
+    {
+     "w": "staat.",
+     "s": 18.79,
+     "e": 19.13
+    }
+   ],
+   "heard": "Puls berekend precies wat jij per dag nodig hebt en laat in één oogopslag zien hoe je ervoor staat.",
+   "start": 13.35
+  },
+  {
+   "text": "Iets gegeten? Scan de barcode, en het staat erin.",
+   "spoken": "Iets gegeten? Scan de barcode, en het staat erin.",
+   "rule": "beat",
+   "dur": 3.871156462585034,
+   "words": [
+    {
+     "w": "Iets",
+     "s": 19.85,
+     "e": 20.07
+    },
+    {
+     "w": "gegeten?",
+     "s": 20.07,
+     "e": 20.75
+    },
+    {
+     "w": "Scan",
+     "s": 21.23,
+     "e": 21.53
+    },
+    {
+     "w": "de",
+     "s": 21.53,
+     "e": 21.71
+    },
+    {
+     "w": "barcode,",
+     "s": 21.71,
+     "e": 22.13
+    },
+    {
+     "w": "en",
+     "s": 22.13,
+     "e": 22.71
+    },
+    {
+     "w": "het",
+     "s": 22.71,
+     "e": 22.89
+    },
+    {
+     "w": "staat",
+     "s": 22.89,
+     "e": 23.13
+    },
+    {
+     "w": "erin.",
+     "s": 23.13,
+     "e": 23.53
+    }
+   ],
+   "heard": "Iets gegeten, scan de barcode en het staat erin.",
+   "start": 19.85
+  },
+  {
+   "text": "Je krijgt een trainingsschema op jouw niveau, met uitleg bij elke oefening.",
+   "spoken": "Je krijgt een trainingsschema op jouw niveau, met uitleg bij elke oefening.",
+   "rule": "beat",
+   "dur": 4.319546485260771,
+   "words": [
+    {
+     "w": "Je",
+     "s": 24.35,
+     "e": 24.45
+    },
+    {
+     "w": "krijgt",
+     "s": 24.45,
+     "e": 24.81
+    },
+    {
+     "w": "een",
+     "s": 24.81,
+     "e": 24.91
+    },
+    {
+     "w": "trainingsschema",
+     "s": 24.91,
+     "e": 25.69
+    },
+    {
+     "w": "op",
+     "s": 25.69,
+     "e": 25.95
+    },
+    {
+     "w": "jouw",
+     "s": 25.95,
+     "e": 26.21
+    },
+    {
+     "w": "niveau,",
+     "s": 26.21,
+     "e": 26.49
+    },
+    {
+     "w": "met",
+     "s": 26.49,
+     "e": 26.91
+    },
+    {
+     "w": "uitleg",
+     "s": 26.91,
+     "e": 27.35
+    },
+    {
+     "w": "bij",
+     "s": 27.35,
+     "e": 27.57
+    },
+    {
+     "w": "elke",
+     "s": 27.57,
+     "e": 27.99
+    },
+    {
+     "w": "oefening.",
+     "s": 27.99,
+     "e": 28.43
+    }
+   ],
+   "heard": "Je krijgt een trainingsschema op jouw niveau met uitleg bij elke oefening.",
+   "start": 24.35
+  },
+  {
+   "text": "En je coach herinnert je aan water, eten en training, en viert het als je je doel haalt.",
+   "spoken": "En je coach herinnert je aan water, eten en training, en viert het als je je doel haalt.",
+   "rule": "beat",
+   "dur": 5.3244897959183675,
+   "words": [
+    {
+     "w": "En",
+     "s": 29.35,
+     "e": 29.49
+    },
+    {
+     "w": "je",
+     "s": 29.49,
+     "e": 29.61
+    },
+    {
+     "w": "coach",
+     "s": 29.61,
+     "e": 29.89
+    },
+    {
+     "w": "herinnert",
+     "s": 29.89,
+     "e": 30.39
+    },
+    {
+     "w": "je",
+     "s": 30.39,
+     "e": 30.47
+    },
+    {
+     "w": "aan",
+     "s": 30.47,
+     "e": 30.67
+    },
+    {
+     "w": "water,",
+     "s": 30.67,
+     "e": 31.01
+    },
+    {
+     "w": "eten",
+     "s": 31.47,
+     "e": 31.89
+    },
+    {
+     "w": "en",
+     "s": 31.89,
+     "e": 32.15
+    },
+    {
+     "w": "training,",
+     "s": 32.15,
+     "e": 32.55
+    },
+    {
+     "w": "en",
+     "s": 32.55,
+     "e": 33.03
+    },
+    {
+     "w": "viert",
+     "s": 33.03,
+     "e": 33.31
+    },
+    {
+     "w": "het",
+     "s": 33.31,
+     "e": 33.49
+    },
+    {
+     "w": "als",
+     "s": 33.49,
+     "e": 33.71
+    },
+    {
+     "w": "je",
+     "s": 33.71,
+     "e": 33.83
+    },
+    {
+     "w": "je",
+     "s": 33.83,
+     "e": 33.97
+    },
+    {
+     "w": "doel",
+     "s": 33.97,
+     "e": 34.23
+    },
+    {
+     "w": "haalt.",
+     "s": 34.23,
+     "e": 34.53
+    }
+   ],
+   "heard": "En je coach herinnert je aan water, eten en training en viert het als je je doel haalt.",
+   "start": 29.35
+  },
+  {
+   "text": "Download Puls nu, en probeer het 14 dagen gratis.",
+   "spoken": "Daunlood Puls nu, en probeer het 14 dagen gratis.",
+   "rule": "bar",
+   "dur": 3.674421768707483,
+   "words": [
+    {
+     "w": "Download",
+     "s": 36.85,
+     "e": 37.397
+    },
+    {
+     "w": "Puls",
+     "s": 37.397,
+     "e": 37.67
+    },
+    {
+     "w": "nu,",
+     "s": 37.67,
+     "e": 37.93
+    },
+    {
+     "w": "en",
+     "s": 37.93,
+     "e": 38.29
+    },
+    {
+     "w": "probeer",
+     "s": 38.29,
+     "e": 38.73
+    },
+    {
+     "w": "het",
+     "s": 38.73,
+     "e": 38.85
+    },
+    {
+     "w": "14",
+     "s": 38.85,
+     "e": 39.23
+    },
+    {
+     "w": "dagen",
+     "s": 39.23,
+     "e": 39.61
+    },
+    {
+     "w": "gratis.",
+     "s": 39.61,
+     "e": 40.37
+    }
+   ],
+   "heard": "Downloadpuls nu en probeer het 14 dagen gratis.",
+   "start": 36.85
+  }
+ ]
+}

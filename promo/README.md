@@ -1,6 +1,6 @@
 # Puls promotiefilmpjes
 
-Elf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muziek. Alle filmpjes eindigen met **"Download Puls nu, 14 dagen gratis"**. De kant-en-klare video's staan in `out/`.
+Twaalf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muziek, en filmpje 12 heeft ook een Nederlandse voice-over met ondertitels. Alle filmpjes eindigen met **"Download Puls nu, 14 dagen gratis"**. De kant-en-klare video's staan in `out/`.
 
 | # | Bestand | Formaat | Duur | Waar gaat het over | Muziek |
 |---|---------|---------|------|--------------------|--------|
@@ -15,6 +15,7 @@ Elf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muzi
 | 09 | `out/09-jouw-plan.mp4` | 9:16 | 23,5 s | De intake met silhouet en schuifjes, daarna onthulling van je plan | Filmische opbouw met drop, 110 bpm |
 | 10 | `out/10-manifest.mp4` | **16:9 (1920×1080)** | 21 s | Kinetische typografie, "Eet slimmer. Train beter. Voel je sterker." | Stampende electro-pop-anthem, 124 bpm |
 | 11 | `out/11-voortgang.mp4` | 9:16 | 27 s | Van dag 1 tot dag 84: gewichtsgrafiek, mijlpalen, "Kleine stappen. Grote verandering." | Emotionele piano en strijkers, 96 bpm |
+| 12 | `out/12-uitleg.mp4` | 9:16 | 46 s | **Met voice-over en ondertitels:** legt in zeven zinnen uit hoe Puls werkt, in de opbouw van filmpje 02 | Muziekbed in de stijl van 02, duikt weg onder de stem, 120 bpm |
 
 Je kunt ze plaatsen op Reels, TikTok, Shorts en Stories (9:16), en op YouTube of je website (16:9). Alle muziek staat op −14 LUFS, de norm voor social media.
 
@@ -25,12 +26,20 @@ De muziek is zelf gemaakt in code en dus volledig rechtenvrij (`music/`):
 - `music/lib.py` is een kleine muziekstudio. Hij heeft synthesizers (supersaw, pluck, FM-bel, 808, Karplus-Strong), drums, overgangen (riser, impact, whoosh), echte instrumenten via FluidSynth met de General MIDI-soundfont (piano, Rhodes, strijkers, koor, koper, vibrafoon, contrabas), galm, delay, sidechain en mastering.
 - `music/tNN.py` is per filmpje het arrangement, afgestemd op de beelden. Schermwissels vallen op de maat en interface-geluidjes (scanpiep, afvinken, meldingen) zijn gestemd in de toonsoort.
 
+## Voice-over (filmpje 12)
+
+- De stem is **Pim** (`nl_NL-pim-medium`) van [Piper](https://github.com/OHF-Voice/piper1-gpl), een open-source tekst-naar-spraakmodel. De dataset heeft een **CC0-licentie**, dus de stem mag in reclame. Alles draait lokaal en de tekst gaat naar geen enkele dienst.
+- `voice/build_vo.py` spreekt elke zin acht keer in. Spraakherkenning (Whisper) kiest per zin de helderste take, ook met ruis eronder om muziek na te bootsen. Daarna bepaalt het script de woordtijden en legt het de zinnen op de maat (drop en afsluiter op een maatstreep). Het schrijft `videos/12-uitleg/timeline.json` en `timeline.js`.
+- De ondertitels en alle animaties lezen die tijdlijn, dus elk woord en elke schermwissel valt precies op de stem.
+- In het script staat "Daunlood" in plaats van "Download": zo spreekt de Nederlandse stem het Engels uit. In beeld staat gewoon "Download".
+- Tekst aanpassen kan in `LINES` in `voice/build_vo.py`. Draai daarna `python3 promo/voice/build_vo.py`, `python3 promo/music/t12.py` en `node promo/render.cjs 12-uitleg`.
+
 ## Zelf opnieuw maken
 
 Je hebt Node met Playwright nodig (`npm ci` in de root), ffmpeg, Python 3 en de audiotools:
 
 ```bash
-pip install pedalboard scipy mido pyloudnorm numpy
+pip install pedalboard scipy mido pyloudnorm numpy piper-tts faster-whisper   # de laatste twee alleen voor de voice-over
 sudo apt-get install fluidsynth fluid-soundfont-gm
 
 python3 promo/music/t04.py            # muziek -> promo/videos/04-scan-alles/audio.wav
