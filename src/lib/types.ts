@@ -1,4 +1,5 @@
 import type { Equip } from '../data/exercises';
+import type { CustomWorkout } from '../data/workouts';
 import type { Food } from '../data/foods';
 
 export type Sex = 'man' | 'vrouw' | 'anders';
@@ -52,6 +53,10 @@ export interface Profile {
   macroStyle?: MacroStyle;
   /** calorie-doel bijsturen op basis van je gemeten verbruik (eten + gewichtstrend) */
   adaptive?: boolean;
+  /** per weekdag (0 = ma) een zelf gekozen workout in plaats van de standaard */
+  dayPlan?: Record<number, string>;
+  /** zelf gecombineerde workouts */
+  customWorkouts?: CustomWorkout[];
   createdAt: string;
 }
 

@@ -5,7 +5,7 @@ import { cachedInsight } from './insights';
 import { emptyDay, useStore } from './store';
 import { MEALS, type DayLog, type MealKey } from './types';
 import { roomFor } from './recipes';
-import { buildPlan } from './workout';
+import { buildPlan, buildWorkout } from './workout';
 
 const EMPTY = emptyDay();
 
@@ -39,7 +39,7 @@ export function usePlan() {
   return useMemo(
     () => (profile ? buildPlan(profile) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [profile?.trainDays.join(), profile?.focus, profile?.experience, profile?.place, profile?.equipment?.join(), profile?.excluded?.join(), JSON.stringify(profile?.swaps)],
+    [profile?.trainDays.join(), profile?.focus, profile?.experience, profile?.place, profile?.equipment?.join(), profile?.excluded?.join(), JSON.stringify(profile?.swaps), JSON.stringify(profile?.dayPlan), profile?.customWorkouts],
   );
 }
 
@@ -63,4 +63,14 @@ export function useMealRoom(meal: MealKey, date: string) {
   const t = useTargets();
   const day = useStore((s) => s.days[date]);
   return useMemo(() => (t ? roomFor(meal, t, day, day ? dayTotals(day).eaten : NO_NUTRIENTS) : null), [t, day, meal]);
+}
+
+/** Een workout uit je schema, de bibliotheek of je eigen combinaties. */
+export function useWorkout(id: string | null | undefined) {
+  const plan = usePlan();
+  const profile = useStore((s) => s.profile);
+  return useMemo(() => {
+    if (!id || !profile) return null;
+    return plan.find((p) => p.id === id) ?? buildWorkout(id, profile);
+  }, [id, plan, profile]);
 }

@@ -4,6 +4,7 @@ import { ALL_EQUIP } from '../data/exercises';
 import { FOOD_BY_ID, type Food } from '../data/foods';
 import type { Recipe } from '../data/recipes';
 import type { WorkoutLog } from './training';
+import type { CustomWorkout } from '../data/workouts';
 import { mergeShopping, portionNutrients, portionText, recipeFood, setLightRecipes, type Prefs, type ShopItem } from './recipes';
 import { dateKey } from './date';
 import type { Cadeau } from './cadeau';
@@ -109,6 +110,14 @@ interface State {
   recipePrefs: Prefs;
   /** eigen maaltijden */
   savedMeals: SavedMeal[];
+  /** favoriete workouts uit de bibliotheek */
+  favWorkouts: string[];
+  toggleFavWorkout: (id: string) => void;
+  /** eigen combinatie bewaren (of bijwerken) */
+  saveCustomWorkout: (w: CustomWorkout) => void;
+  deleteCustomWorkout: (id: string) => void;
+  /** workout op een weekdag zetten; null = terug naar de standaard */
+  setDayWorkout: (weekday: number, id: string | null) => void;
 
   setProfile: (p: Profile) => void;
   updateProfile: (p: Partial<Profile>) => void;
@@ -165,6 +174,7 @@ const initial = {
   shopping: [] as ShopItem[],
   recipePrefs: { vega: false } as Prefs,
   savedMeals: [] as SavedMeal[],
+  favWorkouts: [] as string[],
 };
 
 export const useStore = create<State>()(
@@ -285,6 +295,24 @@ export const useStore = create<State>()(
           updateDay(date, (d) => ({ ...d, meals: { ...d.meals, [meal]: [...d.meals[meal], ...entries] } }));
           set((s) => ({ savedMeals: s.savedMeals.map((m) => (m.id === id ? { ...m, used: m.used + 1 } : m)) }));
         },
+        toggleFavWorkout: (id) =>
+          set((s) => ({ favWorkouts: s.favWorkouts.includes(id) ? s.favWorkouts.filter((f) => f !== id) : [...s.favWorkouts, id] })),
+        saveCustomWorkout: (w) =>
+          set((s) => (s.profile ? { profile: { ...s.profile, customWorkouts: [w, ...(s.profile.customWorkouts ?? []).filter((c) => c.id !== w.id)] } } : {})),
+        deleteCustomWorkout: (id) =>
+          set((s) => {
+            if (!s.profile) return {};
+            const dayPlan = Object.fromEntries(Object.entries(s.profile.dayPlan ?? {}).filter(([, v]) => v !== id));
+            return { profile: { ...s.profile, dayPlan, customWorkouts: (s.profile.customWorkouts ?? []).filter((c) => c.id !== id) }, favWorkouts: s.favWorkouts.filter((f) => f !== id) };
+          }),
+        setDayWorkout: (weekday, id) =>
+          set((s) => {
+            if (!s.profile) return {};
+            const dayPlan = { ...(s.profile.dayPlan ?? {}) };
+            if (id) dayPlan[weekday] = id;
+            else delete dayPlan[weekday];
+            return { profile: { ...s.profile, dayPlan } };
+          }),
         clearMeal: (date, meal) => updateDay(date, (d) => ({ ...d, meals: { ...d.meals, [meal]: [] } })),
       };
     },
@@ -304,7 +332,7 @@ export const useStore = create<State>()(
           }
         }
         if (s.recent) s.recent = s.recent.map(fresh);
-        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null, savedMeals: s.savedMeals ?? [], theme: s.theme ?? 'systeem' } as State;
+        return { ...s, profile: s.profile ? normalizeProfile(s.profile) : null, reminders: s.reminders ?? DEFAULT_REMINDERS, fired: s.fired ?? {}, cheered: s.cheered ?? {}, favRecipes: s.favRecipes ?? [], workoutLog: s.workoutLog ?? [], cooked: s.cooked ?? {}, shopping: s.shopping ?? [], recipePrefs: s.recipePrefs ?? { vega: false }, cadeau: s.cadeau ?? null, savedMeals: s.savedMeals ?? [], favWorkouts: s.favWorkouts ?? [], theme: s.theme ?? 'systeem' } as State;
       },
     },
   ),

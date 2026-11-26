@@ -16,7 +16,9 @@ export type SheetState =
   | { type: 'profileEdit' }
   | { type: 'goals' }
   | { type: 'connect' }
-  | { type: 'exercise'; id: string; slotKey?: string }
+  | { type: 'exercise'; id: string; slotKey?: string; /** workout buiten je schema (voor wisselen) */ wid?: string }
+  | { type: 'workout'; id: string; /** kiezen voor deze weekdag */ day?: number }
+  | { type: 'combine'; edit?: string; day?: number }
   | { type: 'inbox' }
   | { type: 'recipe'; id: string; meal?: MealKey; /** portie uit het dagmenu */ factor?: number }
   | { type: 'shopping' }
@@ -31,6 +33,11 @@ interface UI {
   session: string | null;
   /** recept in kookmodus */
   cook: { id: string; servings: number; factor: number; meal: MealKey } | null;
+  /** trainingstab: je eigen week of alle workouts */
+  trView: 'week' | 'workouts';
+  /** in de bibliotheek een workout kiezen voor deze weekdag */
+  pickDay: number | null;
+  setTrView: (v: UI['trView'], pickDay?: number | null) => void;
   setTab: (t: Tab) => void;
   setDate: (d: string) => void;
   open: (s: SheetState) => void;
@@ -45,6 +52,12 @@ export const useUI = create<UI>((set) => ({
   sheet: null,
   session: null,
   cook: null,
+  trView: 'week',
+  pickDay: null,
+  setTrView: (trView, pickDay = null) => {
+    set({ trView, pickDay });
+    window.scrollTo({ top: 0 });
+  },
   setTab: (tab) => {
     set({ tab });
     window.scrollTo({ top: 0 });

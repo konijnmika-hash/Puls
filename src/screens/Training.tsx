@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, dateKey, DAY_LONG, DAY_SHORT, dayTitle, fmt, parseKey, weekday } from '../lib/date';
-import { usePlan, useTargets } from '../lib/hooks';
+import { usePlan, useTargets, useWorkout } from '../lib/hooks';
+import { Library } from './Workouts';
+import { TimerSession } from '../components/TimerSession';
+import { WorkoutArt } from '../components/WorkoutArt';
+import { LIBRARY_BY_ID } from '../data/workouts';
 import { behaviorNotes } from '../lib/health';
 import { HealthNotes } from '../components/HealthNotes';
 import { FOCUS_OPTIONS, PLACE_OPTIONS } from '../lib/options';
@@ -26,7 +30,7 @@ export function Training() {
   const targets = useTargets()!;
   const log = useStore((s) => s.workoutLog) ?? NO_LOG;
   const plan = usePlan();
-  const { open, startSession } = useUI();
+  const { open, startSession, trView, setTrView } = useUI();
   const today = dateKey();
   const todayWd = weekday(today);
   const monday = addDays(today, -todayWd);
@@ -54,6 +58,12 @@ export function Training() {
         </div>
       </header>
 
+      <div className="seg seg-wide" role="tablist" aria-label="Weergave">
+        <button role="tab" aria-selected={trView === 'week'} className={trView === 'week' ? 'on' : ''} onClick={() => setTrView('week')}>Mijn week</button>
+        <button role="tab" aria-selected={trView === 'workouts'} className={trView === 'workouts' ? 'on' : ''} onClick={() => setTrView('workouts')}>Alle workouts</button>
+      </div>
+
+      {trView === 'workouts' ? <Library /> : <>
       {/* Week */}
       <section className="card tr-week" aria-label="Deze week">
         <div className="tr-week-head">
@@ -114,7 +124,7 @@ export function Training() {
                 )}
               </div>
             </div>
-            <div className="tr-hero-fig" aria-hidden><Figure anim={wd.exercises[0]?.exercise.anim ?? EXERCISES.squat.anim} /></div>
+            <div className="tr-hero-fig" aria-hidden>{wd.source === 'lib' && LIBRARY_BY_ID[wd.id] ? <WorkoutArt id={wd.id} cat={LIBRARY_BY_ID[wd.id].cat} cover={wd.cover} animate /> : <Figure anim={wd.exercises[0]?.exercise.anim ?? EXERCISES.squat.anim} />}</div>
             {done ? (
               <div className="tr-hero-done"><span className="i18"><I.check /></span> Afgerond</div>
             ) : (
@@ -123,6 +133,11 @@ export function Training() {
               </button>
             )}
           </section>
+          <div className="row tr-dayacts">
+            <button className="btn sm ghost grow" onClick={() => setTrView('workouts', sel)}><span className="i18"><I.shuffle /></span> Andere workout</button>
+            {profile.dayPlan?.[sel] !== undefined && <button className="btn sm ghost" onClick={() => { useStore.getState().setDayWorkout(sel, null); toast('Terug naar je standaardschema'); }}>Standaard</button>}
+            {wd.source !== 'schema' && <button className="btn sm ghost" onClick={() => open({ type: 'workout', id: wd.id })}>Info</button>}
+          </div>
           <WorkoutList wd={wd} />
         </>
       ) : (
@@ -131,6 +146,7 @@ export function Training() {
           <div className="grow">
             <b>Rustdag op {DAY_LONG[sel]}</b>
             <div className="small muted">Herstel hoort bij het schema. Wandelen of rustig stretchen kan altijd.</div>
+            <button className="link small" style={{ marginTop: 6, display: 'block' }} onClick={() => setTrView('workouts', sel)}>Toch trainen? Kies een workout voor {DAY_LONG[sel]} →</button>
             {nextUp && <button className="link small" style={{ marginTop: 6 }} onClick={() => setSel(nextUp.weekday)}>Volgende training: {nextUp.name} op {DAY_LONG[nextUp.weekday]} →</button>}
           </div>
         </section>
@@ -152,7 +168,7 @@ export function Training() {
                     <div className="ico" style={did ? { background: 'color-mix(in srgb, var(--ok) 16%, transparent)', color: 'var(--ok)' } : undefined}>{did ? <span className="i20"><I.check /></span> : <span className="i20"><I.dumbbell /></span>}</div>
                     <div className="grow">
                       <div className="t">{p.name}</div>
-                      <div className="s">{DAY_LONG[p.weekday]} · {dayMuscles(p).slice(0, 3).join(', ')}</div>
+                      <div className="s">{DAY_LONG[p.weekday]} · {p.timer ? `${p.estMinutes} min op tijd` : dayMuscles(p).slice(0, 3).join(', ')}{profile.dayPlan?.[p.weekday] !== undefined ? ' · eigen keuze' : ''}</div>
                     </div>
                     {p.weekday === todayWd && !did ? <span className="tag brand">Vandaag</span> : <span className="small muted num">{p.estMinutes} min</span>}
                   </button>
@@ -164,6 +180,7 @@ export function Training() {
       )}
 
       <History log={log} />
+      </>}
     </div>
   );
 }
@@ -242,8 +259,12 @@ interface ExState {
 }
 
 export function WorkoutSession({ id }: { id: string }) {
-  const plan = usePlan();
-  const wd = plan.find((p) => p.id === id);
+  const wd = useWorkout(id);
+  if (!wd) return null;
+  return wd.timer ? <TimerSession key={wd.id} wd={wd} /> : <SetsSession key={wd.id} wd={wd} />;
+}
+
+function SetsSession({ wd }: { wd: WorkoutDay }) {
   const kg = useStore((s) => s.profile?.weightKg ?? 70);
   const lifts = useStore((s) => s.lifts);
   const log = useStore((s) => s.workoutLog) ?? NO_LOG;
@@ -265,6 +286,8 @@ export function WorkoutSession({ id }: { id: string }) {
     ),
   );
   const endedRef = useRef(0);
+  const [stableWd] = useState(wd);
+  wd = stableWd;
 
   // terugknop: eerst vragen als er al sets zijn afgevinkt
   useBack(() => {

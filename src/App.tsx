@@ -18,6 +18,7 @@ import { Progress } from './screens/Progress';
 import { ProfileScreen } from './screens/Profile';
 import { Today } from './screens/Today';
 import { Training, WorkoutSession } from './screens/Training';
+import { CombineSheet, WorkoutSheet } from './screens/Workouts';
 
 const TABS: { id: Tab; label: string; icon: () => ReactElement }[] = [
   { id: 'vandaag', label: 'Vandaag', icon: I.today },
@@ -41,7 +42,9 @@ function SheetHost() {
     case 'profileEdit': return <ProfileEditSheet />;
     case 'goals': return <GoalsSheet />;
     case 'connect': return <ConnectSheet />;
-    case 'exercise': return <ExerciseSheet id={sheet.id} slotKey={sheet.slotKey} />;
+    case 'exercise': return <ExerciseSheet id={sheet.id} slotKey={sheet.slotKey} wid={sheet.wid} />;
+    case 'workout': return <WorkoutSheet key={sheet.id} id={sheet.id} day={sheet.day} />;
+    case 'combine': return <CombineSheet edit={sheet.edit} day={sheet.day} />;
     case 'inbox': return <InboxSheet />;
     case 'recipe': return <RecipeSheet key={sheet.id} id={sheet.id} meal={sheet.meal} planned={sheet.factor} />;
     case 'shopping': return <ShoppingSheet />;

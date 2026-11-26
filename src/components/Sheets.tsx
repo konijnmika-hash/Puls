@@ -4,7 +4,7 @@ import { ALL_EQUIP, EQUIP_LABEL, EXERCISES, type Equip } from '../data/exercises
 import { ACTIVITY, MACRO_STYLE, PACE, calcTargets, kcalFloor, kcalLow, metKcal } from '../lib/calc';
 import { controleerCode } from '../lib/cadeau';
 import { dateKey, DAY_SHORT, fmt, liters } from '../lib/date';
-import { useDay, useEnergyInsight, usePlan, useTargets } from '../lib/hooks';
+import { useDay, useEnergyInsight, usePlan, useTargets, useWorkout } from '../lib/hooks';
 import { FOCUS_OPTIONS, GOAL_OPTIONS, PLACE_OPTIONS, SEX_OPTIONS, defaultEquipment } from '../lib/options';
 import { useStore, type Reminders, type Theme } from '../lib/store';
 import { requestNotifications } from './Coach';
@@ -451,10 +451,12 @@ export function PlanEditSheet() {
   );
 }
 
-export function ExerciseSheet({ id, slotKey }: { id: string; slotKey?: string }) {
+export function ExerciseSheet({ id, slotKey, wid }: { id: string; slotKey?: string; wid?: string }) {
   const close = useUI((s) => s.close);
   const lift = useStore((s) => s.lifts[id]);
-  const plan = usePlan();
+  const schedule = usePlan();
+  const other = useWorkout(wid);
+  const plan = other ? [other] : schedule;
   const e = EXERCISES[id];
   const [confirm, setConfirm] = useState(false);
   if (!e) return null;
