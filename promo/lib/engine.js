@@ -216,8 +216,9 @@ function show(el, k, { y = 40, s = null, blur = 10 } = {}) {
   el.style.transform = `translateY(${(1 - k) * y}px)` + (s !== null ? ` scale(${lerp(s, 1, k)})` : '');
   el.style.filter = k < 1 && blur ? `blur(${(1 - cl(k)) * blur}px)` : '';
 }
+/** render(t) mag een Promise teruggeven (bijv. om eerst een beeld te laden); de renderer wacht daarop. */
 function boot(render) {
   stage(); splitReveal();
-  window.render = t => { render(t); };
-  window.ready = document.fonts.ready.then(() => { render(0); return true; });
+  window.render = t => render(t);
+  window.ready = document.fonts.ready.then(() => render(0)).then(() => true);
 }

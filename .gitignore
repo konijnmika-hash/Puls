@@ -3,4 +3,5 @@ dist/
 dist-single/
 promo/videos/*/audio.wav
 promo/videos/*/shots.png
+promo/videos/*/clips/
 __pycache__/

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Probeer dit 14 dagen</title>
+<link rel="stylesheet" href="../../lib/base.css">
+<style>
+/* TikTok legt eigen knoppen over de video: houd tekst tussen y 140-1440 en links van x 940 (zie #safe). */
+:root{--dark:#06100c}
+.tracker{position:absolute;left:124px;top:158px;width:832px;height:12px;display:flex;gap:8px}
+.tracker i{flex:1;border-radius:6px;background:rgba(255,255,255,.14)}
+#trkLime i{background:rgba(6,16,12,.16)}
+
+/* shots: dag-chip, kop en telefoon */
+#scrim{position:absolute;left:0;top:0;width:1080px;height:640px;
+  background:radial-gradient(760px 360px at 50% 330px,rgba(72,196,134,.20),rgba(72,196,134,0) 70%),linear-gradient(180deg,#06100c 0,#06100c 505px,rgba(6,16,12,0) 600px)}
+.chiprow{position:absolute;left:0;right:0;top:202px;display:flex;justify-content:center;gap:14px}
+.chip2{font-family:Brico;font-weight:800;font-size:42px;letter-spacing:.02em;line-height:1;padding:13px 28px 16px;border-radius:999px;background:var(--lime);color:var(--dark)}
+.chip2.gold{background:#f0a03a}
+.shot-h{position:absolute;left:0;right:0;text-align:center;font-size:106px}
+#phone{left:206px;top:540px;width:668px;height:1413px}
+#app{position:absolute;left:0;top:0;width:640px;height:1385px}
+#phone .island{top:15px;width:156px;height:42px;margin-left:-78px;border-radius:22px}
+#phone .status{top:22px;left:44px;right:40px;font-size:25px;align-items:center}
+#phone .sicons{display:flex;gap:9px;align-items:center}
+
+/* lime laag: hook en slotkaart */
+#lime{position:absolute;left:0;top:0;width:1080px;height:2140px;border-radius:0 0 540px 540px / 0 0 210px 210px;overflow:hidden;
+  background:radial-gradient(1300px 1100px at 50% 44%,#defc9f 0%,#c9f27a 46%,#b3e45d 100%);color:var(--dark)}
+#lime .xh{position:absolute;left:0;right:0;text-align:center;color:var(--dark)}
+.brand{position:absolute;left:0;right:0;top:214px;display:flex;justify-content:center;align-items:center;gap:20px;font-family:Brico;font-weight:800;font-size:66px;letter-spacing:-.04em}
+#h1{top:452px;font-size:150px}
+#h14{top:566px;font-size:640px;letter-spacing:-.07em;line-height:.86}
+#h3{top:1100px;font-size:250px}
+
+#e1{top:478px;font-size:112px}
+#e2{top:604px;font-size:204px}
+#e3{top:816px}
+#e3 b{display:inline-block;font-weight:800;font-size:214px;line-height:1;padding:0 46px 30px;border-radius:48px;background:var(--dark);color:var(--lime)}
+#cta{position:absolute;left:215px;top:1186px;width:650px;height:136px;border-radius:999px;background:#fff;color:var(--dark);font-family:Brico;font-weight:800;font-size:54px;letter-spacing:-.02em;
+  display:flex;align-items:center;justify-content:center;gap:20px;box-shadow:0 26px 60px -22px rgba(6,16,12,.55)}
+#esub{position:absolute;left:0;right:0;top:1358px;text-align:center;font-size:38px;font-weight:500;color:rgba(6,16,12,.72)}
+
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#safe{position:absolute;inset:0;display:none;pointer-events:none;z-index:99}
+#safe i{position:absolute;background:rgba(255,40,80,.28);outline:2px dashed rgba(255,40,80,.9)}
+</style></head>
+<body><div id="stage">
+  <div id="bgwrap"></div>
+
+  <div class="phone" id="phone"><div class="screen">
+    <canvas id="app" width="1170" height="2532"></canvas>
+    <div class="island"></div>
+    <div class="status"><span id="ptime">13:05</span><span class="sicons">
+      <svg width="34" height="22" viewBox="0 0 34 22"><rect x="0" y="14" width="6" height="8" rx="1.5" fill="#fff"/><rect x="9" y="10" width="6" height="12" rx="1.5" fill="#fff"/><rect x="18" y="5" width="6" height="17" rx="1.5" fill="#fff"/><rect x="27" y="0" width="6" height="22" rx="1.5" fill="#fff"/></svg>
+      <svg width="46" height="22" viewBox="0 0 46 22"><rect x="1" y="1" width="39" height="20" rx="6" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/><rect x="4" y="4" width="28" height="14" rx="3.5" fill="#fff"/><rect x="42" y="7" width="3" height="8" rx="1.5" fill="rgba(255,255,255,.5)"/></svg>
+    </span></div>
+  </div></div>
+  <div id="scrim"></div>
+  <div class="tracker" id="trk"></div>
+  <div id="shots"></div>
+
+  <div id="lime">
+    <svg id="limePulse" class="abs" style="left:0;top:560px" width="1080" height="640" viewBox="0 0 1080 640"><path id="lp" d="M-30 380H250l70-190 120 360 96-300 56 130H1110" fill="none" stroke="#a9dc50" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="tracker" id="trkLime"></div>
+    <div id="hook">
+      <div class="brand" id="hbrand"><span id="hlogo"></span><span>puls</span></div>
+      <div class="xh" id="h1">Probeer dit</div>
+      <div class="xh" id="h14">14</div>
+      <div class="xh" id="h3">dagen.</div>
+    </div>
+    <div id="end">
+      <div class="abs" id="elogo" style="left:455px;top:250px;width:170px;height:170px"></div>
+      <div class="xh" id="e1">Eerste 14 dagen</div>
+      <div class="xh" id="e2">Premium</div>
+      <div class="xh" id="e3"><b>gratis.</b></div>
+      <div id="cta"><svg width="46" height="46" viewBox="0 0 46 46"><path d="M23 6v24M12 21l11 11 11-11M8 40h30" fill="none" stroke="#06100c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Download Puls</span></div>
+      <div id="esub">Je coach voor eten, trainen en energie.</div>
+    </div>
+  </div>
+  <div id="flash"></div>
+  <div id="safe"><i style="left:0;top:0;right:0;height:140px"></i><i style="left:0;bottom:0;right:0;height:480px"></i><i style="right:0;top:820px;width:140px;height:620px"></i></div>
+</div>
+<script src="../../lib/engine.js"></script>
+<script src="clips/manifest.js"></script>
+<script>
+// 15 seconden op 128 bpm: 8 maten. Maat 1 = hook, maat 2-6 = vijf shots (echte app-beelden), maat 7-8 = slotkaart.
+window.VIDEO = { w: 1080, h: 1920, dur: 15, fps: 30, bpm: 128, title: 'Probeer dit 14 dagen' };
+if (!window.CLIPS) throw new Error('De app-clips ontbreken. Draai eerst: node promo/capture.cjs 12-probeer-14-dagen');
+// l2 = tweede regel van de kop; at2 = op welke tel van het shot die regel binnenkomt
+const SHOTS = [
+  { clip: 'dash', day: 1, time: '13:05', l1: 'Jouw plan.', l2: 'Op maat.' },
+  { clip: 'scan', day: 2, time: '12:38', l1: 'Scan.', l2: '<span class="lime">Gelogd.</span>', at2: 3, premium: true },
+  { clip: 'recipes', day: 5, time: '17:42', l1: '146 recepten.', l2: 'Op jouw doel.' },
+  { clip: 'training', day: 8, time: '18:04', l1: 'Train op', l2: 'jouw schema.' },
+  { clip: 'stats', day: 14, time: '20:31', l1: 'Zie je', l2: 'voortgang.' },
+];
+const LEAD = 4;                     // dit frame van de clip staat op de eerste tel van het shot
+const T0 = n => b(4 + 4 * n);       // begin van shot n
+const END = b(24);                  // slotkaart
+
+const pills = n => Array.from({ length: n }, () => '<i></i>').join('');
+$('#bgwrap').innerHTML = bgHTML('rgba(72,196,134,.34)', 'rgba(201,242,122,.18)');
+$('#trk').innerHTML = pills(14); $('#trkLime').innerHTML = pills(14);
+$('#hlogo').innerHTML = logoSVG(84); $('#elogo').innerHTML = logoSVG(170);
+$('#shots').innerHTML = SHOTS.map((s, i) => `
+  <div class="scene" data-in="${T0(i) - .01}" data-out="${T0(i + 1)}" data-fo=".12">
+    <div class="chiprow"><span class="chip2 pop" data-a="${T0(i)}">DAG ${s.day}</span>${s.premium ? `<span class="chip2 gold pop" data-a="${T0(i) + .12}">PREMIUM</span>` : ''}</div>
+    <div class="shot-h h rv" style="top:286px" data-a="${T0(i) + .02}" data-s=".07" data-fx="slam">${s.l1}</div>
+    <div class="shot-h h rv" style="top:394px" data-a="${s.at2 ? T0(i) + b(s.at2) - .03 : T0(i) + .13}" data-s=".07" data-fx="slam">${s.l2}</div>
+  </div>`).join('');
+
+/* ---------- camera: op welk deel van de app zoomen we in ---------- */
+const U = 640 / 390;                           // schermpixels per app-pixel bij zoom 1
+const FOCUS = [540, 1012];                     // hier komt het midden van het gekozen deel (tussen kop en TikTok-knoppen)
+const box = (clip, name) => CLIPS.clips[clip].boxes[name];
+/** zoom zo in dat [x, y, b, h] (app-pixels) het vak onder de kop vult; de bovenkant komt direct onder de kop */
+const fit = ([x, y, w, h], max = 1.4) => { const s = Math.min(820 / (w * U), 840 / (h * U), max); return { ax: x + w / 2, ay: y + 400 / (U * s), s }; };
+const HOME = { ax: 195, ay: (FOCUS[1] - 606 - 14) / U - 44, s: 1 };          // hele telefoon, bovenkant op y 606
+const [px, py, pw] = box('scan', 'product'), wb = box('stats', 'weight');
+const CAM = [                                   // [begin, duur, doel]
+  [0, 0, HOME],
+  [T0(0) + b(.5) - .14, .36, fit(box('dash', 'ring'))],
+  [T0(1) - .1, .36, fit(box('scan', 'camera'))],
+  [T0(1) + b(1) - .03, .32, fit([px, py - 6, pw, 372])],                     // product, portie en de voedingswaarden
+  [T0(1) + b(3) - .02, .3, { ax: 195, ay: 135, s: 1.3 }],                    // omhoog naar de melding "toegevoegd"
+  [T0(2) - .1, .36, { ax: 195, ay: 270, s: 1.22 }],
+  [T0(3) - .1, .36, fit(box('training', 'exercise'))],
+  [T0(4) - .1, .36, { ax: 195, ay: 330, s: 1.2 }],
+  [T0(4) + b(.5), .95, fit([wb[0], wb[1] + 78, wb[2], 372])],                // gewichtskaart: trend, grafiek en voorspelling
+];
+function camera(t) {
+  let c = CAM[0][2];
+  for (const [at, d, to] of CAM) {
+    if (t < at || !d) continue;
+    const k = eio(P(t, at, at + d));
+    c = { ax: lerp(c.ax, to.ax, k), ay: lerp(c.ay, to.ay, k), s: lerp(c.s, to.s, k) };
+  }
+  return c;
+}
+
+/* ---------- app-beelden: frames laden wanneer ze nodig zijn ---------- */
+const cache = new Map();
+function clipFrame(clip, i) {
+  i = cl(i, 0, CLIPS.clips[clip].frames - 1);
+  const key = clip + i;
+  let e = cache.get(key);
+  if (e) { cache.delete(key); cache.set(key, e); return e; }
+  const img = new Image();
+  img.src = `clips/${clip}/${String(i).padStart(4, '0')}.jpg`;
+  e = img.decode().then(() => img, () => { throw new Error(`Clipframe ontbreekt: ${img.src}. Draai: node promo/capture.cjs 12-probeer-14-dagen`); });
+  cache.set(key, e);
+  if (cache.size > 8) cache.delete(cache.keys().next().value);
+  return e;
+}
+const cv = $('#app'), ctx = cv.getContext('2d'), CW = cv.width, CH = cv.height, STRIP = Math.round(44 * CW / 390);
+/** één app-beeld op het scherm, met bovenaan een statusbalk in de kleur van de bovenste rij */
+function drawApp(img, x, dim = 0) {
+  ctx.drawImage(img, 0, 0, CW, 2, x, 0, CW, STRIP + 2);
+  ctx.drawImage(img, x, STRIP);
+  if (dim) { ctx.fillStyle = `rgba(3,8,6,${dim})`; ctx.fillRect(x, 0, CW, CH); }
+}
+
+/* ---------- slam: tekst die in een paar frames op zijn plek knalt ---------- */
+function slam(el, t, a, { from = 1.7, dur = .26, blur = 16 } = {}) {
+  const k = eo5(P(t, a, a + dur));
+  el.style.opacity = t >= a ? cl(k * 3) : 0;
+  el.style.transform = `scale(${lerp(from, 1, k)})`;
+  el.style.filter = k < 1 && k > 0 ? `blur(${(1 - k) * blur}px)` : '';
+  return k;
+}
+const LP = 1890;
+$('#lp').style.strokeDasharray = LP;
+
+async function render(t) {
+  const shot = cl(Math.floor((t - b(4)) / b(4)), 0, SHOTS.length - 1);
+  const inShots = t >= b(3) && t < END + .35;
+  bg(t, inShots ? .25 : 0);
+  scenes(t); reveal(t);
+  $$('.pop').forEach(el => { const a = +el.dataset.a, k = back(P(t, a, a + .3), 2.2); el.style.opacity = P(t, a, a + .08); el.style.transform = `scale(${lerp(.5, 1, k)})`; });
+
+  /* dagteller op de donkere laag: licht op tot en met de dag van het shot */
+  $$('#trk i').forEach((p, j) => {
+    let at = -1;                                             // moment waarop deze dag oplicht
+    for (let n = 0; n < SHOTS.length; n++) {
+      const prev = n ? SHOTS[n - 1].day : 0;
+      if (j >= prev && j < SHOTS[n].day) { at = T0(n) + (j - prev) * (.3 / (SHOTS[n].day - prev)); break; }
+    }
+    const on = at >= 0 && t >= at, k = on ? P(t, at, at + .22) : 0;
+    p.style.background = on ? '#c9f27a' : 'rgba(255,255,255,.14)';
+    p.style.transform = `scaleY(${on ? 1 + (1 - eo(k)) * 1.6 : 1})`;
+    p.style.boxShadow = on ? `0 0 ${14 + (1 - k) * 22}px rgba(201,242,122,${.35 + (1 - k) * .5})` : 'none';
+  });
+
+  /* telefoon met echte app-beelden */
+  const ph = $('#phone');
+  ph.style.display = inShots ? '' : 'none';
+  if (inShots) {
+    const T = T0(shot), next = T0(shot + 1);
+    const idx = Math.round((t - T) * 30) + LEAD;
+    // het scherm schuift naar het volgende shot; dat begint 3 frames voor de tel
+    const k = shot < SHOTS.length - 1 ? eo5(P(t, next - .1, next + .2)) : 0;
+    const k0 = shot > 0 ? eo5(P(t, T - .1, T + .2)) : 1;     // net na de tel loopt de vorige schuif nog
+    ctx.fillStyle = '#0c1813'; ctx.fillRect(0, 0, CW, CH);
+    if (k0 < 1) {
+      const [a, c] = await Promise.all([clipFrame(SHOTS[shot - 1].clip, Math.round((t - T0(shot - 1)) * 30) + LEAD), clipFrame(SHOTS[shot].clip, idx)]);
+      drawApp(a, -k0 * CW * .3, k0 * .5); drawApp(c, (1 - k0) * CW);
+    } else if (k > 0) {
+      const [a, c] = await Promise.all([clipFrame(SHOTS[shot].clip, idx), clipFrame(SHOTS[shot + 1].clip, Math.round((t - next) * 30) + LEAD)]);
+      drawApp(a, -k * CW * .3, k * .5); drawApp(c, (1 - k) * CW);
+    } else drawApp(await clipFrame(SHOTS[shot].clip, idx), 0);
+    $('#ptime').textContent = SHOTS[k > .5 ? shot + 1 : shot].time;
+
+    const c = camera(t), lx = 14 + c.ax * U, ly = 14 + (44 + c.ay) * U;
+    const rise = 1 - eo5(P(t, b(3) + .04, b(4) + .12));
+    const kick = Math.max(0, ...SHOTS.map((s, n) => t >= T0(n) ? Math.exp(-(t - T0(n)) * 10) : 0));
+    const push = P(t, T, next) * .025;
+    ph.style.transformOrigin = `${lx}px ${ly}px`;
+    ph.style.transform = `translate(${FOCUS[0] - 206 - lx}px, ${FOCUS[1] - 540 - ly + rise * 1500}px) rotate(${Math.sin(t * .9) * .5 + rise * 7}deg) scale(${c.s * (1 + push + kick * .03)})`;
+  }
+
+  /* lime laag: omhoog na de hook, omlaag voor de slotkaart */
+  const lift = eio(P(t, b(3), b(4) + .06)), flood = eo5(P(t, END - .08, END + .3));
+  const isEnd = t >= END - .2;
+  const lime = $('#lime');
+  lime.style.display = (lift < 1 || isEnd) ? '' : 'none';
+  lime.style.transform = `translateY(${isEnd ? -(1 - flood) * 2160 : -lift * 2160}px)`;
+  $('#hook').style.display = isEnd ? 'none' : '';
+  $('#end').style.display = isEnd ? '' : 'none';
+  $('#lp').style.strokeDashoffset = LP * (1 - eio(P(t, isEnd ? END + .1 : -.05, isEnd ? END + .9 : .55)));
+  $('#lp').style.opacity = isEnd ? .55 : 1;
+  $$('#trkLime i').forEach((p, j) => {
+    // hook: de 14 dagen tikken één voor één vol op tel 3; slotkaart: allemaal vol
+    const at = b(2) + j * b(1) / 14, on = isEnd || t >= at, k = isEnd ? 1 : P(t, at, at + .16);
+    p.style.background = on ? '#06100c' : 'rgba(6,16,12,.16)';
+    p.style.transform = `scaleY(${on ? 1 + (1 - eo(k)) * 1.8 : 1})`;
+  });
+
+  if (!isEnd) {
+    /* hook: "Probeer dit" op tel 1, "14 dagen." op tel 2, daarna tikken de 14 dagen vol */
+    // "Probeer dit" staat eerst groot in het midden en schuift omhoog zodra "14 dagen." erbij komt
+    const k1 = eo5(P(t, -.12, .18)), up = eo5(P(t, b(1) - .1, b(1) + .16)), h1 = $('#h1');
+    h1.style.top = lerp(770, 452, up) + 'px';
+    h1.style.transform = `scale(${lerp(1.5, 1, k1) * lerp(1.12, 1, up)})`;
+    h1.style.filter = k1 < 1 ? `blur(${(1 - k1) * 16}px)` : '';
+    $('#hbrand').style.opacity = P(t, -.2, .12);
+    const k14 = slam($('#h14'), t, b(1) - .02, { from: 2.2, dur: .3, blur: 26 });
+    slam($('#h3'), t, b(1) + .07, { from: 1.8, dur: .28 });
+    const tick = t >= b(2) && t < b(3) ? 1 - (((t - b(2)) / (b(1) / 14)) % 1) : 0;         // klein schokje per tik
+    const hit = t >= b(3) ? Math.exp(-(t - b(3)) * 9) : 0;
+    $('#h14').style.transform = `scale(${lerp(2.2, 1, k14) + tick * .018 + hit * .06})`;
+  } else {
+    const L = $('#elogo'), lk = back(P(t, END + .1, END + .55), 2);
+    L.style.opacity = P(t, END + .1, END + .2);
+    L.style.transform = `scale(${lerp(.3, 1, lk) + beatPulse(t, b(29), 10) * .04}) rotate(${(1 - eo(P(t, END + .1, END + .55))) * -12}deg)`;
+    L.style.filter = 'drop-shadow(0 22px 34px rgba(6,16,12,.35))';
+    logoDraw(L, eio(P(t, END + .2, END + .8)));
+    slam($('#e1'), t, b(25));
+    slam($('#e2'), t, b(26), { from: 1.9 });
+    const g = eo5(P(t, b(27), b(27) + .26)), e3 = $('#e3');
+    e3.style.opacity = t >= b(27) ? 1 : 0;
+    e3.style.transform = `scale(${lerp(2.4, 1, g) + beatPulse(t, b(28), 9) * .025}) rotate(${lerp(8, -3, g)}deg)`;
+    e3.style.filter = g < 1 && g > 0 ? `blur(${(1 - g) * 18}px)` : '';
+    const c = $('#cta'), ck = back(P(t, b(28), b(28) + .34), 2), pl = beatPulse(t, b(29), 6);
+    c.style.opacity = P(t, b(28), b(28) + .1);
+    c.style.transform = `scale(${lerp(.5, 1, ck) + pl * .035})`;
+    show($('#esub'), eo(P(t, b(28) + .25, b(28) + .7)), { y: 24, blur: 6 });
+  }
+
+  /* flitsen op de klappen */
+  const fl = [[END, .3], [b(27), .24]].reduce((m, [x, v]) => Math.max(m, t >= x ? v * (1 - P(t, x, x + .22)) : 0), 0);
+  $('#flash').style.opacity = fl;
+}
+/** TikTok-zones tonen (alleen om te controleren): safe(true) in de console */
+window.safe = on => { $('#safe').style.display = on ? 'block' : 'none'; };
+boot(render);
+</script></body></html>

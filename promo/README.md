@@ -1,6 +1,6 @@
 # Puls promotiefilmpjes
 
-Elf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muziek. Alle filmpjes eindigen met **"Download Puls nu, 14 dagen gratis"**. De kant-en-klare video's staan in `out/`.
+Twaalf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muziek. Filmpje 01 tot en met 11 eindigen met **"Download Puls nu, 14 dagen gratis"**; filmpje 12 eindigt met **"Eerste 14 dagen Premium gratis"** en de knop **"Download Puls"**. De kant-en-klare video's staan in `out/`.
 
 | # | Bestand | Formaat | Duur | Waar gaat het over | Muziek |
 |---|---------|---------|------|--------------------|--------|
@@ -15,6 +15,7 @@ Elf promotiefilmpjes voor Puls. Elk filmpje heeft eigen, zelf gecomponeerde muzi
 | 09 | `out/09-jouw-plan.mp4` | 9:16 | 23,5 s | De intake met silhouet en schuifjes, daarna onthulling van je plan | Filmische opbouw met drop, 110 bpm |
 | 10 | `out/10-manifest.mp4` | **16:9 (1920×1080)** | 21 s | Kinetische typografie, "Eet slimmer. Train beter. Voel je sterker." | Stampende electro-pop-anthem, 124 bpm |
 | 11 | `out/11-voortgang.mp4` | 9:16 | 27 s | Van dag 1 tot dag 84: gewichtsgrafiek, mijlpalen, "Kleine stappen. Grote verandering." | Emotionele piano en strijkers, 96 bpm |
+| 12 | `out/12-probeer-14-dagen.mp4` | 9:16 | **15 s** | Voor TikTok: "Probeer dit 14 dagen", daarna dag 1, 2, 5, 8 en 14 met **echte beelden van de app** (dashboard, barcodescanner, recepten, training, statistieken) en als slot "Eerste 14 dagen Premium gratis" | Energieke pop-house, 128 bpm |
 
 Je kunt ze plaatsen op Reels, TikTok, Shorts en Stories (9:16), en op YouTube of je website (16:9). Alle muziek staat op −14 LUFS, de norm voor social media.
 
@@ -42,3 +43,22 @@ node promo/render.cjs 04-scan-alles --shots 2,5,9,15   # contactblad met losse f
 - Gedeelde onderdelen staan in `lib/`: `base.css` (stijl), `engine.js` (animaties, logo, telefoon, sportfiguurtje, silhouet en confetti) en `screens.js` (geanimeerde app-schermen).
 - Bij filmpje 01 laat `sync.json` de schermwissels precies op de maat van de muziek vallen.
 - De getoonde gegevens (Sam, 2.300 kcal, de gewichtsgrafiek) zijn voorbeeldgegevens.
+- De renderer rekent de kleuren om volgens de HD-norm (BT.709) en labelt de video zo. Daardoor ziet het groen er in apps hetzelfde uit als in de browser. De filmpjes 01 tot en met 11 zijn nog met de oude instelling gemaakt; wie ze opnieuw rendert krijgt een fractie andere kleuren.
+
+## Filmpje 12: echte beelden van de app
+
+Filmpje 12 tekent de app niet na, maar laat de echte app zien. Dat gaat in drie stappen:
+
+```bash
+npm ci                                       # eenmalig, in de root: de app moet kunnen draaien
+node promo/capture.cjs 12-probeer-14-dagen   # app-beelden   -> promo/videos/12-probeer-14-dagen/clips/
+python3 promo/music/t12.py                   # muziek        -> promo/videos/12-probeer-14-dagen/audio.wav
+node promo/render.cjs 12-probeer-14-dagen    # beeld + muziek -> promo/out/12-probeer-14-dagen.mp4
+```
+
+- `capture.cjs` start de app, vult hem met voorbeeldgegevens en neemt per shot een clip op. De klok en alle animaties staan stil en gaan per frame 1/30 seconde verder, dus elke opname is precies gelijk en loopt vloeiend. De clips (ongeveer 120 MB aan losse frames) staan niet in de repo; je maakt ze met het commando hierboven.
+- `videos/12-probeer-14-dagen/clips.cjs` beschrijft het verhaal: de eerste 14 dagen van Sam (dag 1 is maandag 16 november 2026). Per clip staat er welke dag het is, wat er al is ingevuld en wat er gebeurt: eten loggen, scannen, scrollen, sets afvinken. Alles valt op de tel van de muziek (128 bpm, 1 tel = 14 frames).
+- Snel kijken zonder op te nemen: `node promo/capture.cjs 12-probeer-14-dagen scan --peek` maakt één schermfoto van die clip; na een opname staat er per clip ook een contactblad (`clips/<naam>-blad.jpg`).
+- De barcodescanner is de echte app, maar het camerabeeld is getekend (een pak magere kwark met een echte EAN-13-code) en het antwoord van de online productdatabase ligt vast. Zo is de opname elke keer hetzelfde.
+- In `scene.html` zoomt een camera per shot in op het deel van de app dat ertoe doet. De posities komen uit de opname zelf (`clips/manifest.json`), dus als de app verandert schuift de camera mee.
+- TikTok legt eigen knoppen over de video. Belangrijke tekst staat daarom tussen y 140 en 1440 en links van x 940. Open `scene.html` in een browser en typ `safe(true)` in de console om die zones te zien.

@@ -67,6 +67,8 @@ const sceneTime = t => {
   const audio = path.join(dir, 'audio.wav');
   const args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-'];
   if (fs.existsSync(audio)) args.push('-i', audio);
+  // kleuren volgens de HD-norm (BT.709) omrekenen én zo labelen, anders tonen apps het groen net anders
+  args.push('-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv');
   args.push('-c:v', 'libx264', '-preset', 'slow', '-crf', '19', '-pix_fmt', 'yuv420p', '-movflags', '+faststart');
   if (fs.existsSync(audio)) args.push('-c:a', 'aac', '-b:a', '256k', '-shortest');
   args.push(out);
